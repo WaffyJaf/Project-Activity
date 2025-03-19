@@ -1,0 +1,61 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model event_posts {
+  post_id               Int                      @id @default(autoincrement())
+  project_id            Int?
+  post_content          String?                  @db.Text
+  imge_url              String?                  @db.VarChar(255)
+  post_date             DateTime?                @default(now()) @db.Timestamp(0)
+  post_status           event_posts_post_status? @default(active)
+  project_activity      project_activity?        @relation(fields: [project_id], references: [project_id], onDelete: NoAction, onUpdate: NoAction, map: "event_posts_ibfk_1")
+  registration_activity registration_activity[]
+
+  @@index([project_id], map: "project_id")
+}
+
+model project_activity {
+  project_id            Int                             @id @default(autoincrement())
+  project_name          String                          @db.VarChar(255)
+  project_description   String?                         @db.Text
+  department            String?                         @db.VarChar(255)
+  location              String?                         @db.VarChar(255)
+  budget                Decimal?                        @db.Decimal(15, 2)
+  hours                 Int?
+  created_date          DateTime?                       @default(now()) @db.Timestamp(0)
+  project_status        project_activity_project_status @default(pending)
+  project_datetime      DateTime?                       @db.DateTime(0)
+  event_posts           event_posts[]
+  registration_activity registration_activity[]
+}
+
+model registration_activity {
+  register_id      Int               @id @default(autoincrement())
+  post_id          Int?
+  project_id       Int?
+  student_id       String            @db.Char(9)
+  student_name     String            @db.VarChar(255)
+  faculty          String            @db.VarChar(255)
+  event_posts      event_posts?      @relation(fields: [post_id], references: [post_id], onDelete: NoAction, onUpdate: NoAction, map: "registration_activity_ibfk_1")
+  project_activity project_activity? @relation(fields: [project_id], references: [project_id], onDelete: NoAction, onUpdate: NoAction, map: "registration_activity_ibfk_2")
+
+  @@index([post_id], map: "post_id")
+  @@index([project_id], map: "project_id")
+}
+
+enum event_posts_post_status {
+  active
+  expired
+}
+
+enum project_activity_project_status {
+  pending
+  approved
+  rejected
+}
