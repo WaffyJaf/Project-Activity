@@ -1,0 +1,102 @@
+.pj-container{
+  margin-left: 200px;
+  padding: 20px;
+  overflow-x: auto; 
+  overflow-y: auto; 
+  max-height: 100%; 
+}
+
+.pj-header {
+  display: flex;
+  width: 100%; 
+
+ 
+
+  
+}
+.pj-H{
+  margin-left: 70px;
+}
+
+.pj-S{
+  flex: 1;
+  margin-left: 670px;
+  
+}
+
+.pj-status {
+  margin-left: 150px;
+  flex: 1;
+  font-weight: bold;
+}
+
+.status-approved {
+  color: green;
+}
+
+.status-rejected {
+  color: red;
+}
+
+.status-pending {
+  color: rgb(67, 66, 69);
+}
+
+.pj-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px; /*ระยะห่างคอลัม*/
+  width: 80%;
+  margin-top: 20px;
+  margin-left: 90px;
+  justify-content:flex-start;
+  flex-wrap: wrap;
+
+}
+.header{
+  font-size: 30px;
+  color: rgb(84, 18, 145);
+  font-weight: bold;
+  margin-left: 450px;
+
+}
+
+
+.pj-id {
+  
+  text-decoration: none; /* ลบเส้นใต้ */
+  color: black;
+  display:flex;
+  padding: 20px; /* ความกว้างของช่อง */
+  border: 0px ; /*ช่องข้อมูล*/
+  border-radius: 10px; 
+  background-color: #b69bc9;
+  align-items: center;
+  
+}
+
+.pj-grid .pj-id:hover{
+  background-color: rgb(84, 18, 145);
+  color: aliceblue;
+}
+
+.pj-name {
+  font-weight: bold;
+  margin-left: 50px;
+ 
+}
+
+.pj-date {
+  
+  margin-left: 300px;
+  flex: 1; /* ให้ข้อมูลชื่อโปรเจคขยายไปทั้งหมด */
+
+}
+
+.pj-status {
+  margin-left: 150px;
+  flex: 1;
+
+
+}
+

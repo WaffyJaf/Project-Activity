@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { fetchProjectByID, Project } from "../../api/projectapi";
 import { useParams } from "react-router-dom";
 import Navbar from "../../component/navbar";
+import "../css/Projectdetail.css"
 
 function Projectdetail() {
   const { id } = useParams<{ id: string }>();
@@ -38,18 +39,20 @@ function Projectdetail() {
 
         {project && (
           <div className="pj-content">
-            <h2 className="pj_name">{project.project_name}</h2>
             <div className="pj-detail">
-              <p><strong>รหัสโครงการ :</strong> {project.project_id}</p>
+            <h2 className="pj_name">{project.project_name}</h2>
+              <p><strong>รหัสโครงการ :</strong> {project.project_id}</p> 
               <p><strong>สถานะ :</strong> {project.project_status}</p>
               <p><strong>หน่วยงาน/คณะ :</strong> {project.department}</p>
               <p><strong>สถานที่ :</strong> {project.location}</p>
               <p><strong>งบประมาณ :</strong> {project.budget}</p>
               <p><strong>จำนวนชั่วโมงที่ได้รับ :</strong> {project.hours}</p>
-              <p><strong>วัน เวลา ที่จัดกิจกรรม :</strong> {project.project_datetime}</p>
+              <p><strong>วัน เวลา ที่จัดกิจกรรม :</strong> {new Date(project.project_datetime).toLocaleString()}</p>
               <p><strong className="description">รายละเอียด :</strong> {project.project_description}</p>
             </div>
+            
           </div>
+          
         )}
       </div>
     </div>

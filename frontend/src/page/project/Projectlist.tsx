@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { fetchProjects,} from "../../api/projectapi";
 import { Project } from "../../api/projectapi";
 import Navbar from "../../component/navbar";
-import './Projectlist.css';
+import '../css/Projectlist.css'
 
 function Projectlist() {
   const [projects, setProjects] = useState<Project[]>([]);
@@ -40,7 +40,7 @@ function Projectlist() {
             {projects.map((item) => (
               <Link to={`/Projectdetail/${item.project_id}`} key={item.project_id} className="pj-id">
                 <div className="pj-name">{item.project_name}</div>
-                <div className="pj-date">{item.created_date}</div>
+                <div className="pj-date">{new Date(item.created_date).toLocaleDateString()}</div>
                 <div className={`pj-status ${getStatusClass(item.project_status)}`}>
                   {item.project_status}
                 </div>

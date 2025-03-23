@@ -55,5 +55,29 @@ export const registerActivity = async (req: Request,res: Response) =>{
         return res.status(500).json({message: "Erro save to database",error});
      }
 };
+
+export const getEventActivity = async(req: Request,res: Response) => {
+    try{
+        const getevent = await prisma.event_posts.findMany({
+            select: {
+                post_id: true,
+                post_content: true,
+                post_date:true,
+                post_status:true,
+                imge_url:true,
+            },
+            orderBy: {
+                post_date: 'desc',
+            },
+        });
+        if(getevent.length == 0){
+            return res.status(404).json({message: 'ไม่พบ POST กิจกรรม'});
+        }
+        res.status(200).json(getevent);
+    }catch(error){
+        console.error("!!! เกิดข้อผิดพลาดในการดึงข้อมูลโพตส์' !!!",error);
+        return res.status(500).json({message: "!!! เกิดข้อผิดพลาดในการดึงข้อมูลโพตส์' !!!",error});
+    }
+};
         
     

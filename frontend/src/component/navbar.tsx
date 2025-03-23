@@ -21,7 +21,7 @@ function Navbar() {
             <li className="project">
               <Link to="/"><i className="fa-solid fa-file"></i> โครงการ <i className="fa-solid fa-play"></i></Link>
               <ul className="dropdown">
-                <li><Link to="/Createproject">เปิดโครงการ</Link></li>
+                <li><Link to="/createproject">เปิดโครงการ</Link></li>
                 <li><Link to="/Projectlist">ประวัติเปิดโครงการ</Link></li>
               </ul>
             </li>
@@ -29,7 +29,7 @@ function Navbar() {
               <Link to="/activity"><i className="fa-solid fa-font-awesome"></i> Activity <i className="fa-solid fa-play"></i></Link>
               <ul className="dropdown">
                 <li><Link to="/post-activity">Post กิจกรรม</Link></li>
-                <li><Link to="/activity-history">ประวัติ Post</Link></li>
+                <li><Link to="/Eventlist">ประวัติ Post</Link></li>
               </ul>
             </li>
             <li className="project">
