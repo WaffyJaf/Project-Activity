@@ -4,7 +4,7 @@ export interface Event{
   post_content: string;
   post_date: string;
   post_status: string;
-  post_url : string;
+  imge_url : string;
 }
 
 const APIEVENT_URL = "http://localhost:3000/event/getevent"

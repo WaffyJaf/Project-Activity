@@ -15,6 +15,7 @@ function Eventlist() {
       try {
         setLoading(true);
         const data = await Eventget();
+        console.log(data);
         setEvents(data);
         setError(null);
       } catch (err) {
@@ -47,14 +48,14 @@ function Eventlist() {
   if (error) {
     return <div className="error">{error}</div>;
   }
-
+  
   return (
     <div>
       <Navbar />
       <div className="p-4 mx-auto flexcontainer">
-        <h1 className="text-center text-red">ประวัติการ POST กิจกรรม</h1>
+        <h1 className="text-center text-red ">ประวัติการ POST กิจกรรม</h1>
         {events.map((item) => (
-          <div className="event-card" key={item.post_id}>
+          <div className="event-car " key={item.post_id}>
             <div className="ev-name">{item.post_content}</div>
             <div className="ev-date">{new Date(item.post_date).toLocaleDateString()}</div>
             <div className={`ev-status ${renderStatusBadge(item.post_status)} mt-2`}>

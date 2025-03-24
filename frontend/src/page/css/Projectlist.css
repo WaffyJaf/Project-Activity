@@ -1,5 +1,6 @@
 .pj-container{
-  margin-left: 200px;
+  margin-top: 40px;
+  margin-left: 300px;
   padding: 20px;
   overflow-x: auto; 
   overflow-y: auto; 
@@ -7,6 +8,7 @@
 }
 
 .pj-header {
+  margin-top: 30px;
   display: flex;
   width: 100%; 
 
@@ -20,7 +22,7 @@
 
 .pj-S{
   flex: 1;
-  margin-left: 670px;
+  margin-left: 750px;
   
 }
 
@@ -46,7 +48,7 @@
   display: flex;
   flex-direction: column;
   gap: 10px; /*ระยะห่างคอลัม*/
-  width: 80%;
+  width: 75%;
   margin-top: 20px;
   margin-left: 90px;
   justify-content:flex-start;
@@ -57,7 +59,7 @@
   font-size: 30px;
   color: rgb(84, 18, 145);
   font-weight: bold;
-  margin-left: 450px;
+  margin-left: 500px;
 
 }
 
@@ -72,6 +74,7 @@
   border-radius: 10px; 
   background-color: #b69bc9;
   align-items: center;
+  flex-wrap: wrap;
   
 }
 

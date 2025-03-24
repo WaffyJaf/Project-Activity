@@ -28,7 +28,7 @@ function Navbar() {
             <li className="activity">
               <Link to="/activity"><i className="fa-solid fa-font-awesome"></i> Activity <i className="fa-solid fa-play"></i></Link>
               <ul className="dropdown">
-                <li><Link to="/post-activity">Post กิจกรรม</Link></li>
+                <li><Link to="/eventpost">Post กิจกรรม</Link></li>
                 <li><Link to="/Eventlist">ประวัติ Post</Link></li>
               </ul>
             </li>
@@ -49,5 +49,5 @@ function Navbar() {
   );
 }
 
-export default Navbar
+export default Navbar;
 
