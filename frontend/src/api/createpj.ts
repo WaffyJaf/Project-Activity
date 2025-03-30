@@ -8,7 +8,7 @@ export interface FormData{
   budget: number;
   hours: number;
   project_datetime: string;  
-};
+}
 
 
 
@@ -45,7 +45,14 @@ export async function submitProject(data: FormData): Promise<{ success: boolean,
       return { success: false, message: "เกิดข้อผิดพลาดบางประการ กรุณาลองใหม่" };
     }
   }
-}
+
+  
+} 
+
+
+
+
+
 
 
 
