@@ -3,6 +3,7 @@ import { useForm, SubmitHandler } from 'react-hook-form';
 import Navbar from "../../component/navbar";
 import { FormPost, submitFormToAPI, uploadImage } from "../../api/createpost";
 import '../css/Eventpost.css'
+import { Link } from "react-router-dom";
 
 function Eventpost() {
   // State for modal
@@ -24,11 +25,10 @@ function Eventpost() {
     defaultValues: {
       project_id: 0,
       post_content: "",
-      image_url: "",
+      imge_url: "",
     },
   });
 
-  // Handle file upload
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -38,20 +38,25 @@ function Eventpost() {
     }
   };
 
-  // Handle upload button click
   const handleUploadButtonClick = () => {
     fileInputRef.current?.click();
   };
 
-  // Form submission handler
   const onSubmit: SubmitHandler<FormPost> = async (formData) => {
     try {
+      // Check if image is selected and upload it
       if (fileToUpload.current) {
         const imageUrl = await uploadImage(fileToUpload.current);
-        formData.image_url = imageUrl;
-
+        if (imageUrl) {
+          formData.imge_url = imageUrl; // Update form data with the image URL
+        } else {
+          setModalMessage("ไม่สามารถอัปโหลดรูปภาพได้ กรุณาลองใหม่ ❌");
+          setShowModal(true);
+          return;
+        }
       }
 
+      // Submit form data to API
       const result = await submitFormToAPI(formData);
 
       if (result.success) {
@@ -76,28 +81,45 @@ function Eventpost() {
       <Navbar />
       <div className="body">
         <section className="content">
-          <span className="head">สร้างโพสต์</span>
+          <span className="head-post">สร้างโพสต์</span>
         </section>
         <div className="container">
           <form onSubmit={handleSubmit(onSubmit)} className="form">
             <div className="form-group">
               <label>รหัสกิจกรรม<span className="required">*</span></label>
-              <input type="number"{...register("project_id", { required: "กรุณากรอกรหัสกิจกรรม",min: { value: 1, message: "รหัสกิจกรรมต้องมีค่ามากกว่า 0" }})}/>
+              <input 
+                type="number"
+                {...register("project_id", { 
+                  required: "กรุณากรอกรหัสกิจกรรม",
+                  min: { value: 1, message: "รหัสกิจกรรมต้องมีค่ามากกว่า 0" }
+                })}
+              />
               {errors.project_id && <p className="error">{errors.project_id.message}</p>}
               
               <label>เนื้อหากิจกรรม<span className="required">*</span></label>
-              <textarea {...register("post_content", { required: "จำเป็นต้องกรอกเนื้อหาโพสต์",minLength: { value: 10, message: "กรุณากรอกเนื้อหาอย่างน้อย 10 ตัวอักษร" }})}/>
+              <textarea
+                {...register("post_content", { 
+                  required: "จำเป็นต้องกรอกเนื้อหาโพสต์",
+                  minLength: { value: 10, message: "กรุณากรอกเนื้อหาอย่างน้อย 10 ตัวอักษร" }
+                })}
+              />
               {errors.post_content && <p className="error">{errors.post_content.message}</p>}
               
               <div className="form-group">
                 <label className="form-label">อัพโหลดรูปภาพ</label>
-                <input type="file" ref={fileInputRef} onChange={handleFileUpload} accept="image/*" className="hidden-input"/>
-                <input type="hidden" {...register('image_url')} />
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleFileUpload}
+                  accept="image/*"
+                  className="hidden-input"
+                />
+                <input type="hidden" {...register('imge_url')} />
 
                 <div className="upload-container">
                   <button type="button" onClick={handleUploadButtonClick} className="upload-button"> เลือกรูปภาพ</button>
                   <span className="file-name">
-                    {fileToUpload.current ? `ไฟล์: ${fileToUpload.current.name}` : 'ยังไม่ได้เลือกไฟล์'}
+                    {fileToUpload.current ? `File: ${fileToUpload.current.name}` : 'No file selected'}
                   </span>
                 </div>
                
@@ -114,7 +136,7 @@ function Eventpost() {
               </div>
               
               <div className="form-actions">
-                <button type="submit" className="submit-button"disabled={isSubmitting}>
+                <button type="submit" className="submit-button" disabled={isSubmitting}>
                   {isSubmitting ? 'กำลังบันทึก...' : 'บันทึกโพสต์'}
                 </button>
               </div>
@@ -125,10 +147,10 @@ function Eventpost() {
       
       {/* Show modal if showModal is true */}
       {showModal && (
-        <div className="modal">
+        <div className="modal-main">
           <div className="modal-content">
             <p>{modalMessage}</p> {/* ✅ แสดง modalMessage */}
-            <button onClick={() => setShowModal(false)}>ปิด</button>
+            <Link to="/Eventlist"><button onClick={() => setShowModal(false)}>ปิด</button></Link>
           </div>
         </div>
       )}

@@ -1,8 +1,8 @@
 import { useForm, SubmitHandler } from 'react-hook-form';
 import { useState } from "react";
-import { submitProject } from '../../api/create';
+import { submitProject } from '../../api/createpj';
 import Navbar from "../../component/navbar";
-import { FormData } from '../../api/create';
+import { FormData } from '../../api/createpj';
 import '../css/Createproject.css'
 import { Link } from 'react-router-dom';
 
@@ -40,7 +40,7 @@ function Createproject() {
       <Navbar /> 
       <div className="body">
         <section className="content"><span className='head'>เปิดโครงการ</span></section>
-        <div className='container'>
+        <div className='main'>
           <form onSubmit={handleSubmit(onSubmit)} className="form">
             <div className="input-box">
               <label>ชื่อโครงการ<span className="required">*</span></label>

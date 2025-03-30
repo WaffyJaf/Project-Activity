@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { fetchProjectByID, Project } from "../../api/projectapi";
+import { fetchProjectByID, Project } from "../../api/projectget";
 import { useParams } from "react-router-dom";
 import Navbar from "../../component/navbar";
 import "../css/Projectdetail.css"

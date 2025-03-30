@@ -3,7 +3,7 @@ import axios from "axios";
 export interface FormPost{
   project_id: number;
   post_content: string;
-  image_url: string;
+  imge_url: string;
 }
 
 // ✅ ฟังก์ชันอัปโหลดรูปภาพและคืนค่า URL
@@ -11,8 +11,9 @@ export const uploadImage = async (file: File): Promise<string | null> => {
   const uploadData = new FormData();
   uploadData.append("image", file);
 
+ 
   try {
-    const response = await axios.post("https://your-api-url.com/api/upload-image", uploadData, {
+    const response = await axios.post("http://localhost:3000/event/uploadimage", uploadData, {
       headers: { "Content-Type": "multipart/form-data" },
     });
 
@@ -32,12 +33,13 @@ export const uploadImage = async (file: File): Promise<string | null> => {
 
 export const submitFormToAPI = async (formData: FormPost) => {
   try {
-    const response = await axios.post("https://your-api-url.com/api/posts", formData, {
+    const response = await axios.post("http://localhost:3000/event/postevent", formData, {
       headers: { "Content-Type": "application/json" },
     });
 
     if (response.status === 200 || response.status === 201) {
-      if (response.data.message === "Project activity created successfully") {
+      // แสดงข้อความที่เซิร์ฟเวอร์ส่งกลับมา
+      if (response.data.message === "Event post saved successfully") {
         console.log("Form submitted successfully:", response.data);
         return { success: true, message: "Project successfully sent." };
       } else {
@@ -58,3 +60,4 @@ export const submitFormToAPI = async (formData: FormPost) => {
     }
   }
 };
+

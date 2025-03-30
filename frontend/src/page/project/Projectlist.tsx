@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from 'react-router-dom';
-import { fetchProjects,} from "../../api/projectapi";
-import { Project } from "../../api/projectapi";
+import { fetchProjects,} from "../../api/projectget";
+import { Project } from "../../api/projectget";
 import Navbar from "../../component/navbar";
 import '../css/Projectlist.css'
 

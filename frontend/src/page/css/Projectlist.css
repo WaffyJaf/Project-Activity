@@ -10,18 +10,13 @@
 .pj-header {
   margin-top: 30px;
   display: flex;
-  width: 100%; 
-
- 
-
-  
+  width: 100%;   
 }
 .pj-H{
   margin-left: 70px;
 }
 
 .pj-S{
-  flex: 1;
   margin-left: 750px;
   
 }

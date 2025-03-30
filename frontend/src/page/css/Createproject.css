@@ -7,7 +7,8 @@
 .content .head {
   color: #6c0cac;
   border: #fff;
-  text-align: center;
+  margin-left: 300px;
+  margin-bottom: 0px;
 }
 .required{
   color: red;
@@ -19,14 +20,14 @@
 }
 
 /* กล่องหลัก */
-.container {
+.main {
   max-width: 900px;
   width: 95%;  
-  background: #fff;
+  background:  #c6aad2;
   padding: 30px;
   border-radius: 8px;
   box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
-  margin: 1rem auto 1rem 30%;
+  margin: 1rem auto 1rem 20%;
 }
 
 
