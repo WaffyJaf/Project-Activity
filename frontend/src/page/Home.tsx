@@ -1,13 +1,11 @@
 import Navbar from '../component/navbar';
-import './Home.css';
 
 
 function Home() {
   return (
-      <div className="home-background">
-        <Navbar />
-        
-      </div>
+    <div className="bg-gray-100 min-h-screen overflow-hidden bg-[url('/up.jpg')] bg-cover bg-no-repeat bg-fixed w-full ">
+      <Navbar />
+    </div>
   );
 }
 

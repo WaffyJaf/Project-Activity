@@ -2,7 +2,7 @@
   font-size: 28px;
   color: #6c0cac;
   border: #fff;
-  margin-left: 750px;
+  margin-left: 800px;
   font-weight: bold;
 }
 
@@ -217,7 +217,7 @@
 }
 
 .modal-main button[type="submit"] {
-  background-color: #09b10f;
+  background-color: #0c9f1d;
   color: white;
   padding: 12px 24px;
   border: none;
