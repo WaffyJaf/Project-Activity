@@ -8,7 +8,7 @@ router.post("/createproject", async (req: Request, res: Response) => {
   await createProjectActivity(req, res);
 });
 
-router.post("/statusproject", async (req: Request, res: Response) => {
+router.patch("/statusproject/:project_id", async (req: Request, res: Response) => {
   await updateProjectActivity(req, res);
 });
 

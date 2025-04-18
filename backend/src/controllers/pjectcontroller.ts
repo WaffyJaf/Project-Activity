@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, project_activity_project_status } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
@@ -42,28 +42,57 @@ export const createProjectActivity = async (req: Request, res: Response) => {
 };
 
 
-export const updateProjectActivity = async (req: Request,res: Response) =>{
-  const {project_id, project_status} = req.body;
 
-  if(!project_id || !project_status){
-    return res.status(400).json({Message: "ข้อมูลไม่ครบถ้วน",});
+export const updateProjectActivity = async (req: Request, res: Response) => {
+  const { project_id } = req.params;
+  const { project_status } = req.body;
 
+  // ตรวจสอบข้อมูลที่ส่งมา
+  if (!project_id || isNaN(Number(project_id))) {
+    return res.status(400).json({ message: "project_id ไม่ครบถ้วนหรือไม่ใช่ตัวเลข" });
+  }
+  if (!project_status || typeof project_status !== 'string') {
+    return res.status(400).json({ message: "project_status ไม่ครบถ้วนหรือไม่ใช่สตริง" });
   }
 
-  try{
-    const updateProject = await prisma.project_activity.update({
-      where: {project_id},
-      data: {project_status},
+  // ตรวจสอบว่า project_status เป็นค่าที่ถูกต้องใน enum
+  const validStatuses = Object.values(project_activity_project_status); // ["pending", "approved", "rejected"]
+  if (!validStatuses.includes(project_status as project_activity_project_status)) {
+    return res.status(400).json({
+      message: `project_status ต้องเป็นหนึ่งใน: ${validStatuses.join(', ')}`,
+    });
+  }
+
+  try {
+    const projectIdNum = Number(project_id);
+
+    // ค้นหาโครงการ
+    const existingProject = await prisma.project_activity.findUnique({
+      where: { project_id: projectIdNum },
     });
 
-    console.log("Update to database");
-    res.status(200).json({message: "Update to database",project_id,project_status});
+    if (!existingProject) {
+      return res.status(404).json({ message: "ไม่พบโครงการ" });
+    }
 
-  }catch(error){
-    console.error("!!! Erroe Update to Status !!!",error);
-    return res.status(500).json({message: "!!! Erroe Update to Status !!!",error});
+    // อัปเดตสถานะ
+    const updatedProject = await prisma.project_activity.update({
+      where: { project_id: projectIdNum },
+      data: {
+        project_status: { set: project_status as project_activity_project_status }, 
+      },
+    });
+
+    return res.status(200).json({ message: "อัปเดตสถานะสำเร็จ", data: updatedProject });
+  } catch (error) {
+    console.error("เกิดข้อผิดพลาดในการอัปเดตสถานะ:", error);
+    return res.status(500).json({ message: "เกิดข้อผิดพลาดในการอัปเดตสถานะ", error });
+  } finally {
+    await prisma.$disconnect();
   }
 };
+
+
 
 export const getProjectActivity = async(req:Request,res:Response) => {
   try{

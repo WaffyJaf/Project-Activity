@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { Event, Eventget, updateEvent, deleteEvent } from "../../api/postget";  
 import Navbar from "../../component/navbar";
 import Swal from 'sweetalert2';
+import { Link } from "react-router-dom";
+
 
 function Eventlist() {
   const [events, setEvents] = useState<Event[]>([]);
@@ -152,6 +154,7 @@ function Eventlist() {
         <span className="text-3xl font-extrabold text-purple-800 mb-12 drop-shadow-md">
           ประวัติการ POST กิจกรรม
         </span>
+        
         <div className="flex flex-col gap-6 w-full max-w-4xl mt-3.5">
           {events.map((item) => (
             <div 
@@ -180,16 +183,27 @@ function Eventlist() {
               <div className="flex flex-row gap-3 mt-4 md:mt-0 md:ml-4">
                 <button
                   onClick={() => openEditModal(item)}
-                  className="bg-green-700 text-white py-1.5 px-4 rounded-full hover:bg-green-900 transition-colors duration-300 shadow-md text-sm"
+                  className="bg-green-700 text-white py-1.5 px-4 rounded hover:bg-green-900 transition-colors duration-300 shadow-md text-sm"
                 >
                   แก้ไข
                 </button>
                 <button
                   onClick={() => handleDeleteEvent(item.post_id)}
-                  className="bg-red-600 text-white py-1.5 px-4 rounded-full hover:bg-red-700 transition-colors duration-300 shadow-md text-sm"
+                  className="bg-red-600 text-white py-1.5 px-4 rounded hover:bg-red-700 transition-colors duration-300 shadow-md text-sm"
                 >
                   ลบ
                 </button>
+              </div>
+              <div className="absolute bottom-4 left-6 ml-175 "> 
+              <Link to={`/Regisactivity/${item.post_id}`}>
+                  <button
+                    className="text-gray-700   hover:text-gray-900 rounded transition-colors duration-300  text-sm "
+                    
+                  >
+                    รายชื่อลงทะเบียน
+                    <i className="fa-solid fa-user ml-3 text-3xl text-gray-700  rounded hover:text-gray-900"></i>
+                  </button>
+                </Link>
               </div>
             </div>
           ))}

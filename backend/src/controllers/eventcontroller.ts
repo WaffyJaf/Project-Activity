@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import { Request, response, Response } from "express";
 import {Prisma, PrismaClient} from "@prisma/client"
 import multer from "multer";
 import path from "path";
@@ -67,31 +67,82 @@ const storage = multer.diskStorage({
     }
   };
     
-export const registerActivity = async (req: Request,res: Response) =>{
-    const {project_id, post_id, student_id, student_name, faculty} = req.body;
-
-    if( !project_id || !post_id || !student_id || !student_name || ! faculty){
-        return res.status(400).json({message: "ข้อมูลไม่ครบถ้วน",});
+  export const registerActivity = async (req: Request, res: Response) => {
+    const { project_id, post_id, student_id, student_name, faculty } = req.body;
+  
+    if (!project_id || !post_id || !student_id || !student_name || !faculty) {
+      return res.status(400).json({ message: "ข้อมูลไม่ครบถ้วน" });
     }
+  
+    try {
+      const newRegister = await prisma.registration_activity.create({
+        data: {
+          project_id: Number(project_id), 
+          post_id: Number(post_id),
+          student_id,
+          student_name,
+          faculty,
+        },
+      });
+      console.log("Saved to database:", newRegister);
+      res.status(201).json({ message: "ลงทะเบียนสำเร็จ", data: newRegister });
+    } catch (error) {
+      console.error("!!! Error saving to database !!!", error);
+      return res.status(500).json({ message: "เกิดข้อผิดพลาดในการบันทึก", error });
+    }
+  };
 
-    try{
-        const newRegister = await prisma.registration_activity.create({
-            data:{
-                project_id,
-                post_id,
-                student_id,
-                student_name,
-                faculty,
-            },
-        });
-        console.log("Save to database");
-        res.status(200).json({message: "event post save successfully ", });
-
-    }catch (error){
-        console.error("!!! Error Save to database !!!",error);
-        return res.status(500).json({message: "Erro save to database",error});
-     }
-};
+  
+  export const getregisACtivity = async (req: Request, res: Response) => {
+    const { post_id } = req.params;
+  
+    try {
+      // ตรวจสอบว่า post_id เป็นตัวเลขหรือไม่
+      const postId = Number(post_id);
+      if (isNaN(postId)) {
+        return res.status(400).json({ message: "ID โครงการต้องเป็นตัวเลข" });
+      }
+  
+      // ดึงข้อมูลจาก registration_activity ตาม post_id
+      const getregis = await prisma.registration_activity.findMany({
+        where: {
+          post_id: postId, 
+        },
+      });
+  
+      if (getregis.length === 0) {
+        return res.status(404).json({ message: "ไม่พบข้อมูลผู้ลงทะเบียน" });
+      }
+  
+      // ดึงข้อมูล project_activity ตาม post_id
+      const getprojectid = await prisma.registration_activity.findMany({
+        where: {
+          post_id: postId, // ใช้ post_id ในการค้นหา
+        },
+        select: {
+          post_id: true,
+          student_id: true,
+          student_name: true,
+          faculty: true,
+        },
+      });
+  
+      if (!getprojectid) {
+        return res.status(404).json({ message: "ไม่พบข้อมูลโครงการที่เกี่ยวข้อง" });
+      }
+  
+      // ส่งผลลัพธ์ข้อมูลผู้ลงทะเบียนพร้อมข้อมูลโครงการ
+      res.status(200).json({ registrations: getregis, projectDetails: getprojectid });
+    } catch (error) {
+      console.error("!!! Error fetching registrations !!!", error);
+      return res.status(500).json({ message: "เกิดข้อผิดพลาดในการดึงข้อมูล", error });
+    } finally {
+      await prisma.$disconnect();
+    }
+  };
+  
+  
+  
 
 export const getEventActivity = async (req: Request, res: Response) => {
   try {
@@ -168,7 +219,6 @@ export const deleteEvent = async (req: Request, res: Response) => {
   }
 
   try {
-    // ค้นหากิจกรรมที่ต้องการลบ
     const existingEvent = await prisma.event_posts.findUnique({
       where: { post_id: Number(post_id) },  // ใช้ post_id ที่ได้รับจาก URL
     });

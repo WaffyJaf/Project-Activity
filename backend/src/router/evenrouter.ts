@@ -1,5 +1,5 @@
 import express, { Request, Response } from "express";
-import { eventPost , getEventActivity , uploadImage ,updateEvent, deleteEvent } from "../controllers/eventcontroller";
+import { eventPost , getEventActivity , uploadImage ,updateEvent, deleteEvent, registerActivity, getregisACtivity } from "../controllers/eventcontroller";
 
 
 const router = express.Router();
@@ -12,8 +12,16 @@ router.post("/uploadimage", async (req: Request, res: Response) => {
   await uploadImage(req, res);
 });
 
+router.post("/regisactivity", async (req: Request, res: Response) => {
+  await registerActivity(req, res);
+});
+
 router.get("/getevent", async (req: Request, res: Response) => {
   await getEventActivity(req, res);
+});
+
+router.get("/getregisactivity/:post_id", async (req: Request, res: Response) => {
+  await getregisACtivity(req, res);
 });
 
 router.put("/updatepost/:post_id", async (req: Request, res: Response) => {

@@ -42,3 +42,5 @@ export const deleteEvent = async (post_id: number) => {
     throw new Error('ไม่สามารถลบกิจกรรมได้');
   }
 };
+
+

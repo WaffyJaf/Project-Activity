@@ -2,10 +2,11 @@ import React, { useEffect, useState, useRef } from "react";
 import { fetchProjectByID, Project } from "../../api/projectget";
 import { FormPost, uploadImage, submitFormToAPI } from "../../api/createpost";
 import { useForm, SubmitHandler } from 'react-hook-form';
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate,  } from "react-router-dom";
 import Navbar from "../../component/navbar";
 import Swal from 'sweetalert2';
-import { motion } from 'framer-motion'; // Import Framer Motion
+import { motion } from 'framer-motion'; 
+import { useAuth } from "../../context/AuthContext"; // Import AuthContext
 
 function Projectdetail() {
   const { id } = useParams<{ id: string }>();
@@ -18,13 +19,18 @@ function Projectdetail() {
   const fileToUpload = useRef<File | null>(null); 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [warningMessage, setWarningMessage] = useState<string | null>(null);
+  
+  // ใช้ AuthContext เพื่อเข้าถึงข้อมูล user ปัจจุบัน
+  const { currentUser } = useAuth();
+  
   const navigate = useNavigate();
 
   const {
     register,
     handleSubmit,
     reset,
-    formState: { errors, isSubmitting },
+    setValue,
+    formState: { isSubmitting },
   } = useForm<FormPost>({
     defaultValues: {
       project_id: 0,
@@ -49,6 +55,11 @@ function Projectdetail() {
   const onSubmit: SubmitHandler<FormPost> = async (formData) => {
     try {
       formData.project_id = Number(id);  
+
+      // Always use the project description as the post content
+      if (project && project.project_description) {
+        formData.post_content = project.project_description;
+      }
 
       if (fileToUpload.current) {
         const imageUrl = await uploadImage(fileToUpload.current);
@@ -105,6 +116,13 @@ function Projectdetail() {
     }
   };
 
+  function getStatusClass(status: string): string {
+    if (status === 'approved') return 'bg-green-100 text-green-800 border-green-300';
+    if (status === 'rejected') return 'bg-red-100 text-red-800 border-red-300';
+    if (status === 'pending') return 'bg-yellow-100 text-yellow-800 border-yellow-300';
+    return 'bg-gray-100 text-gray-800 border-gray-300';
+  }
+
   useEffect(() => {
     async function getProjectDetail() {
       setLoading(true);  
@@ -130,9 +148,16 @@ function Projectdetail() {
       setWarningMessage("โครงการนี้ยังไม่ได้รับการอนุมัติ ❌");
       console.log("Setting warning modal to true"); 
     } else {
+      // Pre-fill the post_content with project description when opening the modal
+      if (project && project.project_description) {
+        setValue("post_content", project.project_description);
+      }
       setShowModal(true);
     }
   };
+
+  // ตรวจสอบว่าผู้ใช้ปัจจุบันเป็น admin หรือไม่
+  const isAdmin = currentUser?.role === "admin";
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-purple-50 to-white ml-60">
@@ -170,15 +195,21 @@ function Projectdetail() {
 
         {project && (
           <motion.div
-            className="w-full max-w-4xl bg-white rounded-3xl shadow-xl  p-5"
+            className="w-full max-w-4xl bg-white rounded-3xl shadow-xl p-5"
             initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
           >
-            <span className="text-2xl font-extrabold text-green-700 ml-90 py-3.5  ">{project.project_name}</span>
+            <span className="text-2xl font-extrabold text-green-700 ml-90 py-3.5">{project.project_name}</span>
             <div className="space-y-4 text-gray-700 text-base">
               <p><strong>รหัสโครงการ:</strong> {project.project_id}</p>
-              <p><strong>สถานะ:</strong> {project.project_status}</p>
+              <p>
+                <strong>สถานะ:</strong> 
+                <span className={`inline-block py-1 px-3 rounded-full border ${getStatusClass(project.project_status)}`}>
+                  {project.project_status}
+                </span>
+                <i className="fa-solid fa-eye ml-2 text-gray-600">  ดูรายละเอียด</i>
+              </p>
               <p><strong>หน่วยงาน/คณะ:</strong> {project.department}</p>
               <p><strong>สถานที่:</strong> {project.location}</p>
               <p><strong>งบประมาณ:</strong> {project.budget}</p>
@@ -187,15 +218,18 @@ function Projectdetail() {
               <p><strong>รายละเอียด:</strong> {project.project_description}</p>
             </div>
 
-            <motion.button
-              onClick={handlePostClick}
-              className="mt-8 bg-green-700 text-white py-2 px-3 rounded hover:bg-green-900 transition-colors duration-300 shadow-md font-semibold ml-50 "
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              โพสต์กิจกรรม
-              <i className="fa-solid fa-arrow-up-from-bracket ml-2 text-white text-lg"></i>
-            </motion.button>
+            {/* ซ่อนปุ่มโพสต์กิจกรรมเมื่อ user เป็น admin */}
+            {!isAdmin && (
+              <motion.button
+                onClick={handlePostClick}
+                className="mt-8 bg-green-700 text-white py-2 px-3 rounded hover:bg-green-900 transition-colors duration-300 shadow-md font-semibold ml-50"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                โพสต์กิจกรรม
+                <i className="fa-solid fa-arrow-up-from-bracket ml-2 text-white text-lg"></i>
+              </motion.button>
+            )}
 
             {warningMessage && (
               <motion.p
@@ -234,27 +268,44 @@ function Projectdetail() {
             >
               ×
             </button>
-            <h2 className="text-xl font-bold text-purple-800 mb-6 pb-3 border-b border-purple-100 ">สร้างโพสต์กิจกรรม</h2>
+            <h2 className="text-xl font-bold text-purple-800 mb-6 pb-3 border-b border-purple-100">สร้างโพสต์กิจกรรม</h2>
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
               <div>
                 <label className="block text-gray-700 font-semibold mb-2 text-sm">
-                  เนื้อหากิจกรรม<span className="text-red-500">*</span>
+                  เนื้อหากิจกรรม
                 </label>
-                <textarea
-                  {...register("post_content", {
-                    required: "จำเป็นต้องกรอกเนื้อหาโพสต์",
-                    minLength: { value: 10, message: "กรุณากรอกเนื้อหาอย่างน้อย 10 ตัวอักษร" }
-                  })}
-                  className="w-full min-h-[160px] p-3 border border-gray-300 rounded-lg resize-y text-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all shadow-sm"
-                  placeholder="กรุณากรอกเนื้อหากิจกรรม..."
-                />
-                {errors.post_content && (
-                  <p className="text-red-500 text-xs mt-1">{errors.post_content.message}</p>
-                )}
+                <div className="w-full min-h-[160px] p-3 border border-gray-300 rounded-lg text-sm bg-gray-50">
+                  {project?.project_description}
+                  <input 
+                    type="hidden" 
+                    {...register("post_content")} 
+                    value={project?.project_description || ""} 
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-gray-700 font-semibold mb-2 text-sm">สถานที่จัดกิจกรรม</label>
+                <div className="w-full p-3 border border-gray-300 rounded-lg text-sm bg-gray-50">
+                  {project?.location || "-"}
+                </div>
               </div>
 
               <div>
-                <label className="block text-gray-700 font-semibold mb-2 text-sm ">อัพโหลดรูปภาพ</label>
+                <label className="block text-gray-700 font-semibold mb-2 text-sm">วันและเวลา</label>
+                <div className="w-full p-3 border border-gray-300 rounded-lg text-sm bg-gray-50">
+                  {project?.project_datetime ? new Date(project.project_datetime).toLocaleString('th-TH') : "-"}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-gray-700 font-semibold mb-2 text-sm">จำนวนชั่วโมงที่ได้รับ</label>
+                <div className="w-full p-3 border border-gray-300 rounded-lg text-sm bg-gray-50">
+                  {project?.hours || "-"} ชั่วโมง
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-gray-700 font-semibold mb-2 text-sm">อัพโหลดรูปภาพ</label>
                 <input
                   type="file"
                   ref={fileInputRef}
@@ -265,7 +316,7 @@ function Projectdetail() {
                 <motion.button
                   type="button"
                   onClick={handleUploadButtonClick}
-                  className=" mb-4 text-gray-600 py-2 px-3 rounded hover:bg-gray-300 transition-colors duration-300 bg-gray-200"
+                  className="mb-4 text-gray-600 py-2 px-3 rounded hover:bg-gray-300 transition-colors duration-300 bg-gray-200"
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                 >

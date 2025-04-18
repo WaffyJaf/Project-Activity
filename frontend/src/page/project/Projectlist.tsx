@@ -44,7 +44,7 @@ function Projectlist() {
           ประวัติการเปิดโครงการ
         </span>
         {projects.length > 0 ? (
-          <div className="w-full max-w-4xl bg-white rounded-2xl shadow-xl overflow-hidden ml-50">
+          <div className="w-full max-w-5xl bg-white rounded-2xl shadow-xl overflow-hidden ml-50">
             <div className="grid grid-cols-3 gap-20 bg-purple-100 p-4 font-semibold text-gray-800 text-m border-b border-purple-200">
               <div>ชื่อโครงการ</div>
               <div>วันที่สร้าง</div>

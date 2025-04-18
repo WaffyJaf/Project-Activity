@@ -1,6 +1,6 @@
 import axios from "axios";
 
-export interface FormPost{
+export interface FormPost {
   project_id: number;
   post_content: string;
   imge_url: string;
@@ -11,14 +11,13 @@ export const uploadImage = async (file: File): Promise<string | null> => {
   const uploadData = new FormData();
   uploadData.append("image", file);
 
- 
   try {
     const response = await axios.post("http://localhost:3000/event/uploadimage", uploadData, {
       headers: { "Content-Type": "multipart/form-data" },
     });
 
     if (response.status === 200) {
-      return response.data.imageUrl; 
+      return response.data.imageUrl;
     } else {
       console.error("Upload failed:", response.data);
       return null;
@@ -29,8 +28,7 @@ export const uploadImage = async (file: File): Promise<string | null> => {
   }
 };
 
-
-
+// ฟังก์ชันส่งข้อมูลโพสต์ไปยัง API
 export const submitFormToAPI = async (formData: FormPost) => {
   try {
     const response = await axios.post("http://localhost:3000/event/postevent", formData, {
@@ -38,7 +36,6 @@ export const submitFormToAPI = async (formData: FormPost) => {
     });
 
     if (response.status === 200 || response.status === 201) {
-      // แสดงข้อความที่เซิร์ฟเวอร์ส่งกลับมา
       if (response.data.message === "Event post saved successfully") {
         console.log("Form submitted successfully:", response.data);
         return { success: true, message: "Project successfully sent." };
@@ -60,4 +57,3 @@ export const submitFormToAPI = async (formData: FormPost) => {
     }
   }
 };
-

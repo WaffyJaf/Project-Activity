@@ -38,3 +38,18 @@ export async function fetchProjectByID(id: string | undefined): Promise<Project>
   }
 }
 
+
+
+export async function updateProjectStatus(projectId: number, status: string): Promise<Project> {
+  try {
+    const response = await axios.patch<Project>(
+      `http://localhost:3000/project/statusproject/${projectId}`,
+      { project_status: status },
+      { headers: { 'Content-Type': 'application/json' } }
+    );
+    return response.data;
+  } catch (error) {
+    console.error(`เกิดข้อผิดพลาดในการอัพเดทสถานะโครงการ ${projectId}:`, error);
+    throw error;
+  }
+}
