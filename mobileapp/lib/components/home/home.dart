@@ -32,7 +32,7 @@ class Home extends StatelessWidget {
         color: Colors.white,
         fontWeight: FontWeight.normal
       )),
-      backgroundColor: Colors.purple,
+      backgroundColor: Colors.deepPurple,
       actions: [IconButton(
         icon: Icon(IconlyBold.profile),
         color: Colors.white,

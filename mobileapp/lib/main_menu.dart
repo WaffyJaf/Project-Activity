@@ -30,7 +30,8 @@ class _MainMenuState extends State<MainMenu> {
     return Scaffold(
       body: _pages[_selectedIndex], //แสดงหน้าแรก
       bottomNavigationBar: CrystalNavigationBar(
-        backgroundColor: Colors.purple.withValues(alpha: 0.6),
+        backgroundColor: Colors.deepPurple.withValues(alpha: 0.6),
+        
         items: <CrystalNavigationBarItem>[
           //index 0
           CrystalNavigationBarItem(

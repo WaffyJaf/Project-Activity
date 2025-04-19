@@ -14,6 +14,9 @@ model event_posts {
   imge_url              String?                  @db.VarChar(255)
   post_date             DateTime?                @default(now()) @db.Timestamp(0)
   post_status           event_posts_post_status? @default(active)
+  location_post         String?                  @db.VarChar(255)
+  hour_post             Int?
+  post_datetime         DateTime?                @db.DateTime(0)
   project_activity      project_activity?        @relation(fields: [project_id], references: [project_id], onDelete: NoAction, onUpdate: NoAction, map: "event_posts_ibfk_1")
   registration_activity registration_activity[]
 

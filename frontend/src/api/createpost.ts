@@ -4,6 +4,9 @@ export interface FormPost {
   project_id: number;
   post_content: string;
   imge_url: string;
+  location_post: string;
+  post_datetime: string; 
+  hour_post: number;
 }
 
 // ✅ ฟังก์ชันอัปโหลดรูปภาพและคืนค่า URL

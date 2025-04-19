@@ -43,7 +43,7 @@ const storage = multer.diskStorage({
   };
 
   export const eventPost = async (req: Request, res: Response) => {
-    const { project_id, post_content, imge_url } = req.body;
+    const { project_id, post_content, imge_url, location_post, post_datetime, hour_post } = req.body;
   
     if (!project_id || !post_content) {
       return res.status(400).json({ message: "ข้อมูลไม่ครบถ้วน" }); 
@@ -53,9 +53,12 @@ const storage = multer.diskStorage({
      
       const newEvent = await prisma.event_posts.create({
         data: {
-          project_id: Number(project_id), 
+          project_id: Number(project_id),
           post_content,
-          imge_url, 
+          imge_url,
+          location_post,
+          post_datetime: new Date(post_datetime),
+          hour_post: Number(hour_post), 
         },
       });
   
@@ -68,16 +71,15 @@ const storage = multer.diskStorage({
   };
     
   export const registerActivity = async (req: Request, res: Response) => {
-    const { project_id, post_id, student_id, student_name, faculty } = req.body;
+    const {  post_id, student_id, student_name, faculty } = req.body;
   
-    if (!project_id || !post_id || !student_id || !student_name || !faculty) {
+    if (!post_id || !student_id || !student_name || !faculty) {
       return res.status(400).json({ message: "ข้อมูลไม่ครบถ้วน" });
     }
   
     try {
       const newRegister = await prisma.registration_activity.create({
-        data: {
-          project_id: Number(project_id), 
+        data: { 
           post_id: Number(post_id),
           student_id,
           student_name,
@@ -151,6 +153,9 @@ export const getEventActivity = async (req: Request, res: Response) => {
         post_id: true,
         post_content: true,
         post_date: true,
+        post_datetime: true,
+        hour_post: true,
+        location_post:true,
         post_status: true,
         imge_url: true,
       },

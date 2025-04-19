@@ -84,14 +84,14 @@ const Navbar: React.FC = () => {
       {currentUser && (
         <div className="fixed top-2 right-2">
           <Link to="/Projectlist" className="text-3xl p-4 font-bold no-underline" style={{ textDecoration: 'none' }}>
-            <i className="fa-solid fa-envelope text-sky-600 text-4xl"></i>
+            <i className="fa-solid fa-envelope text-purple-800 text-4xl"></i>
           </Link>
 
                 {/* User Dropdown ข้อมูลผู้ใช้ */}
 <div className="relative inline-block">
   <button
     onClick={handleUserClick}
-    className="p-3 text-sky-600 hover:text-purple-900 focus:outline-none transition-colors duration-200"
+    className="p-3 text-purple-800 hover:text-purple-900 focus:outline-none transition-colors duration-200"
     aria-label="User Profile"
   >
     <i className="fa-solid fa-circle-user text-4xl"></i>
@@ -145,7 +145,7 @@ const Navbar: React.FC = () => {
       )}
 
       {/* Sidebar */}
-      <div className="fixed top-0 left-0 h-screen w-64 bg-sky-600 text-white shadow-lg p-4">
+      <div className="fixed top-0 left-0 h-screen w-64 bg-purple-800 text-white shadow-lg p-4">
         <div className="flex items-center">
           <Link to="/" className="no-underline" style={{ textDecoration: 'none' }}>
             <img src="/logoup.png" alt="logo" className="w-24" />

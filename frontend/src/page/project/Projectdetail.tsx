@@ -36,6 +36,9 @@ function Projectdetail() {
       project_id: 0,
       post_content: "",
       imge_url: "",
+      location_post: "",
+      post_datetime: "",
+      hour_post: 0,
     },
   });
 
@@ -54,11 +57,13 @@ function Projectdetail() {
 
   const onSubmit: SubmitHandler<FormPost> = async (formData) => {
     try {
-      formData.project_id = Number(id);  
-
-      // Always use the project description as the post content
-      if (project && project.project_description) {
-        formData.post_content = project.project_description;
+      
+      if (project) {
+        formData.project_id = Number(id);
+        formData.post_content = project.project_description || "";
+        formData.location_post = project.location || "";
+        formData.post_datetime = project.project_datetime || "";
+        formData.hour_post = project.hours || 0;
       }
 
       if (fileToUpload.current) {
