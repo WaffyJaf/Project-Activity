@@ -25,8 +25,7 @@ export const createProjectActivity = async (req: Request, res: Response) => {
         location,                                    
         budget,                                  
         hours,
-        project_datetime: projectDate,
-        project_status: 'pending',                
+        project_datetime: projectDate,               
 
       },
     });
@@ -79,7 +78,8 @@ export const updateProjectActivity = async (req: Request, res: Response) => {
     const updatedProject = await prisma.project_activity.update({
       where: { project_id: projectIdNum },
       data: {
-        project_status: { set: project_status as project_activity_project_status }, 
+        project_status: { set: project_status as project_activity_project_status },
+        approval_datetime: new Date(), 
       },
     });
 
@@ -102,6 +102,8 @@ export const getProjectActivity = async(req:Request,res:Response) => {
         project_name: true,
         created_date: true,
         project_status:true,
+        approval_datetime: true,
+        project_datetime: true,
       },
       orderBy:{
         created_date: 'desc',
@@ -139,11 +141,13 @@ export const getProjectActivityByID = async(req: Request,res: Response) => {
         project_id: true,
         project_name: true,
         project_status: true,
+        approval_datetime: true,
         project_description: true,
         department: true,
         location: true,
         budget: true,
         hours: true,
+        created_date: true,
         project_datetime: true,
 
       }  

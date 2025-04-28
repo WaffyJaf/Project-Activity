@@ -6,7 +6,7 @@ import { useParams, useNavigate,  } from "react-router-dom";
 import Navbar from "../../component/navbar";
 import Swal from 'sweetalert2';
 import { motion } from 'framer-motion'; 
-import { useAuth } from "../../context/AuthContext"; // Import AuthContext
+import { useAuth } from "../../context/AuthContext"; 
 
 function Projectdetail() {
   const { id } = useParams<{ id: string }>();
@@ -19,6 +19,8 @@ function Projectdetail() {
   const fileToUpload = useRef<File | null>(null); 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [warningMessage, setWarningMessage] = useState<string | null>(null);
+
+
   
   // ใช้ AuthContext เพื่อเข้าถึงข้อมูล user ปัจจุบัน
   const { currentUser } = useAuth();
@@ -128,6 +130,10 @@ function Projectdetail() {
     return 'bg-gray-100 text-gray-800 border-gray-300';
   }
 
+
+
+ 
+
   useEffect(() => {
     async function getProjectDetail() {
       setLoading(true);  
@@ -163,6 +169,7 @@ function Projectdetail() {
 
   // ตรวจสอบว่าผู้ใช้ปัจจุบันเป็น admin หรือไม่
   const isAdmin = currentUser?.role === "admin";
+
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-purple-50 to-white ml-60">
@@ -213,7 +220,7 @@ function Projectdetail() {
                 <span className={`inline-block py-1 px-3 rounded-full border ${getStatusClass(project.project_status)}`}>
                   {project.project_status}
                 </span>
-                <i className="fa-solid fa-eye ml-2 text-gray-600">  ดูรายละเอียด</i>
+                
               </p>
               <p><strong>หน่วยงาน/คณะ:</strong> {project.department}</p>
               <p><strong>สถานที่:</strong> {project.location}</p>

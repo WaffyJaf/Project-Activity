@@ -99,29 +99,17 @@ const storage = multer.diskStorage({
     const { post_id } = req.params;
   
     try {
-      // ตรวจสอบว่า post_id เป็นตัวเลขหรือไม่
+      // ตรวจสอบว่า post_id เป็นตัวเลข
       const postId = Number(post_id);
       if (isNaN(postId)) {
-        return res.status(400).json({ message: "ID โครงการต้องเป็นตัวเลข" });
+        return res.status(400).json({ message: "ID กิจกรรมต้องเป็นตัวเลข" });
       }
   
-      // ดึงข้อมูลจาก registration_activity ตาม post_id
-      const getregis = await prisma.registration_activity.findMany({
-        where: {
-          post_id: postId, 
-        },
-      });
-  
-      if (getregis.length === 0) {
-        return res.status(404).json({ message: "ไม่พบข้อมูลผู้ลงทะเบียน" });
-      }
-  
-      // ดึงข้อมูล project_activity ตาม post_id
-      const getprojectid = await prisma.registration_activity.findMany({
-        where: {
-          post_id: postId, // ใช้ post_id ในการค้นหา
-        },
+      // ดึงข้อมูลผู้ลงทะเบียนจาก registration_activity
+      const registrations = await prisma.registration_activity.findMany({
+        where: { post_id: postId },
         select: {
+          register_id: true,
           post_id: true,
           student_id: true,
           student_name: true,
@@ -129,20 +117,13 @@ const storage = multer.diskStorage({
         },
       });
   
-      if (!getprojectid) {
-        return res.status(404).json({ message: "ไม่พบข้อมูลโครงการที่เกี่ยวข้อง" });
-      }
-  
-      // ส่งผลลัพธ์ข้อมูลผู้ลงทะเบียนพร้อมข้อมูลโครงการ
-      res.status(200).json({ registrations: getregis, projectDetails: getprojectid });
+      // คืน array ว่างหากไม่มีผู้ลงทะเบียน
+      return res.status(200).json(registrations);
     } catch (error) {
-      console.error("!!! Error fetching registrations !!!", error);
-      return res.status(500).json({ message: "เกิดข้อผิดพลาดในการดึงข้อมูล", error });
-    } finally {
-      await prisma.$disconnect();
+      console.error("Error fetching registrations:", error);
+      return res.status(500).json({ message: "เกิดข้อผิดพลาดในการดึงข้อมูลผู้ลงทะเบียน" });
     }
   };
-  
   
   
 
@@ -244,6 +225,77 @@ export const deleteEvent = async (req: Request, res: Response) => {
   }
 };
 
+export const deleteRegis = async (req: Request, res: Response) => {
+  const { register_id } = req.params;
+
+  
+  if (!register_id) {
+    return res.status(400).json({ message: "ไม่พบ register_id ในคำขอ" });
+  }
+
+  const parsedRegisterId = Number(register_id);
+  if (isNaN(parsedRegisterId)) {
+    return res.status(400).json({ message: "register_id ต้องเป็นตัวเลขที่ถูกต้อง" });
+  }
+
+  try {
+    
+    const existingEvent = await prisma.registration_activity.findUnique({
+      where: { register_id: parsedRegisterId },
+    });
+
+    if (!existingEvent) {
+      return res.status(404).json({ message: "ไม่พบการลงทะเบียนที่ต้องการลบ" });
+    }
+
+    
+    await prisma.registration_activity.delete({
+      where: { register_id: parsedRegisterId },
+    });
+
+    return res.status(200).json({ message: "ลบการลงทะเบียนเรียบร้อย" });
+  } catch (error) {
+    console.error("เกิดข้อผิดพลาดในการลบการลงทะเบียน:", error);
+    return res.status(500).json({ message: "เกิดข้อผิดพลาดในการลบการลงทะเบียน" });
+  }
+};
+
+export const addRegis = async (req: Request, res: Response) => {
+  const { post_id, student_id, student_name, faculty } = req.body;
+
+  if (!post_id || !student_id?.trim() || !student_name?.trim() || !faculty?.trim()) {
+    return res.status(400).json({ message: "กรุณาระบุข้อมูลที่จำเป็นทั้งหมด: post_id, รหัสนักศึกษา, ชื่อ-นามสกุล, คณะ" });
+  }
+
+  try {
+    const parsedPostId = Number(post_id);
+    if (isNaN(parsedPostId)) {
+      return res.status(400).json({ message: "post_id ต้องเป็นตัวเลขที่ถูกต้อง" });
+    }
+
+    // ตรวจสอบว่ารหัสนักศึกษาเป็นตัวเลข 8 หลัก (ถ้าต้องการ)
+    if (!/^\d{8}$/.test(student_id)) {
+      return res.status(400).json({ message: "รหัสนักศึกษาต้องเป็นตัวเลข 8 หลัก" });
+    }
+
+    const newRegistration = await prisma.registration_activity.create({
+      data: {
+        post_id: parsedPostId,
+        student_id,
+        student_name,
+        faculty,
+      },
+    });
+
+    return res.status(201).json({
+      message: "เพิ่มผู้ลงทะเบียนเรียบร้อย",
+      data: newRegistration,
+    });
+  } catch (error) {
+    console.error("เกิดข้อผิดพลาดในการเพิ่มผู้ลงทะเบียน:", error);
+    return res.status(500).json({ message: "เกิดข้อผิดพลาดในการเพิ่มผู้ลงทะเบียน" });
+  }
+};
 
 
 

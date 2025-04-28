@@ -11,6 +11,7 @@ export interface Project {
   budget: string;
   hours: number;
   project_datetime: string;
+  approval_datetime: string;
 }
 
 const API_URL = "http://localhost:3000/project/getproject"

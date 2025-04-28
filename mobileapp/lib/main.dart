@@ -1,25 +1,27 @@
+// lib/main.dart
 import 'package:flutter/material.dart';
-import 'package:mobileapp/main_menu.dart';
-import 'package:flutter/services.dart'; 
+import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
+import 'providers/user_provider.dart';
+import 'login.dart';
+import 'main_menu.dart';
+import 'services/login_api.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // ตั้งค่าให้แอปทำงานในโหมดเต็มหน้าจอและล็อก orientation เป็น portrait
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
   ]);
 
-  // ตั้งค่าสีของ status bar และ navigation bar 
   SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
     statusBarColor: Colors.transparent,
-    statusBarIconBrightness: Brightness.dark, 
-    systemNavigationBarColor: Colors.white, 
+    statusBarIconBrightness: Brightness.dark,
+    systemNavigationBarColor: Colors.white,
     systemNavigationBarIconBrightness: Brightness.dark,
   ));
 
- 
   runApp(const MyApp());
 }
 
@@ -28,23 +30,62 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Menu Example',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-        visualDensity: VisualDensity.adaptivePlatformDensity,
-        fontFamily: 'Roboto',
-        textTheme: const TextTheme(
-          bodyLarge: TextStyle(fontSize: 16.0),
-          bodyMedium: TextStyle(fontSize: 14.0),
+    return ChangeNotifierProvider(
+      create: (context) => UserProvider(),
+      child: MaterialApp(
+        title: 'Flutter Menu Example',
+        theme: ThemeData(
+          primarySwatch: Colors.blue,
+          visualDensity: VisualDensity.adaptivePlatformDensity,
+          fontFamily: 'Roboto',
+          textTheme: const TextTheme(
+            bodyLarge: TextStyle(fontSize: 16.0),
+            bodyMedium: TextStyle(fontSize: 14.0),
+          ),
         ),
-        
+        debugShowCheckedModeBanner: false,
+        home: const AuthWrapper(),
       ),
-      
-      debugShowCheckedModeBanner: false,
-      // หน้าแรกของแอป
-      home: const MainMenu(),
     );
   }
+}
 
+class AuthWrapper extends StatefulWidget {
+  const AuthWrapper({super.key});
+
+  @override
+  _AuthWrapperState createState() => _AuthWrapperState();
+}
+
+class _AuthWrapperState extends State<AuthWrapper> {
+  bool _isLoading = true;
+  bool _isAuthenticated = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkAuth();
+  }
+
+  Future<void> _checkAuth() async {
+    final token = await LoginApi().getToken();
+    if (token != null) {
+      setState(() {
+        _isAuthenticated = true;
+      });
+    }
+    setState(() {
+      _isLoading = false;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+    return _isAuthenticated ? const MainMenu() : const LoginScreen();
+  }
 }

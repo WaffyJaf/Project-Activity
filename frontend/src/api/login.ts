@@ -1,28 +1,16 @@
 import axios from 'axios';
+import {User , UserRole , LoginResponse} from '../type/user'
 
 const API_URL = 'http://localhost:3000/auth';
 
-export type UserRole = 'admin' | 'organizer';
-
-export interface User {
-  id: number;
-  ms_id: string;
-  givenName: string;
-  surname: string;
-  jobTitle: string;
-  department: string;
-  displayName:string;
-  role: UserRole;
-  created_at: Date;
-}
-
-export const loginUser = async (ms_id: string): Promise<User> => {
+export const loginUser = async (data: { msId: string }): Promise<LoginResponse> => {
   try {
-    const response = await axios.post(`${API_URL}/login`, { ms_id });
-    return response.data.user;
-  } catch (error) {
+    const response = await axios.post(`${API_URL}/login`, { ms_id: data.msId });
+    return response.data as LoginResponse;
+  } catch (error: any) {
     console.error('Login API error:', error);
-    throw new Error('Login failed');
+    const errorMessage = error.response?.data?.error || 'Login failed';
+    throw new Error(errorMessage);
   }
 };
 

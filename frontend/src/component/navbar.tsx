@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { UserRole } from '../api/login';
+import { UserRole } from '../type/user';
 
 interface MenuItem {
   path: string;
@@ -15,66 +15,84 @@ interface SubMenuItem {
   path: string;
   label: string;
   allowedRoles: UserRole[];
+  icon?: string;
 }
 
-const Navbar: React.FC = () => {
-  const { currentUser, logout } = useAuth(); // ดึง currentUser และ logout จาก context
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false); // สถานะสำหรับควบคุม Dropdown
+
+const Sidebar: React.FC = () => {
+  const { currentUser, logout } = useAuth();
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const navigate = useNavigate();
 
   const handleUserClick = () => {
-    setIsDropdownOpen((prev) => !prev); // สลับสถานะ Dropdown (เปิด/ปิด)
+    setIsDropdownOpen((prev) => !prev);
   };
 
   const handleDropdownClose = () => {
-    setIsDropdownOpen(false); // ปิด Dropdown
+    setIsDropdownOpen(false);
   };
 
-
+  const handleLogout = () => {
+    logout();
+    handleDropdownClose();
+    navigate('/login');
+  };
 
   const menuItems: MenuItem[] = [
     {
       path: '/',
       label: 'โครงการ',
-      allowedRoles: [ 'organizer'],
-      icon: 'fa-solid fa-file',
+      allowedRoles: ['organizer'],
+      icon: 'fa-solid fa-clipboard-list',
       subMenu: [
-        { path: '/createproject', label: 'เปิดโครงการ', allowedRoles: ['admin', 'organizer'] },
-        { path: '/Projectlist', label: 'ประวัติเปิดโครงการ', allowedRoles: ['admin', 'organizer'] },
+        { path: '/createproject', label: 'เปิดโครงการ', allowedRoles: ['admin', 'organizer'], icon: 'fa-solid fa-plus' },
+        { path: '/Projectlist', label: 'ประวัติเปิดโครงการ', allowedRoles: ['admin', 'organizer'], icon: 'fa-solid fa-list-ul' },
       ],
     },
     {
       path: '/Eventlist',
       label: 'Activity',
-      allowedRoles: [ 'organizer'],
-      icon: 'fa-solid fa-font-awesome',
+      allowedRoles: ['organizer'],
+      icon: 'fa-solid fa-calendar-days',
     },
     {
-      path: '/adminrole',
+      path: '/savehours',
       label: 'บันทึกชั่วโมง',
       allowedRoles: ['admin', 'organizer'],
-      icon: 'fa-solid fa-download',
+      icon: 'fa-solid fa-clock',
     },
     {
       path: '/record',
       label: 'Record',
       allowedRoles: ['admin', 'organizer'],
-      icon: 'fa-solid fa-bars',
+      icon: 'fa-solid fa-file-lines',
       subMenu: [
-        { path: '/registration-list', label: 'รายชื่อลงทะเบียน', allowedRoles: ['admin', 'organizer'] },
-        { path: '/evaluation-summary', label: 'สรุปประเมิน', allowedRoles: ['admin', 'organizer'] },
-        { path: '/search-history', label: 'ค้นหาประวัตินิสิต', allowedRoles: ['admin', 'organizer'] },
+        { path: '/evaluation-summary', label: 'สรุปประเมิน', allowedRoles: ['admin', 'organizer'], icon: 'fa-solid fa-check-double' },
+        { path: '/search-history', label: 'ค้นหาประวัตินิสิต', allowedRoles: ['admin', 'organizer'], icon: 'fa-solid fa-magnifying-glass' },
       ],
     },
     {
-      path: '/',
+      path: '/admin',
       label: 'Admin',
       allowedRoles: ['admin'],
-      icon: 'fa-solid fa-user-tie',
+      icon: 'fa-solid fa-user-shield',
       subMenu: [
-        { path: '/projectstatus', label: 'คำร้องเปิดโครงการ', allowedRoles: ['admin', 'organizer'] },
-        { path: '/adminrole', label: 'กำหนด Role', allowedRoles: ['admin', 'organizer'] },
+        { path: '/projectstatus', label: 'คำร้องเปิดโครงการ', allowedRoles: ['admin', 'organizer'], icon: 'fa-solid fa-inbox' },
+        { path: '/adminrole', label: 'กำหนด Role', allowedRoles: ['admin', 'organizer'], icon: 'fa-solid fa-users-gear' },
       ],
-      
+    },
+
+    {
+      path: '/',
+      label: 'คำร้อง',
+      allowedRoles: ['admin', 'organizer'],
+      icon: 'fa-solid fa-comments',
+      subMenu: [
+        { path: '/projectstatus', label: 'ยื่นคำร้อง', allowedRoles: ['organizer'], icon: 'fa-solid fa-inbox' },
+        { path: '/adminrole', label: 'ตรวจสอบคำร้อง', allowedRoles: ['organizer'], icon: 'fa-solid fa-bars' },
+        { path: '/projectstatus', label: 'คำร้องเปิดโครงการ', allowedRoles: ['admin'], icon: 'fa-solid fa-inbox' },
+        { path: '/changerole', label: 'คำร้องขอเป็นผู้จัดกิจกรรม', allowedRoles: ['admin'], icon: 'fa-solid fa-check' },
+      ],
     },
   ];
 
@@ -83,102 +101,101 @@ const Navbar: React.FC = () => {
       {/* Top-right icons */}
       {currentUser && (
         <div className="fixed top-2 right-2">
-          <Link to="/Projectlist" className="text-3xl p-4 font-bold no-underline" style={{ textDecoration: 'none' }}>
-            <i className="fa-solid fa-envelope text-purple-800 text-4xl"></i>
-          </Link>
+          {/* User Dropdown ข้อมูลผู้ใช้ */}
+          <div className="relative inline-block">
+            <button
+              onClick={handleUserClick}
+              className="p-3 text-purple-800 hover:text-purple-900 focus:outline-none transition-colors duration-200"
+              aria-label="User Profile"
+            >
+              <i className="fa-solid fa-circle-user text-5xl"></i>
+            </button>
 
-                {/* User Dropdown ข้อมูลผู้ใช้ */}
-<div className="relative inline-block">
-  <button
-    onClick={handleUserClick}
-    className="p-3 text-purple-800 hover:text-purple-900 focus:outline-none transition-colors duration-200"
-    aria-label="User Profile"
-  >
-    <i className="fa-solid fa-circle-user text-4xl"></i>
-  </button>
+            {isDropdownOpen && (
+              <div className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-xl border border-gray-100 z-50 transform transition-all duration-300 ease-in-out">
+                {/* Header ส่วนข้อมูลผู้ใช้ */}
+                <div className="p-6 border-b border-gray-100">
+                  <span className="text-lg font-semibold text-purple-800 mb-3 ml-25">ข้อมูลผู้ใช้</span>
+                  <div className="space-y-4 mt-3">
+                    <p className="text-sm text-gray-600 ">
+                      <span className="font-medium text-gray-800">รหัสนิสิต:</span>{' '}
+                      <span className="text-gray-900">{currentUser.ms_id}</span>
+                    </p>
+                    <p className="text-sm text-gray-600">
+                      <span className="font-medium text-gray-800">ชื่อผู้ใช้:</span>{' '}
+                      <span className="text-gray-900">{currentUser.displayName}</span>
+                    </p>
+                    <p className="text-sm text-gray-600">
+                      <span className="font-medium text-gray-800">ตำแหน่ง:</span>{' '}
+                      <span className="text-gray-900">{currentUser.jobTitle}</span>
+                    </p>
+                    <p className="text-sm text-gray-600">
+                      <span className="font-medium text-gray-800">หน่วยงาน:</span>{' '}
+                      <span className="text-gray-900">{currentUser.department}</span>
+                    </p>
+                    <p className="text-sm text-gray-600">
+                      <span className="font-medium text-green-600">Role:</span>{' '}
+                      <span className="text-gray-900">{currentUser.role}</span>
+                    </p>
+                  </div>
+                </div>
 
-  {isDropdownOpen && (
-    <div className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-xl border border-gray-100 z-50 transform transition-all duration-300 ease-in-out">
-      {/* Header ส่วนข้อมูลผู้ใช้ */}
-      <div className="p-6 border-b border-gray-100">
-        <span className="text-lg font-semibold text-purple-800 mb-3 ml-25">ข้อมูลผู้ใช้</span>
-        <div className="space-y-4 mt-3">
-          <p className="text-sm text-gray-600 ">
-            <span className="font-medium text-gray-800">รหัสนิสิต:</span>{' '}
-            <span className="text-gray-900">{currentUser.ms_id}</span>
-          </p>
-          <p className="text-sm text-gray-600">
-            <span className="font-medium text-gray-800">ชื่อผู้ใช้:</span>{' '}
-            <span className="text-gray-900">{currentUser.displayName}</span>
-          </p>
-          <p className="text-sm text-gray-600">
-            <span className="font-medium text-gray-800">ตำแหน่ง:</span>{' '}
-            <span className="text-gray-900">{currentUser.jobTitle}</span>
-          </p>
-          <p className="text-sm text-gray-600">
-            <span className="font-medium text-gray-800">หน่วยงาน:</span>{' '}
-            <span className="text-gray-900">{currentUser.department}</span>
-          </p>
-          <p className="text-sm text-gray-600">
-            <span className="font-medium text-green-600">Role:</span>{' '}
-            <span className="text-gray-900">{currentUser.role}</span>
-          </p>
-
-        </div>
-      </div>
-
-      {/* ปุ่มออกจากระบบ */}
-      <button
-        onClick={() => {
-          logout();
-          handleDropdownClose();
-        }}
-        className="w-full text-left px-6 py-4 text-sm text-gray-700 hover:bg-gray-50 hover:text-purple-700 focus:outline-none transition-colors duration-200 rounded-b-xl flex items-center"
-      >
-        <i className="fa-solid fa-sign-out-alt mr-2 text-gray-500"></i>
-        ออกจากระบบ
-      </button>
-    </div>
-  )}
-</div>
+                {/* ปุ่มออกจากระบบ */}
+                <button
+                  onClick={handleLogout}
+                  className="w-full text-left px-6 py-4 text-sm text-gray-700 hover:bg-gray-50 hover:text-purple-700 focus:outline-none transition-colors duration-200 rounded-b-xl flex items-center"
+                >
+                  <i className="fa-solid fa-sign-out-alt mr-2 text-gray-500"></i>
+                  ออกจากระบบ
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       )}
 
       {/* Sidebar */}
-      <div className="fixed top-0 left-0 h-screen w-64 bg-purple-800 text-white shadow-lg p-4">
-        <div className="flex items-center">
+      <div className="fixed top-0 left-0 h-screen w-64 bg-purple-800 text-white shadow-lg">
+        {/* Header/Logo */}
+        <div className="px-4 py-3 flex items-center border-b border-purple-700">
           <Link to="/" className="no-underline" style={{ textDecoration: 'none' }}>
-            <img src="/logoup.png" alt="logo" className="w-24" />
+            <img src="/logoup.png" alt="logo" className="w-16 h-14" />
           </Link>
-          <span className="text-3xl ml-2 font-bold">MENU</span>
+          <span className="text-2xl ml-2 font-bold text-white">MENU</span>
         </div>
 
-        <ul className="mt-8">
+        {/* Menu Items */}
+        <ul className="mt-6 px-2">
           {currentUser ? (
             menuItems.map((item) =>
               item.allowedRoles.includes(currentUser.role) ? (
-                <li key={item.path} className="relative group py-4">
+                <li key={item.path} className="relative group mb-2">
                   <Link
                     to={item.path}
-                    className="flex items-center text-xl font-bold text-white p-2 hover:bg-purple-950 no-underline"
+                    className="flex items-center justify-between text-xl font-medium text-white py-4 px-4 rounded-md hover:bg-purple-950 transition-colors duration-200 no-underline"
                     style={{ textDecoration: 'none' }}
                   >
-                    <i className={`${item.icon} mr-3`}></i> {item.label}
+                    <div className="flex items-center">
+                      <i className={`${item.icon} mr-3`}></i>
+                      <span>{item.label}</span>
+                    </div>
                     {item.subMenu && (
-                      <i className="fa-solid fa-play absolute right-4 text-xs top-1/2 transform -translate-y-1/2"></i>
+                      <i className="fa-solid fa-angle-right text-sm"></i>
                     )}
                   </Link>
+                  
                   {item.subMenu && (
-                    <ul className="hidden group-hover:block absolute left-full top-0 bg-purple-800 border border-purple-700 shadow-lg rounded-lg p-2 w-max transition-all duration-300">
+                    <ul className="hidden group-hover:block absolute left-full top-0 bg-purple-800 shadow-lg rounded-md p-2 w-53 z-40">
                       {item.subMenu.map((subItem) =>
                         subItem.allowedRoles.includes(currentUser.role) ? (
                           <li key={subItem.path}>
                             <Link
                               to={subItem.path}
-                              className="block p-2 text-white hover:bg-purple-950 rounded no-underline"
+                              className="flex items-center py-2 px-2 text-white hover:bg-purple-950 rounded-md transition-colors duration-200 no-underline"
                               style={{ textDecoration: 'none' }}
                             >
-                              {subItem.label}
+                              <i className={`${subItem.icon} mr-3`}></i>
+                              <span>{subItem.label}</span>
                             </Link>
                           </li>
                         ) : null
@@ -189,20 +206,26 @@ const Navbar: React.FC = () => {
               ) : null
             )
           ) : (
-            <li className="py-4">
+            <li className="mb-2">
               <Link
                 to="/login"
-                className="flex items-center text-xl font-bold text-white p-2 hover:bg-purple-950 no-underline"
+                className="flex items-center text-xl font-medium text-white py-3 px-4 rounded-md hover:bg-purple-700 transition-colors duration-200 no-underline"
                 style={{ textDecoration: 'none' }}
               >
-                <i className="fa-solid fa-sign-in-alt mr-3"></i> Login
+                <i className="fa-solid fa-sign-in-alt mr-3"></i>
+                <span>Login</span>
               </Link>
             </li>
           )}
         </ul>
       </div>
+
+      {/* Main content area with padding to accommodate sidebar */}
+      <div className="ml-64">
+        {/* Your page content goes here */}
+      </div>
     </>
   );
 };
 
-export default Navbar;
+export default Sidebar;

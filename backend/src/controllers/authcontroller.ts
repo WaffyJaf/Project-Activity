@@ -1,5 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import { Request, Response } from 'express';
+import { randomBytes } from 'crypto';
+import jwt from 'jsonwebtoken';
 
 const prisma = new PrismaClient();
 export default prisma;
@@ -19,34 +21,55 @@ export interface User {
   created_at: Date;
 }
 
+const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret';
+
+function generateQrCodeId() {
+  return randomBytes(8).toString('hex');
+}
+
 export const login = async (req: Request, res: Response) => {
   try {
     const { ms_id } = req.body;
 
+    console.log('Received request body:', req.body); // Debug: ตรวจสอบ request body
+
+    // Validate ms_id
     if (!ms_id) {
-      return res.status(400).json({ message: 'MS_ID is required' });
+      return res.status(400).json({ error: 'MS_ID is required' });
     }
 
-    // ค้นหาผู้ใช้หรือสร้างใหม่ถ้ายังไม่มี
+    if (typeof ms_id !== 'string' || ms_id.trim().length === 0) {
+      return res.status(400).json({ error: 'Invalid MS_ID format' });
+    }
+
+    // ค้นหาผู้ใช้หรือสร้างใหม่
     let user = await prisma.users_up.findUnique({ where: { ms_id } });
 
     if (!user) {
       user = await prisma.users_up.create({
         data: {
           ms_id,
-          givenName: `User ${ms_id}`,
-          surname: 'Unknown',
+          givenName: `NATTITA `,
+          surname: 'DERAI',
           jobTitle: 'Student',
-          department: 'Technology',
-          displayName: `User ${ms_id}`,
-          role: 'user',
+          department: 'ict',
+          displayName: `NATTITA DERAI `,
+          role: 'organizer',
+          qrCodeId: generateQrCodeId(),
         },
       });
     }
 
+    // สร้าง JWT token
+    const token = jwt.sign(
+      { id: user.id, ms_id: user.ms_id, role: user.role },
+      JWT_SECRET,
+      { expiresIn: '1h' }
+    );
+
     // ส่งข้อมูลผู้ใช้กลับไป
     return res.status(200).json({
-      message: 'Login successful',
+      token,
       user: {
         id: user.id,
         ms_id: user.ms_id,
@@ -55,16 +78,16 @@ export const login = async (req: Request, res: Response) => {
         jobTitle: user.jobTitle ?? '',
         department: user.department ?? '',
         displayName: user.displayName ?? '',
-        role: user.role as UserRole,
-        created_at: user.created_at ?? new Date(),
+        role: user.role,
+        qrCodeId: user.qrCodeId ?? '',
+        created_at: user.created_at ? user.created_at.toISOString() : new Date().toISOString(),
       },
     });
-  } catch (error) {
-    console.error(error);
-    return res.status(500).json({ message: 'Internal server error' });
+  } catch (error: any) {
+    console.error('Login error:', error);
+    return res.status(500).json({ error: error.message || 'Internal server error' });
   }
 };
-
 
 
 

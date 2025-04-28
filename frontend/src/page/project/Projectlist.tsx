@@ -3,9 +3,12 @@ import { Link } from 'react-router-dom';
 import { fetchProjects } from "../../api/projectget";
 import { Project } from "../../api/projectget";
 import Navbar from "../../component/navbar";
+import { motion } from 'framer-motion'; 
 
 function Projectlist() {
   const [projects, setProjects] = useState<Project[]>([]);
+  const [showProcessModal, setShowProcessModal] = useState(false);
+  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
 
   useEffect(() => {
     async function getProjects() {
@@ -36,6 +39,43 @@ function Projectlist() {
     }
   }
 
+  const getStatusDetails = (status: string) => {
+    const statusMap: Record<string, { icon: string, color: string, bg: string }> = {
+      'approved': { icon: 'fa-solid fa-check-circle', color: 'text-green-600', bg: 'bg-green-50' },
+      'pending': { icon: 'fa-solid fa-clock', color: 'text-amber-600', bg: 'bg-amber-50' },
+      'rejected': { icon: 'fa-solid fa-exclamation-circle', color: 'text-red-600', bg: 'bg-red-50' },
+      'default': { icon: 'fa-solid fa-bookmark', color: 'text-blue-600', bg: 'bg-blue-50' }
+    };
+  
+    const { icon, color, bg } = statusMap[status] || statusMap['default'];
+  
+    return {
+      icon: <i className={`${icon} ${color} ${bg} mr-2`} style={{ fontSize: 20 }} />,
+      color,
+      bg
+    };
+  };
+
+  const handleViewProcess = (project: Project) => {
+    setSelectedProject(project);
+    setShowProcessModal(true);
+  };
+
+  const formatDate = (dateString: string | undefined) => {
+    if (!dateString) return "-";
+    try {
+      return new Date(dateString).toLocaleString('th-TH', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } catch (e) {
+      return "-";
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-purple-50 to-white">
       <Navbar />
@@ -48,7 +88,7 @@ function Projectlist() {
             <div className="grid grid-cols-3 gap-20 bg-purple-100 p-4 font-semibold text-gray-800 text-m border-b border-purple-200">
               <div>ชื่อโครงการ</div>
               <div>วันที่สร้าง</div>
-              <div className="text-center">สถานะ</div>
+              <div className="text-center mr-30">สถานะ</div>
             </div>
             <div className="divide-y divide-gray-200">
               {projects.map((item) => (
@@ -65,8 +105,9 @@ function Projectlist() {
                     {new Date(item.created_date).toLocaleDateString()}
                   </div>
                   <div className="flex justify-between items-center px-4">
+                    
                     <span
-                      className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border ml-7 ${getStatusClass(item.project_status)}`}
+                      className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border ml-ุ ${getStatusClass(item.project_status)}`}
                     >
                       {getThaiStatus(item.project_status)}
                       {item.project_status === 'approved' && (
@@ -78,6 +119,12 @@ function Projectlist() {
                       {item.project_status === 'pending' && (
                         <i className="fa-solid fa-hourglass-start ml-2 text-yellow-800"></i>
                       )}
+                       <i
+                        className="fa-solid fa-eye ml-2 text-gray-600 cursor-pointer hover:text-red-950"
+                        onClick={() => handleViewProcess(item)}
+                      >
+                        <span className="ml-2 hover:underline">รายละเอียด</span>
+                      </i>
                     </span>
                     <Link to={`/Projectdetail/${item.project_id}`}>
                       <i className="fa-solid fa-bars text-gray-700 hover:text-purple-800 fa-xl"></i>
@@ -91,6 +138,84 @@ function Projectlist() {
           <p className="text-lg text-gray-600 animate-pulse">กำลังโหลดข้อมูล...</p>
         )}
       </div>
+
+      {/* New Process Modal */}
+      {showProcessModal && selectedProject && (
+        <motion.div
+          className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 backdrop-blur-sm"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          <motion.div
+            className="bg-white p-6 rounded-2xl w-[95%] max-w-2xl shadow-2xl max-h-[90vh] overflow-y-auto animate-slideIn relative"
+            initial={{ scale: 0.8, y: -50 }}
+            animate={{ scale: 1, y: 0 }}
+            exit={{ scale: 0.8, y: -50 }}
+            transition={{ duration: 0.4 }}
+          >
+            {/* Header */}
+            <div className="py-6 px-6">
+              <div className="flex justify-between items-center">
+                <h2 className="text-xl font-bold text-gray-600 pb-3 border-b border-purple-100">
+                  ตรวจสอบสถานะคำร้อง
+                </h2>
+                <button
+                  onClick={() => setShowProcessModal(false)}
+                  className="text-white hover:bg-white hover:bg-opacity-20 rounded-full h-8 w-8 flex items-center justify-center transition-colors"
+                >
+                  ×
+                </button>
+              </div>
+            </div>
+
+            {/* Content */}
+            <div className="p-6">
+              {/* Status Badge */}
+              {selectedProject.project_status && (
+                <div className={`${getStatusDetails(selectedProject.project_status).bg} ${getStatusDetails(selectedProject.project_status).color} rounded-lg p-3 flex items-center mb-6`}>
+                  {getStatusDetails(selectedProject.project_status).icon}
+                  <span className="font-medium">สถานะปัจจุบัน: {selectedProject.project_status}</span>
+                </div>
+              )}
+
+              {/* Timeline */}
+              <div className="space-y-6">
+                <div className="flex items-start">
+                  <div className="flex-shrink-0 rounded-full p-2 mr-4">
+                    <i className="fa-solid fa-calendar ml-2 text-gray-700 cursor-pointer"></i>
+                  </div>
+                  <div>
+                    <p className="text-x text-gray-500">วันที่สร้างโครงการ</p>
+                    <p className="font-medium text-gray-800">{formatDate(selectedProject.created_date)}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start">
+                  <div className="flex-shrink-0 rounded-full p-2 mr-4">
+                    <i className="fa-solid fa-square-check ml-2 text-gray-700 cursor-pointer"></i>
+                  </div>
+                  <div>
+                    <p className="text-x text-gray-500">วันที่อนุมัติโครงการ</p>
+                    <p className="font-medium text-gray-800">{formatDate(selectedProject.approval_datetime)}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="bg-gray-50 px-6 py-4 border-t border-gray-100">
+              <button
+                onClick={() => setShowProcessModal(false)}
+                className="w-full bg-green-700 text-white py-2 rounded hover:bg-green-900 transition-all font-medium"
+              >
+                ปิด
+              </button>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
     </div>
   );
 }

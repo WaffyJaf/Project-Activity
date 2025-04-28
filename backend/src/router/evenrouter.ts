@@ -1,5 +1,5 @@
 import express, { Request, Response } from "express";
-import { eventPost , getEventActivity , uploadImage ,updateEvent, deleteEvent, registerActivity, getregisACtivity } from "../controllers/eventcontroller";
+import { eventPost , getEventActivity , uploadImage ,updateEvent, deleteEvent, registerActivity, getregisACtivity, deleteRegis, addRegis } from "../controllers/eventcontroller";
 
 
 const router = express.Router();
@@ -32,6 +32,12 @@ router.delete("/deletepost/:post_id", async (req: Request, res: Response) => {
   await deleteEvent(req, res); 
 });
 
+router.delete("/deleteregis/:register_id", async (req: Request, res: Response) => {
+  await deleteRegis(req, res); 
+});
 
+router.post("/addregis", async (req: Request, res: Response) => {
+  await addRegis(req, res);
+});
 
 export default router;

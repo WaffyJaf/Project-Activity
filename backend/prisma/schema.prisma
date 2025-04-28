@@ -34,6 +34,7 @@ model project_activity {
   created_date          DateTime?                       @default(now()) @db.Timestamp(0)
   project_status        project_activity_project_status @default(pending)
   project_datetime      DateTime?                       @db.DateTime(0)
+  approval_datetime     DateTime?                       @db.DateTime(0)
   event_posts           event_posts[]
   registration_activity registration_activity[]
 }
@@ -41,10 +42,10 @@ model project_activity {
 model registration_activity {
   register_id      Int               @id @default(autoincrement())
   post_id          Int?
-  project_id       Int?
   student_id       String            @db.Char(9)
   student_name     String            @db.VarChar(255)
   faculty          String            @db.VarChar(255)
+  project_id       Int?
   event_posts      event_posts?      @relation(fields: [post_id], references: [post_id], onDelete: NoAction, onUpdate: NoAction, map: "registration_activity_ibfk_1")
   project_activity project_activity? @relation(fields: [project_id], references: [project_id], onDelete: NoAction, onUpdate: NoAction, map: "registration_activity_ibfk_2")
 
@@ -62,6 +63,7 @@ model users_up {
   jobTitle    String?   @db.VarChar(255)
   department  String?   @db.VarChar(255)
   displayName String?   @db.VarChar(255)
+  qrCodeId    String?   @unique(map: "qrCodeId") @db.VarChar(255)
 }
 
 enum event_posts_post_status {
