@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { updateUserRole, getUsers } from '../api/login';
-import { User, UserRole } from '../api/login';
+import { User, UserRole } from '../type/user';
 import Swal from 'sweetalert2';
 import Navbar from '../component/navbar';
 
@@ -12,7 +12,8 @@ const AdminRoleManager: React.FC = () => {
 
   const roleOptions: { value: UserRole; label: string }[] = [
     { value: 'admin', label: 'ผู้ดูแลระบบ' },
-    { value: 'organizer', label: 'ผู้จัดกิจกรรม' },
+    { value: 'organizer', label: 'ผู้จัดกิจกรรม' }, 
+    { value: 'user', label: 'นักศึกษา' },
   ];
 
   useEffect(() => {
@@ -37,33 +38,36 @@ const AdminRoleManager: React.FC = () => {
     }
   };
 
-  const handleRoleChange = async (userId: number, newRole: UserRole) => {
-    try {
-      setLoading(true);
-      await updateUserRole(userId, newRole);
-      setUsers(users.map(user => 
-        user.id === userId ? { ...user, role: newRole } : user
-      ));
-      setLoading(false);
-      const roleLabel = roleOptions.find(role => role.value === newRole)?.label || newRole;
-      Swal.fire({
-        icon: 'success',
-        title: 'สำเร็จ!',
-        text: `อัพเดทบทบาทเป็น ${roleLabel} เรียบร้อยแล้ว`,
-        timer: 1500,
-        showConfirmButton: false,
-      });
-    } catch (err) {
-      setError('ไม่สามารถอัพเดทบทบาทได้');
-      setLoading(false);
-      Swal.fire({
-        icon: 'error',
-        title: 'เกิดข้อผิดพลาด',
-        text: 'ไม่สามารถอัพเดทบทบาทได้',
-        confirmButtonColor: '#9333ea',
-      });
-    }
-  };
+ const handleRoleChange = async (user: User, newRole: UserRole) => {
+  try {
+    setLoading(true);
+    
+    await updateUserRole(user.ms_id, newRole); //ส่งไป backend
+    
+    setUsers(users.map(u => 
+      u.id === user.id ? { ...u, role: newRole } : u
+    ));
+    
+    setLoading(false);
+    const roleLabel = roleOptions.find(role => role.value === newRole)?.label || newRole;
+    Swal.fire({
+      icon: 'success',
+      title: 'สำเร็จ!',
+      text: `อัพเดทบทบาทเป็น ${roleLabel} เรียบร้อยแล้ว`,
+      timer: 1500,
+      showConfirmButton: false,
+    });
+  } catch (err) {
+    setError('ไม่สามารถอัพเดทบทบาทได้');
+    setLoading(false);
+    Swal.fire({
+      icon: 'error',
+      title: 'เกิดข้อผิดพลาด',
+      text: 'ไม่สามารถอัพเดทบทบาทได้',
+      confirmButtonColor: '#9333ea',
+    });
+  }
+};
 
   if (loading) {
     return (
@@ -85,7 +89,7 @@ const AdminRoleManager: React.FC = () => {
     <>
       <Navbar />
       <div className="min-h-screen bg-gradient-to-b from-purple-50 to-white py-12 px-4 ml-50">
-        <div className="container">
+        <div className="mx-auto px-4 max-w-6xl">
           <span className="text-3xl font-bold text-gray-500 mb-8 text-center drop-shadow-md block">
             จัดการบทบาทผู้ใช้
           </span>
@@ -129,7 +133,7 @@ const AdminRoleManager: React.FC = () => {
                       <td className="p-4">
                         <select
                           value={user.role}
-                          onChange={(e) => handleRoleChange(user.id, e.target.value as UserRole)}
+                          onChange={(e) => handleRoleChange(user, e.target.value as UserRole)}
                           disabled={loading}
                           className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-purple-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
                         >

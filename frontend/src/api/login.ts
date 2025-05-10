@@ -14,16 +14,19 @@ export const loginUser = async (data: { msId: string }): Promise<LoginResponse> 
   }
 };
 
-export const updateUserRole = async (userId: number, role: UserRole): Promise<User> => {
+export const updateUserRole = async (msId: string, role: UserRole): Promise<User> => {
   try {
-    const response = await axios.post(`${API_URL}/updaterole`, {
-      userId,
-      role,
+    console.log('sending:', { userId: msId, role });
+    
+    const response = await axios.post(`http://localhost:3000/auth/updaterole`, {
+      userId: msId,  
+      role
     });
-    return response.data.user; 
-  } catch (error) {
+    
+    return response.data.user;
+  } catch (error: any) {
     console.error('Update role API error:', error);
-    throw new Error('Failed to update role');
+    throw new Error(error.response?.data?.message || 'Failed to update role');
   }
 };
 

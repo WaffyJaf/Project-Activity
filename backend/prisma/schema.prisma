@@ -35,6 +35,7 @@ model project_activity {
   project_status        project_activity_project_status @default(pending)
   project_datetime      DateTime?                       @db.DateTime(0)
   approval_datetime     DateTime?                       @db.DateTime(0)
+  activity_record       activity_record[]
   event_posts           event_posts[]
   registration_activity registration_activity[]
 }
@@ -54,16 +55,29 @@ model registration_activity {
 }
 
 model users_up {
-  id          Int       @id @default(autoincrement())
-  ms_id       String?   @unique(map: "ms_id") @db.VarChar(255)
-  role        String?   @default("user") @db.VarChar(50)
-  created_at  DateTime? @default(now()) @db.Timestamp(0)
-  givenName   String?   @db.VarChar(255)
-  surname     String?   @db.VarChar(255)
-  jobTitle    String?   @db.VarChar(255)
-  department  String?   @db.VarChar(255)
-  displayName String?   @db.VarChar(255)
-  qrCodeId    String?   @unique(map: "qrCodeId") @db.VarChar(255)
+  id              Int
+  ms_id           String            @id @unique(map: "ms_id") @db.VarChar(255)
+  role            String?           @default("user") @db.VarChar(50)
+  created_at      DateTime?         @default(now()) @db.Timestamp(0)
+  givenName       String?           @db.VarChar(255)
+  surname         String?           @db.VarChar(255)
+  jobTitle        String?           @db.VarChar(255)
+  department      String?           @db.VarChar(255)
+  displayName     String?           @db.VarChar(255)
+  qrCodeId        String?           @unique(map: "qrCodeId") @db.VarChar(255)
+  activity_record activity_record[]
+}
+
+model activity_record {
+  id               Int              @id @default(autoincrement())
+  project_id       Int
+  ms_id            String           @db.VarChar(10)
+  joined_at        DateTime?        @default(now()) @db.DateTime(0)
+  project_activity project_activity @relation(fields: [project_id], references: [project_id], onDelete: Cascade, onUpdate: NoAction, map: "activity_record_ibfk_1")
+  users_up         users_up         @relation(fields: [ms_id], references: [ms_id], onDelete: Cascade, onUpdate: NoAction, map: "activity_record_ibfk_2")
+
+  @@index([ms_id], map: "ms_id")
+  @@index([project_id], map: "project_id")
 }
 
 enum event_posts_post_status {

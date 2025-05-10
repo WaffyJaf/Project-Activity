@@ -16,25 +16,65 @@ class MainMenu extends StatefulWidget {
 }
 
 class _MainMenuState extends State<MainMenu> {
-  var _selectedIndex = 0;
-
-  late List<Widget> _pages;
-
-  @override
-  void initState() {
-    super.initState();
-    _pages = [
-      const Home(),
-      const ScanScreen(),
-      const Center(child: Text("Notify Page", style: TextStyle(fontSize: 24))),
-      const Doc(),
-    ];
-  }
+  int _selectedIndex = 0;
 
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
     });
+  }
+
+  List<Widget> getPagesForRole(String role) {
+    switch (role.toLowerCase()) {  
+      case 'user':
+        return [
+          const Home(),
+          const Center(child: Text("Notify Page", style: TextStyle(fontSize: 24))),
+          const Doc(),
+        ];
+      case 'organizer':
+        return [
+          const Home(),
+          const ScanScreen(),
+          const Center(child: Text("Notify Page", style: TextStyle(fontSize: 24))),
+          const Doc(),
+        ];
+      case 'admin':
+        return [
+          const Home(),
+          const Center(child: Text("จัดการผู้ใช้", style: TextStyle(fontSize: 24))),
+          const Doc(),
+        ];
+      default:
+        return [const Home()];  
+    }
+  }
+
+  List<CrystalNavigationBarItem> getNavItemsForRole(String role) {
+    switch (role.toLowerCase()) {  
+      case 'user':
+        return [
+          CrystalNavigationBarItem(icon: IconlyBold.home, selectedColor: Colors.white),
+          CrystalNavigationBarItem(icon: IconlyBold.notification, selectedColor: Colors.white),
+          CrystalNavigationBarItem(icon: IconlyBold.document, selectedColor: Colors.white),
+        ];
+      case 'organizer':
+        return [
+          CrystalNavigationBarItem(icon: IconlyBold.home, selectedColor: Colors.white),
+          CrystalNavigationBarItem(icon: IconlyBold.scan, selectedColor: Colors.white),
+          CrystalNavigationBarItem(icon: IconlyBold.notification, selectedColor: Colors.white),
+          CrystalNavigationBarItem(icon: IconlyBold.document, selectedColor: Colors.white),
+        ];
+      case 'admin':
+        return [
+          CrystalNavigationBarItem(icon: IconlyBold.home, selectedColor: Colors.white),
+          CrystalNavigationBarItem(icon: IconlyBold.document, selectedColor: Colors.white),
+        ];
+      default:
+        return [
+          CrystalNavigationBarItem(icon: IconlyBold.home, selectedColor: Colors.white),
+        ];
+    }
   }
 
   @override
@@ -53,32 +93,21 @@ class _MainMenuState extends State<MainMenu> {
       );
     }
 
+    final role = user.role.toLowerCase();  
+    final pages = getPagesForRole(role);
+    final navItems = getNavItemsForRole(role);
+
+    final safeIndex = _selectedIndex < pages.length ? _selectedIndex : 0;
+
     return Scaffold(
-      // AppBar removed
-      body: _pages[_selectedIndex],
+      body: pages[safeIndex],
       bottomNavigationBar: CrystalNavigationBar(
-        backgroundColor: Colors.deepPurple.withValues(alpha: 0.6),
-        items: <CrystalNavigationBarItem>[
-          CrystalNavigationBarItem(
-            icon: IconlyBold.home,
-            selectedColor: Colors.white,
-          ),
-          CrystalNavigationBarItem(
-            icon: IconlyBold.scan,
-            selectedColor: Colors.white,
-          ),
-          CrystalNavigationBarItem(
-            icon: IconlyBold.notification,
-            selectedColor: Colors.white,
-          ),
-          CrystalNavigationBarItem(
-            icon: IconlyBold.document,
-            selectedColor: Colors.white,
-          ),
-        ],
+        backgroundColor: Colors.deepPurple.withAlpha(150),
+        items: navItems,
         onTap: _onItemTapped,
-        currentIndex: _selectedIndex,
+        currentIndex: safeIndex,
       ),
     );
   }
 }
+

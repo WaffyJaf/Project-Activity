@@ -127,42 +127,41 @@ const storage = multer.diskStorage({
   
   
 
-export const getEventActivity = async (req: Request, res: Response) => {
-  try {
-    const getevent = await prisma.event_posts.findMany({
-      select: {
-        post_id: true,
-        post_content: true,
-        post_date: true,
-        post_datetime: true,
-        hour_post: true,
-        location_post:true,
-        post_status: true,
-        imge_url: true,
-      },
-      orderBy: {
-        post_date: 'desc', // เรียงลำดับโพสต์จากใหม่ไปเก่า
-      },
-    });
-
-    // ถ้าไม่พบโพสต์กิจกรรมใด ๆ
-    if (getevent.length === 0) {
-      return res.status(404).json({ message: 'ไม่พบ POST กิจกรรม' });
+  export const getEventActivity = async (req: Request, res: Response) => {
+    try {
+      const getevent = await prisma.event_posts.findMany({
+        select: {
+          post_id: true,
+          post_content: true,
+          post_date: true,
+          post_datetime: true,
+          hour_post: true,
+          location_post:true,
+          post_status: true,
+          imge_url: true,
+        },
+        orderBy: {
+          post_date: 'desc', // เรียงลำดับโพสต์จากใหม่ไปเก่า
+        },
+      });
+  
+      // ถ้าไม่พบโพสต์กิจกรรมใด ๆ
+      if (getevent.length === 0) {
+        return res.status(404).json({ message: 'ไม่พบ POST กิจกรรม' });
+      }
+  
+      // ส่งข้อมูลกลับในรูปแบบ JSON
+      return res.status(200).json(getevent);
+    } catch (error) {
+      console.error("เกิดข้อผิดพลาดในการดึงข้อมูลโพสต์:", error);
+  
+      // ถ้ามีข้อผิดพลาดใด ๆ เกิดขึ้น ให้ตอบกลับด้วยสถานะ 500
+      return res.status(500).json({
+        message: 'เกิดข้อผิดพลาดในการดึงข้อมูลโพสต์',
+        error: error instanceof Error ? error.message : error,
+      });
     }
-
-    // ส่งข้อมูลกลับในรูปแบบ JSON
-    return res.status(200).json(getevent);
-  } catch (error) {
-    console.error("เกิดข้อผิดพลาดในการดึงข้อมูลโพสต์:", error);
-
-    // ถ้ามีข้อผิดพลาดใด ๆ เกิดขึ้น ให้ตอบกลับด้วยสถานะ 500
-    return res.status(500).json({
-      message: 'เกิดข้อผิดพลาดในการดึงข้อมูลโพสต์',
-      error: error instanceof Error ? error.message : error,
-    });
-  }
-};
-
+  };
 export const updateEvent = async (req: Request, res: Response) => {
   const { post_id } = req.params;
   const { post_content, post_status } = req.body;

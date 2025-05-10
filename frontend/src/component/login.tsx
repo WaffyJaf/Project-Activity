@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { loginUser } from '../api/login'; // หรือ login.ts
+import { loginUser } from '../api/login';
 import { useAuth } from '../context/AuthContext';
 import Swal from 'sweetalert2';
 import { LoginResponse, User, UserRole } from '../type/user';
@@ -29,7 +29,7 @@ const Login: React.FC = () => {
     setError(null);
 
     try {
-      console.log('Sending msId:', msId); // Debug: ตรวจสอบค่า msId
+      console.log('Sending msId:', msId);
       const response: LoginResponse = await loginUser({ msId });
       console.log('Response:', response);
 
@@ -53,8 +53,8 @@ const Login: React.FC = () => {
 
       Swal.fire({
         icon: 'success',
-        title: 'Login Successful',
-        text: `Welcome back, ${user.displayName}!`,
+        title: 'ล็อกอินสำเร็จ',
+        text: `ยินดีต้อนรับ, ${user.displayName}!`,
         timer: 2000,
         showConfirmButton: false,
       }).then(() => {
@@ -62,11 +62,11 @@ const Login: React.FC = () => {
       });
     } catch (err: any) {
       console.error('Login error:', err);
-      const errorMessage = err.message || 'Invalid MS ID. Please try again.';
+      const errorMessage = err.message || 'MS ID ไม่ถูกต้อง กรุณาลองใหม่อีกครั้ง';
       setError(errorMessage);
       Swal.fire({
         icon: 'error',
-        title: 'Login Failed',
+        title: 'ล็อกอินล้มเหลว',
         text: errorMessage,
       });
     } finally {
@@ -81,76 +81,149 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
-        <h2 className="text-2xl font-bold text-center text-gray-800 mb-6">
-          Login
-        </h2>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              MS ID
-            </label>
-            <input
-              type="text"
-              name="msId"
-              value={msId}
-              onChange={handleChange}
-              onKeyPress={handleKeyPress}
-              required
-              disabled={isLoading}
-              className="mt-1 w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Enter your MS ID (e.g., user123 or user@domain.com)"
-              autoFocus
+    <div className="min-h-screen flex items-center justify-center relative font-kanit">
+      {/* พื้นหลังที่มีการเบลอ */}
+      <div
+        className="absolute inset-0 bg-cover bg-center"
+        style={{
+          backgroundImage: `url('/upp.jpg')`,
+          filter: 'blur(10px)',
+          WebkitFilter: 'blur(10px)',
+          
+        }}
+      ></div>
+
+      {/* Overlay เพื่อให้พื้นหลังดูมืดลง */}
+      <div className="absolute inset-0 bg-black opacity-40"></div>
+
+      {/* เนื้อหา */}
+      <div
+        className="relative flex flex-col md:flex-row rounded-xl shadow-2xl overflow-hidden max-w-4xl w-full mx-4 z-10 animate-fade-in"
+        style={{
+          background: 'rgba(255, 255, 255, 0.05)',
+          border: '1px solid rgba(255, 255, 255, 0.2)',
+        }}
+      >
+        
+        <div className="w-full md:w-1/2 p-8 flex flex-col justify-between bg-white">
+          <div className="text-center">
+            <img
+              src="/uptop.png"
+              alt="UP Logo"
+              className="mx-auto h-20 mb-4 transition-transform duration-300 hover:scale-105"
+              onError={(e) => console.error('Failed to load logo:', e)}
             />
+            <h2 className="text-2xl font-semibold text-gray-800">มหาวิทยาลัยพะเยา</h2>
+            <p className="text-lg text-gray-600 mt-1">UP ACTIVITY</p>
           </div>
-          {error && (
-            <div className="p-3 text-sm text-red-600 bg-red-50 rounded-md">
-              {error}
+
+          <form onSubmit={handleSubmit} className="mt-8 space-y-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                MS ID
+              </label>
+              <input
+                type="text"
+                name="msId"
+                value={msId}
+                onChange={handleChange}
+                onKeyPress={handleKeyPress}
+                required
+                disabled={isLoading}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-300"
+                placeholder="กรอก MS ID (เช่น user123 หรือ user@domain.com)"
+                autoFocus
+              />
             </div>
-          )}
-          <button
-            type="submit"
-            disabled={isLoading}
-            className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white ${
-              isLoading ? 'bg-blue-300 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'
-            }`}
-          >
-            {isLoading ? (
-              <>
-                <svg
-                  className="w-5 h-5 mr-2 animate-spin"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                  ></circle>
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                  ></path>
-                </svg>
-                Logging in...
-              </>
-            ) : (
-              'Login'
+            {error && (
+              <div className="p-3 text-sm text-red-600 bg-red-50 rounded-lg">
+                {error}
+              </div>
             )}
+            <button
+              type="submit"
+              disabled={isLoading}
+              className={`w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-lg shadow-md text-sm font-medium text-white transition-all duration-300 ${
+                isLoading
+                  ? 'bg-purple-600 cursor-not-allowed'
+                  : 'bg-purple-800 hover:bg-purple-900 hover:shadow-lg'
+              }`}
+            >
+              {isLoading ? (
+                <>
+                  <svg
+                    className="w-5 h-5 mr-2 animate-spin"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
+                  </svg>
+                  กำลังล็อกอิน...
+                </>
+              ) : (
+                'ล็อกอิน'
+              )}
+            </button>
+          </form>
+
+          <div className="mt-6 text-center text-sm text-gray-600">
+            <p>
+              หากลืมรหัส กรุณาติดต่อที่เบอร์{' '}
+              <span className="font-medium text-gray-800">054-466-666 ถึง 6290-6295</span>{' '}
+              (ในวันและเวลาทำการ)
+            </p>
+            <Link
+              to="/register"
+              className="mt-2 block text-purple-700 font-medium hover:underline transition-colors duration-300"
+            >
+              กลับไปหน้า Register
+            </Link>
+          </div>
+        </div>
+
+        {/* ส่วนขวา: ภาพล็อก (เบลอ) */}
+        <div
+          className="w-full md:w-1/2 bg-cover bg-center relative"
+          style={{
+            backgroundImage: `url('/logoup.png')`,
+            backdropFilter: 'blur(10px)',
+            WebkitBackdropFilter: 'blur(10px)',
+            backgroundColor: 'rgba(255, 255, 255, 0.2)',
+          }}
+        >
+          <button
+            onClick={() => navigate('/')}
+            className="absolute top-4 right-4 text-gray-300 hover:text-white transition-colors duration-300"
+          >
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M6 18L18 6M6 6l12 12"
+              ></path>
+            </svg>
           </button>
-        </form>
-        <p className="mt-4 text-center text-sm text-gray-600">
-          Don't have an account?{' '}
-          <Link to="/register" className="text-blue-600 hover:underline">
-            Register
-          </Link>
-        </p>
+        </div>
       </div>
     </div>
   );

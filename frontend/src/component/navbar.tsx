@@ -56,7 +56,7 @@ const Sidebar: React.FC = () => {
       icon: 'fa-solid fa-calendar-days',
     },
     {
-      path: '/savehours',
+      path: '/projectrecord',
       label: 'บันทึกชั่วโมง',
       allowedRoles: ['admin', 'organizer'],
       icon: 'fa-solid fa-clock',
@@ -72,18 +72,15 @@ const Sidebar: React.FC = () => {
       ],
     },
     {
-      path: '/admin',
-      label: 'Admin',
-      allowedRoles: ['admin'],
+      path: '/adminrole',
+      label: 'กำหนด Role',
+      allowedRoles: ['admin', 'organizer'],
       icon: 'fa-solid fa-user-shield',
-      subMenu: [
-        { path: '/projectstatus', label: 'คำร้องเปิดโครงการ', allowedRoles: ['admin', 'organizer'], icon: 'fa-solid fa-inbox' },
-        { path: '/adminrole', label: 'กำหนด Role', allowedRoles: ['admin', 'organizer'], icon: 'fa-solid fa-users-gear' },
-      ],
     },
 
+
     {
-      path: '/',
+      path: '/petition',
       label: 'คำร้อง',
       allowedRoles: ['admin', 'organizer'],
       icon: 'fa-solid fa-comments',

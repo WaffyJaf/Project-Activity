@@ -1,5 +1,6 @@
 import express, { Request, Response } from "express";
-import {login, updateRole, getUsers} from "../controllers/authcontroller"
+import {login, getUsers} from "../controllers/authcontroller";
+import {updateRole} from "../controllers/authcontroller"
 
 
 const router = express.Router();
@@ -9,7 +10,7 @@ router.post("/login", async (req: Request, res: Response) => {
 });
 
 router.post("/updaterole", async (req: Request, res: Response) => {
-  await updateRole(req, res);
+  await updateRole(req, res); 
 });
 
 router.get("/getusers", async (req: Request, res: Response) => {

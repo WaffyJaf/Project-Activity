@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 import projectRouter from "./router/pjrouter";
 import eventRouter from "./router/evenrouter";
 import authRouter from "./router/authrouter";
+import recordRouter from './router/recordrouter';
 import cors from "cors";
 
 
@@ -27,6 +28,7 @@ app.use("/project", projectRouter);
 app.use("/event", eventRouter);
 app.use('/uploads', express.static('D:/ActivityUP/backend/uploads'));
 app.use("/auth", authRouter);
+app.use("/record", recordRouter);
 
 
 
@@ -34,4 +36,3 @@ app.use("/auth", authRouter);
 app.listen(port, () => {
     console.log(`Server is running to port ${port}`);
 });
-

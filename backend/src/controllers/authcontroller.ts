@@ -48,6 +48,7 @@ export const login = async (req: Request, res: Response) => {
     if (!user) {
       user = await prisma.users_up.create({
         data: {
+          id: 1,
           ms_id,
           givenName: `NATTITA `,
           surname: 'DERAI',
@@ -89,21 +90,34 @@ export const login = async (req: Request, res: Response) => {
   }
 };
 
-
-
-// API สำหรับกำหนด role (ใช้สำหรับ admin)
 export const updateRole = async (req: Request, res: Response) => {
   try {
+    console.log("Request Body:", req.body); // เพิ่มการ log เพื่อตรวจสอบข้อมูลที่ได้รับจาก frontend
+
     const { userId, role } = req.body;
+
+    // ตรวจสอบว่า userId และ role ถูกต้องหรือไม่
+    if (typeof userId !== 'string' || typeof role !== 'string') {
+      return res.status(400).json({ message: 'Invalid input types' });
+    }
+
     const validRoles: UserRole[] = ['admin', 'organizer', 'user'];
 
-    if (!validRoles.includes(role)) {
+    if (!validRoles.includes(role as UserRole)) {
       return res.status(400).json({ message: 'Invalid role' });
     }
 
+    const existingUser = await prisma.users_up.findUnique({
+      where: { ms_id: userId },
+    });
+
+    if (!existingUser) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
     const updatedUser = await prisma.users_up.update({
-      where: { id: userId },
-      data: { role },
+      where: { ms_id: userId },
+      data: { role: role as UserRole },
     });
 
     return res.status(200).json({
@@ -111,10 +125,12 @@ export const updateRole = async (req: Request, res: Response) => {
       user: updatedUser,
     });
   } catch (error) {
-    console.error(error);
+    console.error('[UpdateRole Error]', error);
     return res.status(500).json({ message: 'Internal server error' });
   }
 };
+
+
 
 //ดึงข้อมูลผู้ใช้
 export const getUsers = async (req: Request, res: Response) => {

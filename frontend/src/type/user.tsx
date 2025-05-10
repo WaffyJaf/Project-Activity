@@ -1,4 +1,4 @@
-export type UserRole = 'admin' | 'organizer';
+export type UserRole = 'admin' | 'organizer'| 'user';
 
 export interface User {
   id: number;
@@ -24,5 +24,21 @@ export interface LoginResponse {
     displayName: string;
     role: string;
     created_at: string;
+  };
+}
+
+export interface ActivityRecord {
+  id: number;
+  project_id: number;
+  ms_id: string;
+  joined_at: string | null; 
+}
+export interface ActivityRecordResponse {
+  status?: 'success' | 'error' | 'duplicate';
+  message?: string;
+  error?: string;
+  code?: string;
+  data?: {
+    activity?: ActivityRecord;
   };
 }
