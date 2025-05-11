@@ -59,7 +59,7 @@ class _HomeViewState extends State<HomeView> {
                 }
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const QrCodeScreen()),
+                  MaterialPageRoute(builder: (context) => const QrCodeStudent()),
                 );
               },
               icon: const Icon(Icons.qr_code),

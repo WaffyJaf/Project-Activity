@@ -8,7 +8,7 @@ import Projectdetail from './page/project/Projectdetail';
 import Projectrecord from './page/record/Projectrecord';
 import Eventlist from './page/project/Eventlist';
 import Projectstatus from './Admin/Projectstatus';
-import Searchpage from './page/record/searchpage';
+import Searchpage from './page/record/Searchpage';
 import Regisname from './page/project/Regisname';
 import Home from './page/Home';
 import RoleManager from './Admin/Rolemanager';
@@ -37,6 +37,7 @@ const App: React.FC = () => {
           {/* Organizer only */}
           <Route element={<ProtectedRoute allowedRoles={['organizer']} />}>
             <Route path="/projectlist" element={<Projectlist />} />
+            <Route path="/adminrole" element={<RoleManager />} />
             <Route path="/createproject" element={<Createproject />} />
             <Route path="/eventlist" element={<Eventlist />} />
           </Route>

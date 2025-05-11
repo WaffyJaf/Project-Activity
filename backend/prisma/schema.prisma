@@ -35,6 +35,7 @@ model project_activity {
   project_status        project_activity_project_status @default(pending)
   project_datetime      DateTime?                       @db.DateTime(0)
   approval_datetime     DateTime?                       @db.DateTime(0)
+  qrCodeData            String?                         @db.VarChar(255)
   activity_record       activity_record[]
   event_posts           event_posts[]
   registration_activity registration_activity[]

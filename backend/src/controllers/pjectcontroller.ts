@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { PrismaClient, project_activity_project_status } from "@prisma/client";
 
+
 const prisma = new PrismaClient();
 
 export const createProjectActivity = async (req: Request, res: Response) => {
@@ -13,20 +14,33 @@ export const createProjectActivity = async (req: Request, res: Response) => {
     
   const projectDate = new Date(project_datetime);
   if (isNaN(projectDate.getTime())) {
-      return res.status(400).json({ Message: "วันที่และเวลาที่ส่งมาไม่ถูกต้อง" });
+    return res.status(400).json({ message: 'วันที่และเวลาที่ส่งมาไม่ถูกต้อง' });
   }
-  
-    try{
-    const newProject = await prisma.project_activity.create({
-      data:{
-        project_name,          
-        project_description,           
-        department,                                 
-        location,                                    
-        budget,                                  
-        hours,
-        project_datetime: projectDate,               
 
+  const baseUrl = process.env.APP_URL || 'http://localhost:3000';
+
+  try {
+    // สร้างโครงการโดยไม่กำหนด project_id (ให้ Prisma auto-increment)
+    const newProject = await prisma.project_activity.create({
+      data: {
+        project_name,
+        project_description,
+        department,
+        location,
+        budget,
+        hours,
+        created_date: new Date(),
+        project_status: 'pending',
+        project_datetime: projectDate,
+        qrCodeData: `${baseUrl}/attend?projectId=${0}`, 
+      },
+    });
+
+    // อัปเดต qrCodeData ด้วย project_id ที่ได้
+    const updatedProject = await prisma.project_activity.update({
+      where: { project_id: newProject.project_id },
+      data: {
+        qrCodeData: `${baseUrl}/attend?projectId=${newProject.project_id}`,
       },
     });
 
@@ -104,6 +118,7 @@ export const getProjectActivity = async(req:Request,res:Response) => {
         project_status:true,
         approval_datetime: true,
         project_datetime: true,
+        qrCodeData: true,
       },
       orderBy:{
         created_date: 'desc',

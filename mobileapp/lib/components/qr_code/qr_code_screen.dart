@@ -3,8 +3,8 @@ import 'package:qr_flutter/qr_flutter.dart';
 import 'package:provider/provider.dart';
 import '../../providers/user_provider.dart';
 
-class QrCodeScreen extends StatelessWidget {
-  const QrCodeScreen({super.key});
+class QrCodeStudent extends StatelessWidget {
+  const QrCodeStudent({super.key});
 
   @override
   Widget build(BuildContext context) {

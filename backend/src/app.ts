@@ -17,6 +17,7 @@ app.use(cors({
   origin: [
     'http://localhost:5173', // สำหรับ frontend อื่น 
     'http://10.0.2.2:3000',  // สำหรับ Android emulator
+    'http://172.20.10.2:3000',
   ],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization']

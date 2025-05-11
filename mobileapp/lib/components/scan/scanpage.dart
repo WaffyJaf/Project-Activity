@@ -1,107 +1,88 @@
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:provider/provider.dart';
-import '../../services/login_api.dart';
 import '../../providers/user_provider.dart';
+import '../../services/projectapi.dart';
 
-class ScanScreen extends StatefulWidget {
-  const ScanScreen({super.key});
+class ScanActivityScreen extends StatefulWidget {
+  const ScanActivityScreen({super.key});
 
   @override
-  _ScanScreenState createState() => _ScanScreenState();
+  State<ScanActivityScreen> createState() => _ScanActivityScreenState();
 }
 
-class _ScanScreenState extends State<ScanScreen> {
-  final MobileScannerController controller = MobileScannerController();
-  final _apiService = LoginApi();
-  bool _isScanning = true;
+class _ScanActivityScreenState extends State<ScanActivityScreen> {
+  bool _isScanning = false;
 
-  @override
-  void dispose() {
-    controller.dispose();
-    super.dispose();
+  void _scanQrCode(BuildContext context) async {
+    if (_isScanning) return;
+    setState(() => _isScanning = true);
+
+    await showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: const Text('สแกน QR Code กิจกรรม'),
+        content: SizedBox(
+          height: 300,
+          width: 300,
+          child: MobileScanner(
+            onDetect: (barcodeCapture) async {
+              final String? qrCodeData = barcodeCapture.barcodes.first.rawValue;
+              if (qrCodeData != null && _isScanning) {
+                try {
+                  print('Scanned qrCodeData: $qrCodeData'); // Debug
+                  final user = Provider.of<UserProvider>(context, listen: false).user;
+                  if (user == null || user.qrCodeId.isEmpty) {
+                    throw Exception('ไม่พบข้อมูลผู้ใช้');
+                  }
+                  print('User qrCodeId: ${user.qrCodeId}'); // Debug
+
+                  await ApiProject().joinActivity(qrCodeData, user.qrCodeId);
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('เข้าร่วมกิจกรรมสำเร็จ')),
+                    );
+                  }
+                } catch (e) {
+                  print('Error: $e'); // Debug
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('เกิดข้อผิดพลาด: $e')),
+                    );
+                  }
+                } finally {
+                  if (mounted) {
+                    Navigator.pop(context);
+                    setState(() => _isScanning = false);
+                  }
+                }
+              }
+            },
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              setState(() => _isScanning = false);
+            },
+            child: const Text('ยกเลิก'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Column(
-        children: [
-          Expanded(
-            child: MobileScanner(
-              controller: controller,
-              onDetect: (BarcodeCapture capture) async {
-                if (!_isScanning) return;
-                
-                final List<Barcode> barcodes = capture.barcodes;
-                if (barcodes.isEmpty) return;
-                
-                final String? code = barcodes.first.rawValue;
-                if (code == null) return;
-                
-                setState(() {
-                  _isScanning = false;
-                });
-                controller.stop();
-                
-                try {
-                  final user = Provider.of<UserProvider>(context, listen: false).user;
-                  if (user?.role != 'organizer') {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Only organizers can scan')),
-                    );
-                    controller.start();
-                    setState(() {
-                      _isScanning = true;
-                    });
-                    return;
-                  }
-                  
-                  final result = await _apiService.checkIn(code);
-                  final scannedUser = result['scannedUser'];
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Checked in: ${scannedUser['displayName']}')),
-                  );
-                  Navigator.pop(context);
-                } catch (e) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(e.toString())),
-                  );
-                  controller.start();
-                  setState(() {
-                    _isScanning = true;
-                  });
-                }
-              },
-              overlay: Container(
-                decoration: BoxDecoration(
-                  color: Colors.black.withOpacity(0.5),
-                ),
-                child: Center(
-                  child: Container(
-                    width: 300,
-                    height: 300,
-                    decoration: BoxDecoration(
-                      border: Border.all(
-                        color: Colors.deepPurple,
-                        width: 10,
-                      ),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.all(16),
-            color: Colors.deepPurple.withOpacity(0.6),
-            child: const Text(
-              'Scan QR Code to Check In',
-              style: TextStyle(color: Colors.white, fontSize: 16),
-            ),
-          ),
-        ],
+      appBar: AppBar(title: const Text('สแกน QR Code กิจกรรม')),
+      body: Center(
+        child: ElevatedButton(
+          onPressed: () => _scanQrCode(context),
+          child: const Text('เริ่มสแกน'),
+        ),
       ),
     );
   }

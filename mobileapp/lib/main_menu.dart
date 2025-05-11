@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:iconly/iconly.dart';
 import 'package:provider/provider.dart';
 import 'components/home/home.dart';
+import 'components/scan/projectlist.dart';
 import 'components/doc/doc.dart';
 import 'components/scan/scanpage.dart';
 import 'providers/user_provider.dart';
@@ -29,14 +30,14 @@ class _MainMenuState extends State<MainMenu> {
       case 'user':
         return [
           const Home(),
+          const ScanActivityScreen(),
           const Center(child: Text("Notify Page", style: TextStyle(fontSize: 24))),
           const Doc(),
         ];
       case 'organizer':
         return [
           const Home(),
-          const ScanScreen(),
-          const Center(child: Text("Notify Page", style: TextStyle(fontSize: 24))),
+          const ProjectView(),
           const Doc(),
         ];
       case 'admin':
@@ -55,6 +56,7 @@ class _MainMenuState extends State<MainMenu> {
       case 'user':
         return [
           CrystalNavigationBarItem(icon: IconlyBold.home, selectedColor: Colors.white),
+          CrystalNavigationBarItem(icon: IconlyBold.scan, selectedColor: Colors.white),
           CrystalNavigationBarItem(icon: IconlyBold.notification, selectedColor: Colors.white),
           CrystalNavigationBarItem(icon: IconlyBold.document, selectedColor: Colors.white),
         ];
@@ -62,7 +64,6 @@ class _MainMenuState extends State<MainMenu> {
         return [
           CrystalNavigationBarItem(icon: IconlyBold.home, selectedColor: Colors.white),
           CrystalNavigationBarItem(icon: IconlyBold.scan, selectedColor: Colors.white),
-          CrystalNavigationBarItem(icon: IconlyBold.notification, selectedColor: Colors.white),
           CrystalNavigationBarItem(icon: IconlyBold.document, selectedColor: Colors.white),
         ];
       case 'admin':

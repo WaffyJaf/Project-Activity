@@ -1,6 +1,8 @@
 import { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 
+
+
 const prisma = new PrismaClient();
 
 // Interface for user response
@@ -52,7 +54,7 @@ export const ActivityRecord = async (req: Request, res: Response) => {
   const { project_id, ms_id } = req.body;
 
   // ตรวจสอบ input
-  if (!project_id || !ms_id || isNaN(project_id) || typeof ms_id !== 'string') {
+  if (!project_id || !ms_id || typeof project_id !== 'number' || typeof ms_id !== 'string') {
     return res.status(400).json({
       status: 'error',
       error: 'Invalid or missing project_id or ms_id',
@@ -98,10 +100,14 @@ export const ActivityRecord = async (req: Request, res: Response) => {
 
     // บันทึก activity
     const activity = await prisma.activity_record.create({
-      data: { project_id, ms_id },
+      data: {
+        project_id,
+        ms_id,
+        joined_at: new Date(),
+      },
     });
 
-    // จัดการ joined_at ที่อาจเป็น null
+    // จัดการ joined_at
     const activityResponse = {
       ...activity,
       joined_at: activity.joined_at ? activity.joined_at.toISOString() : null,
@@ -121,3 +127,196 @@ export const ActivityRecord = async (req: Request, res: Response) => {
     });
   }
 };
+
+export const ActivityRecordMobile = async (req: Request, res: Response) => {
+  const { project_id, qr_code_id } = req.body;
+
+  // ตรวจสอบ input
+  if (!project_id || !qr_code_id || typeof project_id !== 'number' || typeof qr_code_id !== 'string') {
+    return res.status(400).json({
+      status: 'error',
+      error: 'Invalid or missing project_id or qr_code_id',
+      code: 'INVALID_INPUT',
+    });
+  }
+
+  try {
+    // ค้นหา ms_id จาก qr_code_id
+    const user = await prisma.users_up.findUnique({ where: { qrCodeId: qr_code_id } });
+    if (!user) {
+      return res.status(404).json({
+        status: 'error',
+        error: 'User not found',
+        code: 'USER_NOT_FOUND',
+      });
+    }
+
+    const ms_id = user.ms_id;
+    // ตรวจสอบความยาว ms_id
+    if (ms_id.length > 10) {
+      return res.status(400).json({
+        status: 'error',
+        error: 'ms_id exceeds maximum length of 10 characters',
+        code: 'INVALID_MS_ID_LENGTH',
+      });
+    }
+
+    // ตรวจสอบ project
+    const projectExists = await prisma.project_activity.findUnique({ where: { project_id } });
+    if (!projectExists) {
+      return res.status(404).json({
+        status: 'error',
+        error: 'Project not found',
+        code: 'PROJECT_NOT_FOUND',
+      });
+    }
+
+    // ตรวจสอบบันทึกซ้ำ
+    const existingActivity = await prisma.activity_record.findFirst({
+      where: { project_id, ms_id },
+    });
+
+    if (existingActivity) {
+      return res.status(400).json({
+        status: 'duplicate',
+        error: 'Activity already recorded',
+        code: 'ALREADY_RECORDED',
+      });
+    }
+
+    // บันทึก activity
+    const activity = await prisma.activity_record.create({
+      data: {
+        project_id,
+        ms_id,
+        joined_at: new Date(),
+      },
+    });
+
+    const activityResponse = {
+      ...activity,
+      joined_at: activity.joined_at ? activity.joined_at.toISOString() : null,
+    };
+
+    return res.status(201).json({
+      status: 'success',
+      message: 'Activity recorded successfully',
+      data: { activity: activityResponse },
+    });
+  } catch (error) {
+    console.error('ActivityRecord error:', error);
+    return res.status(500).json({
+      status: 'error',
+      error: 'Failed to record activity',
+      code: 'INTERNAL_SERVER_ERROR',
+    });
+  }
+};
+
+export const JoinActivity = async (req: Request, res: Response) => {
+  const { qr_code_data, user_id } = req.body;
+
+  // ตรวจสอบ input
+  if (!qr_code_data || !user_id || typeof qr_code_data !== 'string' || typeof user_id !== 'string') {
+    return res.status(400).json({
+      status: 'error',
+      error: 'Invalid or missing qr_code_data or user_id',
+      code: 'INVALID_INPUT',
+    });
+  }
+
+  try {
+    console.log('Received qr_code_data:', qr_code_data); // Debug
+    console.log('Received user_id:', user_id); // Debug
+
+    // แปลง qr_code_data เป็น project_id
+    const project_id = parseInt(qr_code_data);
+    if (isNaN(project_id)) {
+      console.log('Invalid qr_code_data format:', qr_code_data); // Debug
+      return res.status(400).json({
+        status: 'error',
+        error: 'Invalid qr_code_data format',
+        code: 'INVALID_QR_CODE',
+      });
+    }
+
+    // ตรวจสอบ project
+    const projectExists = await prisma.project_activity.findUnique({
+      where: { project_id },
+    });
+    if (!projectExists) {
+      console.log('Project not found for project_id:', project_id); // Debug
+      return res.status(404).json({
+        status: 'error',
+        error: 'Project not found',
+        code: 'PROJECT_NOT_FOUND',
+      });
+    }
+    console.log('Found project:', projectExists); // Debug
+
+    // ค้นหา ms_id จาก user_id (qrCodeId)
+    const user = await prisma.users_up.findUnique({ where: { qrCodeId: user_id } });
+    if (!user) {
+      console.log('User not found for qrCodeId:', user_id); // Debug
+      return res.status(404).json({
+        status: 'error',
+        error: 'User not found',
+        code: 'USER_NOT_FOUND',
+      });
+    }
+
+    const ms_id = user.ms_id;
+    // ตรวจสอบความยาว ms_id
+    if (ms_id.length > 10) {
+      console.log('ms_id too long:', ms_id); // Debug
+      return res.status(400).json({
+        status: 'error',
+        error: 'ms_id exceeds maximum length of 10 characters',
+        code: 'INVALID_MS_ID_LENGTH',
+      });
+    }
+    console.log('Found ms_id:', ms_id); // Debug
+
+    // ตรวจสอบบันทึกซ้ำ
+    const existingActivity = await prisma.activity_record.findFirst({
+      where: { project_id, ms_id },
+    });
+
+    if (existingActivity) {
+      console.log('Activity already recorded:', { project_id, ms_id }); // Debug
+      return res.status(400).json({
+        status: 'duplicate',
+        error: 'Activity already recorded',
+        code: 'ALREADY_RECORDED',
+      });
+    }
+
+    // บันทึก activity
+    const activity = await prisma.activity_record.create({
+      data: {
+        project_id,
+        ms_id,
+        joined_at: new Date(),
+      },
+    });
+
+    const activityResponse = {
+      ...activity,
+      joined_at: activity.joined_at ? activity.joined_at.toISOString() : null,
+    };
+
+    return res.status(201).json({
+      status: 'success',
+      message: 'Activity joined successfully',
+      data: { activity: activityResponse },
+    });
+  } catch (error) {
+    console.error('JoinActivity error:', error);
+    return res.status(500).json({
+      status: 'error',
+      error: 'Failed to join activity',
+      code: 'INTERNAL_SERVER_ERROR',
+    });
+  }
+};
+
