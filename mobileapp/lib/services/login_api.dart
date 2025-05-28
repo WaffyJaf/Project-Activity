@@ -4,7 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class LoginApi {
-  static const String baseUrl = 'http://172.20.10.2:3000'; 
+  static const String baseUrl = 'http://10.0.2.2:3000'; 
 
   // ล็อกอินด้วย ms_id
   Future<Map<String, dynamic>> login(String msId) async {

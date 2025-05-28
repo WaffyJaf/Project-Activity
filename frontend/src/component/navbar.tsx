@@ -18,7 +18,6 @@ interface SubMenuItem {
   icon?: string;
 }
 
-
 const Sidebar: React.FC = () => {
   const { currentUser, logout } = useAuth();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -41,19 +40,9 @@ const Sidebar: React.FC = () => {
   const menuItems: MenuItem[] = [
     {
       path: '/',
-      label: 'โครงการ',
+      label: 'หน้าแรก',
       allowedRoles: ['organizer'],
       icon: 'fa-solid fa-clipboard-list',
-      subMenu: [
-        { path: '/createproject', label: 'เปิดโครงการ', allowedRoles: ['admin', 'organizer'], icon: 'fa-solid fa-plus' },
-        { path: '/Projectlist', label: 'ประวัติเปิดโครงการ', allowedRoles: ['admin', 'organizer'], icon: 'fa-solid fa-list-ul' },
-      ],
-    },
-    {
-      path: '/Eventlist',
-      label: 'Activity',
-      allowedRoles: ['organizer'],
-      icon: 'fa-solid fa-calendar-days',
     },
     {
       path: '/projectrecord',
@@ -63,13 +52,9 @@ const Sidebar: React.FC = () => {
     },
     {
       path: '/record',
-      label: 'Record',
+      label: 'สรุปประเมิน',
       allowedRoles: ['admin', 'organizer'],
       icon: 'fa-solid fa-file-lines',
-      subMenu: [
-        { path: '/evaluation-summary', label: 'สรุปประเมิน', allowedRoles: ['admin', 'organizer'], icon: 'fa-solid fa-check-double' },
-        { path: '/search-history', label: 'ค้นหาประวัตินิสิต', allowedRoles: ['admin', 'organizer'], icon: 'fa-solid fa-magnifying-glass' },
-      ],
     },
     {
       path: '/adminrole',
@@ -77,8 +62,6 @@ const Sidebar: React.FC = () => {
       allowedRoles: ['admin', 'organizer'],
       icon: 'fa-solid fa-user-shield',
     },
-
-
     {
       path: '/petition',
       label: 'คำร้อง',
@@ -97,12 +80,12 @@ const Sidebar: React.FC = () => {
     <>
       {/* Top-right icons */}
       {currentUser && (
-        <div className="fixed top-2 right-2">
+        <div className="fixed top-2 right-2 z-50">
           {/* User Dropdown ข้อมูลผู้ใช้ */}
           <div className="relative inline-block">
             <button
               onClick={handleUserClick}
-              className="p-3 text-purple-800 hover:text-purple-900 focus:outline-none transition-colors duration-200"
+              className=" text-purple-800 hover:text-purple-900 focus:outline-none transition-colors duration-200"
               aria-label="User Profile"
             >
               <i className="fa-solid fa-circle-user text-5xl"></i>
@@ -114,7 +97,7 @@ const Sidebar: React.FC = () => {
                 <div className="p-6 border-b border-gray-100">
                   <span className="text-lg font-semibold text-purple-800 mb-3 ml-25">ข้อมูลผู้ใช้</span>
                   <div className="space-y-4 mt-3">
-                    <p className="text-sm text-gray-600 ">
+                    <p className="text-sm text-gray-600">
                       <span className="font-medium text-gray-800">รหัสนิสิต:</span>{' '}
                       <span className="text-gray-900">{currentUser.ms_id}</span>
                     </p>
@@ -152,7 +135,7 @@ const Sidebar: React.FC = () => {
       )}
 
       {/* Sidebar */}
-      <div className="fixed top-0 left-0 h-screen w-64 bg-purple-800 text-white shadow-lg">
+      <div className="fixed top-0 left-0 h-screen w-64 bg-purple-800 text-white shadow-lg z-40">
         {/* Header/Logo */}
         <div className="px-4 py-3 flex items-center border-b border-purple-700">
           <Link to="/" className="no-underline" style={{ textDecoration: 'none' }}>

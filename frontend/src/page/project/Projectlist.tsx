@@ -1,22 +1,28 @@
-import { useEffect, useState } from "react";
+import  { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { fetchProjects } from "../../api/projectget";
-import { Project } from "../../api/projectget";
-import Navbar from "../../component/navbar";
-import { motion } from 'framer-motion'; 
+import { fetchProjectsByUser, Project } from '../../api/projectget';
+import Navbar from '../../component/navbar';
+import { motion } from 'framer-motion';
+import { useAuth } from '../../context/AuthContext';
 
 function Projectlist() {
+  const { currentUser } = useAuth();
   const [projects, setProjects] = useState<Project[]>([]);
   const [showProcessModal, setShowProcessModal] = useState(false);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
 
   useEffect(() => {
     async function getProjects() {
-      const data = await fetchProjects();
-      setProjects(data);
+      if (currentUser?.ms_id) {
+        const data = await fetchProjectsByUser(currentUser.ms_id);
+        setProjects(data);
+      } else {
+        console.error('No ms_id found for the current user');
+        setProjects([]);
+      }
     }
     getProjects();
-  }, []);
+  }, [currentUser]);
 
   function getStatusClass(status: string): string {
     if (status === 'approved') return 'bg-green-100 text-green-800 border-green-300';
@@ -25,7 +31,6 @@ function Projectlist() {
     return 'bg-gray-100 text-gray-800 border-gray-300';
   }
 
-  // Function to translate status to Thai
   function getThaiStatus(status: string): string {
     switch (status) {
       case 'approved':
@@ -40,19 +45,19 @@ function Projectlist() {
   }
 
   const getStatusDetails = (status: string) => {
-    const statusMap: Record<string, { icon: string, color: string, bg: string }> = {
-      'approved': { icon: 'fa-solid fa-check-circle', color: 'text-green-600', bg: 'bg-green-50' },
-      'pending': { icon: 'fa-solid fa-clock', color: 'text-amber-600', bg: 'bg-amber-50' },
-      'rejected': { icon: 'fa-solid fa-exclamation-circle', color: 'text-red-600', bg: 'bg-red-50' },
-      'default': { icon: 'fa-solid fa-bookmark', color: 'text-blue-600', bg: 'bg-blue-50' }
+    const statusMap: Record<string, { icon: string; color: string; bg: string }> = {
+      approved: { icon: 'fa-solid fa-check-circle', color: 'text-green-600', bg: 'bg-green-50' },
+      pending: { icon: 'fa-solid fa-clock', color: 'text-amber-600', bg: 'bg-amber-50' },
+      rejected: { icon: 'fa-solid fa-exclamation-circle', color: 'text-red-600', bg: 'bg-red-50' },
+      default: { icon: 'fa-solid fa-bookmark', color: 'text-blue-600', bg: 'bg-blue-50' },
     };
-  
+
     const { icon, color, bg } = statusMap[status] || statusMap['default'];
-  
+
     return {
       icon: <i className={`${icon} ${color} ${bg} mr-2`} style={{ fontSize: 20 }} />,
       color,
-      bg
+      bg,
     };
   };
 
@@ -61,73 +66,64 @@ function Projectlist() {
     setShowProcessModal(true);
   };
 
-  const formatDate = (dateString: string | undefined) => {
-    if (!dateString) return "-";
+  const formatDate = (dateString: string | Date | null | undefined) => {
+    if (!dateString) return '-';
     try {
       return new Date(dateString).toLocaleString('th-TH', {
         year: 'numeric',
         month: 'long',
         day: 'numeric',
         hour: '2-digit',
-        minute: '2-digit'
+        minute: '2-digit',
       });
     } catch (e) {
-      return "-";
+      return '-';
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-purple-50 to-white">
+    <div className="min-h-screen bg-gradient-to-br from-purple-100 via-purple-50 to-white py-7 px-4 md:px-6 ml-50">
       <Navbar />
-      <div className="container mx-auto px-4 py-12 flex flex-col items-center ">
-        <span className="text-3xl font-extrabold text-purple-800 mb-12 drop-shadow-md ml-40">
-          ประวัติการเปิดโครงการ
-        </span>
+      <div className="mx-auto px-4 max-w-6xl">
+        <div className="bg-white rounded-2xl shadow-lg p-6 mb-3 flex flex-col md:flex-row justify-between items-center">
+          <div className="w-full flex justify-between items-center">
+            <span className="text-2xl md:text-2xl font-extrabold text-purple-900 tracking-tight drop-shadow-sm">
+              ประวัติการเปิดโครงการ
+            </span>
+            <i className="fa-solid fa-clock-rotate-left fa-2xl text-purple-800"></i>
+          </div>
+        </div>
         {projects.length > 0 ? (
-          <div className="w-full max-w-5xl bg-white rounded-2xl shadow-xl overflow-hidden ml-50">
-            <div className="grid grid-cols-3 gap-20 bg-purple-100 p-4 font-semibold text-gray-800 text-m border-b border-purple-200">
+          <div className="bg-white shadow-lg rounded-2xl mb-8">
+            <div className="grid grid-cols-3 rounded-2xl gap-20 bg-purple-100 p-4 font-semibold text-gray-800 text-m border-b border-purple-200">
               <div>ชื่อโครงการ</div>
               <div>วันที่สร้าง</div>
-              <div className="text-center mr-30">สถานะ</div>
+              <div className="text-center mr-60">สถานะ</div>
             </div>
             <div className="divide-y divide-gray-200">
               {projects.map((item) => (
                 <div
                   key={item.project_id}
-                  className="grid grid-cols-3 gap-4 p-4 hover:bg-purple-400 transition-colors duration-200"
+                  className="grid grid-cols-3 gap-4 p-4 transition-colors duration-200"
                 >
-                  <span
-                    className="inline-flex items-center px-3 py-1 rounded-full text-xl font-medium"
-                  >
+                  <span className="inline-flex items-center px-3 py-1 rounded-full text-xm font-medium">
                     {item.project_name}
                   </span>
-                  <div className="text-xm text-gray-600 ml-5">
-                    {new Date(item.created_date).toLocaleDateString()}
-                  </div>
+                  <div className="text-xm text-gray-600 ml-5">{formatDate(item.created_date)}</div>
                   <div className="flex justify-between items-center px-4">
-                    
                     <span
-                      className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border ml-ุ ${getStatusClass(item.project_status)}`}
+                      className={`inline-flex items-center px-3 py-1 rounded-full text-xm font-medium border ${getStatusClass(item.project_status)}`}
                     >
                       {getThaiStatus(item.project_status)}
-                      {item.project_status === 'approved' && (
-                        <i className="fa-solid fa-check ml-2 text-green-600"></i>
-                      )}
-                      {item.project_status === 'rejected' && (
-                        <i className="fa-solid fa-xmark ml-2 text-red-600"></i>
-                      )}
-                      {item.project_status === 'pending' && (
-                        <i className="fa-solid fa-hourglass-start ml-2 text-yellow-800"></i>
-                      )}
-                       <i
-                        className="fa-solid fa-eye ml-2 text-gray-600 cursor-pointer hover:text-red-950"
+                      <i
+                        className="fa-solid fa-bars fa-xm ml-2 text-gray-600 cursor-pointer hover:text-red-950"
                         onClick={() => handleViewProcess(item)}
-                      >
-                        <span className="ml-2 hover:underline">รายละเอียด</span>
-                      </i>
+                      ></i>
                     </span>
                     <Link to={`/Projectdetail/${item.project_id}`}>
-                      <i className="fa-solid fa-bars text-gray-700 hover:text-purple-800 fa-xl"></i>
+                      <button className="bg-purple-800 text-white py-2 px-3 rounded hover:bg-purple-950 transition-colors duration-300 shadow-md text-sm">
+                        ดูรายละเอียด
+                      </button>
                     </Link>
                   </div>
                 </div>
@@ -139,7 +135,7 @@ function Projectlist() {
         )}
       </div>
 
-      {/* New Process Modal */}
+      {/* Process Modal */}
       {showProcessModal && selectedProject && (
         <motion.div
           className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 backdrop-blur-sm"
@@ -174,9 +170,11 @@ function Projectlist() {
             <div className="p-6">
               {/* Status Badge */}
               {selectedProject.project_status && (
-                <div className={`${getStatusDetails(selectedProject.project_status).bg} ${getStatusDetails(selectedProject.project_status).color} rounded-lg p-3 flex items-center mb-6`}>
+                <div
+                  className={`${getStatusDetails(selectedProject.project_status).bg} ${getStatusDetails(selectedProject.project_status).color} rounded-lg p-3 flex items-center mb-6`}
+                >
                   {getStatusDetails(selectedProject.project_status).icon}
-                  <span className="font-medium">สถานะปัจจุบัน: {selectedProject.project_status}</span>
+                  <span className="font-medium">สถานะปัจจุบัน: {getThaiStatus(selectedProject.project_status)}</span>
                 </div>
               )}
 

@@ -2,29 +2,25 @@ import React, { useEffect, useState, useRef } from "react";
 import { fetchProjectByID, Project } from "../../api/projectget";
 import { FormPost, uploadImage, submitFormToAPI } from "../../api/createpost";
 import { useForm, SubmitHandler } from 'react-hook-form';
-import { useParams, useNavigate,  } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import Navbar from "../../component/navbar";
 import Swal from 'sweetalert2';
-import { motion } from 'framer-motion'; 
-import { useAuth } from "../../context/AuthContext"; 
+import { motion } from 'framer-motion';
+import { useAuth } from "../../context/AuthContext";
 
 function Projectdetail() {
   const { id } = useParams<{ id: string }>();
-  const [project, setProject] = useState<Project | null>(null);  
-  const [loading, setLoading] = useState<boolean>(true);  
+  const [project, setProject] = useState<Project | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [postStatus, setPostStatus] = useState<string>("");  
+  const [postStatus, setPostStatus] = useState<string>("");
   const [showModal, setShowModal] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const fileToUpload = useRef<File | null>(null); 
+  const fileToUpload = useRef<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [warningMessage, setWarningMessage] = useState<string | null>(null);
 
-
-  
-  // ใช้ AuthContext เพื่อเข้าถึงข้อมูล user ปัจจุบัน
   const { currentUser } = useAuth();
-  
   const navigate = useNavigate();
 
   const {
@@ -41,37 +37,77 @@ function Projectdetail() {
       location_post: "",
       post_datetime: "",
       hour_post: 0,
+      ms_id: "",
+      registration_start: "", // New field
+      registration_end: "",   // New field
     },
   });
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];  
+    const file = e.target.files?.[0];
     if (file) {
-      const objectUrl = URL.createObjectURL(file);  
-      setImagePreview(objectUrl);  
-      fileToUpload.current = file;  
+      const objectUrl = URL.createObjectURL(file);
+      setImagePreview(objectUrl);
+      fileToUpload.current = file;
     }
   };
 
   const handleUploadButtonClick = () => {
-    fileInputRef.current?.click();  
+    fileInputRef.current?.click();
   };
 
   const onSubmit: SubmitHandler<FormPost> = async (formData) => {
     try {
-      
+      if (!currentUser?.ms_id) {
+        Swal.fire({
+          icon: 'error',
+          title: 'เกิดข้อผิดพลาด',
+          text: 'ไม่พบข้อมูลผู้ใช้ กรุณาล็อกอินใหม่ ❌',
+          confirmButtonText: 'ตกลง',
+          confirmButtonColor: '#9333ea',
+        });
+        return;
+      }
+
       if (project) {
         formData.project_id = Number(id);
         formData.post_content = project.project_description || "";
         formData.location_post = project.location || "";
-        formData.post_datetime = project.project_datetime || "";
+        formData.post_datetime = project.project_datetime ? new Date(project.project_datetime).toISOString() : "";
         formData.hour_post = project.hours || 0;
+        formData.ms_id = currentUser.ms_id;
+      }
+
+      // Validate registration period
+      if (formData.registration_start && formData.registration_end) {
+        const start = new Date(formData.registration_start);
+        const end = new Date(formData.registration_end);
+        if (start >= end) {
+          Swal.fire({
+            icon: 'error',
+            title: 'เกิดข้อผิดพลาด',
+            text: 'วันที่เริ่มลงทะเบียนต้องมาก่อนวันที่สิ้นสุด ❌',
+            confirmButtonText: 'ตกลง',
+            confirmButtonColor: '#9333ea',
+          });
+          return;
+        }
+        if (start < new Date()) {
+          Swal.fire({
+            icon: 'error',
+            title: 'เกิดข้อผิดพลาด',
+            text: 'วันที่เริ่มลงทะเบียนต้องอยู่ในอนาคต ❌',
+            confirmButtonText: 'ตกลง',
+            confirmButtonColor: '#9333ea',
+          });
+          return;
+        }
       }
 
       if (fileToUpload.current) {
         const imageUrl = await uploadImage(fileToUpload.current);
         if (imageUrl) {
-          formData.imge_url = imageUrl;  
+          formData.imge_url = imageUrl;
         } else {
           Swal.fire({
             icon: 'error',
@@ -95,9 +131,9 @@ function Projectdetail() {
           confirmButtonColor: '#9333ea',
         }).then((result) => {
           if (result.isConfirmed) {
-            reset(); 
-            setImagePreview(null);  
-            fileToUpload.current = null;  
+            reset();
+            setImagePreview(null);
+            fileToUpload.current = null;
             setShowModal(false);
             navigate('/Eventlist');
           }
@@ -106,7 +142,7 @@ function Projectdetail() {
         Swal.fire({
           icon: 'error',
           title: 'เกิดข้อผิดพลาด',
-          text: 'เกิดข้อผิดพลาดในการบันทึกโพสต์ ❌',
+          text: result.message || 'เกิดข้อผิดพลาดในการบันทึกโพสต์ ❌',
           confirmButtonText: 'ตกลง',
           confirmButtonColor: '#9333ea',
         });
@@ -130,36 +166,31 @@ function Projectdetail() {
     return 'bg-gray-100 text-gray-800 border-gray-300';
   }
 
-
-
- 
-
   useEffect(() => {
     async function getProjectDetail() {
-      setLoading(true);  
+      setLoading(true);
       try {
-        const data = await fetchProjectByID(id);  
+        const data = await fetchProjectByID(id);
         setProject(data);
-        setPostStatus(data.project_status);  
+        setPostStatus(data.project_status);
       } catch (err) {
-        setError("ไม่สามารถดึงข้อมูลโครงการได้");  
+        setError("ไม่สามารถดึงข้อมูลโครงการได้");
       } finally {
-        setLoading(false);  
+        setLoading(false);
       }
     }
 
     if (id) {
-      getProjectDetail();  
+      getProjectDetail();
     }
   }, [id]);
 
   const handlePostClick = () => {
-    console.log("Current status:", postStatus); 
+    console.log("Current status:", postStatus);
     if (postStatus !== "approved") {
       setWarningMessage("โครงการนี้ยังไม่ได้รับการอนุมัติ ❌");
-      console.log("Setting warning modal to true"); 
+      console.log("Setting warning modal to true");
     } else {
-      // Pre-fill the post_content with project description when opening the modal
       if (project && project.project_description) {
         setValue("post_content", project.project_description);
       }
@@ -167,22 +198,20 @@ function Projectdetail() {
     }
   };
 
-  // ตรวจสอบว่าผู้ใช้ปัจจุบันเป็น admin หรือไม่
   const isAdmin = currentUser?.role === "admin";
 
-
   return (
-    <div className="min-h-screen bg-gradient-to-b from-purple-50 to-white ml-60">
+    <div className="min-h-screen bg-gradient-to-br from-purple-100 via-purple-50 to-white py-7 px-4 md:px-6 ml-50">
       <Navbar />
-      <div className="container mx-auto px-6 py-12 flex flex-col items-center pl-5">
-        <motion.span 
-          className="text-3xl font-extrabold text-purple-900 mb-12 drop-shadow-lg"
-          initial={{ opacity: 0, y: -50 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          รายละเอียดโครงการ
-        </motion.span>
+      <div className="mx-auto px-4 max-w-5xl mt-10">
+        <div className="bg-purple-800 rounded-2xl shadow-lg p-6 flex flex-col md:flex-row justify-between items-center">
+          <div className="w-full flex justify-between items-center">
+            <span className="text-2xl md:text-2xl font-extrabold text-white tracking-tight drop-shadow-sm">
+              รายละเอียดโครงการ
+            </span>
+            <i className="fa-solid fa-file-invoice fa-2xl text-white"></i>
+          </div>
+        </div>
 
         {loading && (
           <motion.p
@@ -207,20 +236,19 @@ function Projectdetail() {
 
         {project && (
           <motion.div
-            className="w-full max-w-4xl bg-white rounded-3xl shadow-xl p-5"
+            className="w-full max-w-5xl bg-white rounded-3xl shadow-xl p-5"
             initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
           >
-            <span className="text-2xl font-extrabold text-green-700 ml-90 py-3.5">{project.project_name}</span>
+            <span className="text-2xl font-extrabold text-gray-500 ml-90 py-3.5">{project.project_name}</span>
             <div className="space-y-4 text-gray-700 text-base">
               <p><strong>รหัสโครงการ:</strong> {project.project_id}</p>
               <p>
-                <strong>สถานะ:</strong> 
+                <strong>สถานะ:</strong>
                 <span className={`inline-block py-1 px-3 rounded-full border ${getStatusClass(project.project_status)}`}>
                   {project.project_status}
                 </span>
-                
               </p>
               <p><strong>หน่วยงาน/คณะ:</strong> {project.department}</p>
               <p><strong>สถานที่:</strong> {project.location}</p>
@@ -230,7 +258,6 @@ function Projectdetail() {
               <p><strong>รายละเอียด:</strong> {project.project_description}</p>
             </div>
 
-            {/* ซ่อนปุ่มโพสต์กิจกรรมเมื่อ user เป็น admin */}
             {!isAdmin && (
               <motion.button
                 onClick={handlePostClick}
@@ -288,10 +315,10 @@ function Projectdetail() {
                 </label>
                 <div className="w-full min-h-[160px] p-3 border border-gray-300 rounded-lg text-sm bg-gray-50">
                   {project?.project_description}
-                  <input 
-                    type="hidden" 
-                    {...register("post_content")} 
-                    value={project?.project_description || ""} 
+                  <input
+                    type="hidden"
+                    {...register("post_content")}
+                    value={project?.project_description || ""}
                   />
                 </div>
               </div>
@@ -314,6 +341,24 @@ function Projectdetail() {
                 <div className="w-full p-3 border border-gray-300 rounded-lg text-sm bg-gray-50">
                   {project?.hours || "-"} ชั่วโมง
                 </div>
+              </div>
+
+              <div>
+                <label className="block text-gray-700 font-semibold mb-2 text-sm">วันที่เริ่มลงทะเบียน</label>
+                <input
+                  type="datetime-local"
+                  {...register("registration_start")}
+                  className="w-full p-3 border border-gray-300 rounded-lg text-sm bg-gray-50"
+                />
+              </div>
+
+              <div>
+                <label className="block text-gray-700 font-semibold mb-2 text-sm">วันที่สิ้นสุดลงทะเบียน</label>
+                <input
+                  type="datetime-local"
+                  {...register("registration_end")}
+                  className="w-full p-3 border border-gray-300 rounded-lg text-sm bg-gray-50"
+                />
               </div>
 
               <div>

@@ -5,13 +5,12 @@ import { PrismaClient, project_activity_project_status } from "@prisma/client";
 const prisma = new PrismaClient();
 
 export const createProjectActivity = async (req: Request, res: Response) => {
-  const { project_name, project_description, project_datetime , department, location, budget, hours } = req.body;
+  const { project_name, project_description, project_datetime, department, location, budget, hours, ms_id } = req.body;
 
-  if (!project_name || !project_description || !project_datetime || !department || !location || !budget || !hours) {
-    return res.status(400).json({ Message: "ข้อมูลไม่ครบถ้วน" });
+  if (!project_name || !project_description || !project_datetime || !department || !location || !budget || !hours || !ms_id) {
+    return res.status(400).json({ message: "ข้อมูลไม่ครบถ้วน" });
   }
 
-    
   const projectDate = new Date(project_datetime);
   if (isNaN(projectDate.getTime())) {
     return res.status(400).json({ message: 'วันที่และเวลาที่ส่งมาไม่ถูกต้อง' });
@@ -20,7 +19,7 @@ export const createProjectActivity = async (req: Request, res: Response) => {
   const baseUrl = process.env.APP_URL || 'http://localhost:3000';
 
   try {
-    // สร้างโครงการโดยไม่กำหนด project_id (ให้ Prisma auto-increment)
+    
     const newProject = await prisma.project_activity.create({
       data: {
         project_name,
@@ -29,14 +28,15 @@ export const createProjectActivity = async (req: Request, res: Response) => {
         location,
         budget,
         hours,
+        ms_id,
         created_date: new Date(),
         project_status: 'pending',
         project_datetime: projectDate,
-        qrCodeData: `${baseUrl}/attend?projectId=${0}`, 
+        qrCodeData: `${baseUrl}/attend?projectId=${0}`,
       },
     });
 
-    // อัปเดต qrCodeData ด้วย project_id ที่ได้
+    // Update qrCodeData with the actual project_id
     const updatedProject = await prisma.project_activity.update({
       where: { project_id: newProject.project_id },
       data: {
@@ -45,13 +45,12 @@ export const createProjectActivity = async (req: Request, res: Response) => {
     });
 
     console.log("save to database successfully");
-    res.status(201).json({message: "Project activity created successfully"});
+    res.status(201).json({ message: "Project activity created successfully" });
 
   } catch (error) {
     console.error("!!! Error save to database !!!!", error);
     return res.status(500).json({ message: "Error save to database", error });
   }
-
 };
 
 
@@ -106,6 +105,44 @@ export const updateProjectActivity = async (req: Request, res: Response) => {
   }
 };
 
+// export const getProjectByUser = async (req: Request, res: Response) => {
+//   const { ms_id } = req.params; 
+
+//   if (!ms_id || typeof ms_id !== 'string') {
+//     return res.status(400).json({ message: 'ต้องระบุ ms_id และต้องเป็น string' });
+//   }
+
+//   try {
+//     const projects = await prisma.project_activity.findMany({
+//       where: {
+//         ms_id: ms_id, // Filter by ms_id
+//       },
+//       select: {
+//         project_id: true,
+//         project_name: true,
+//         created_date: true,
+//         project_status: true,
+//         approval_datetime: true,
+//         project_datetime: true,
+//         qrCodeData: true,
+//       },
+//     });
+
+    
+//     const formattedProjects = projects.map((project) => ({
+//       ...project,
+//       created_date: project.created_date ? project.created_date.toISOString() : null,
+//       approval_datetime: project.approval_datetime ? project.approval_datetime.toISOString() : null,
+//       project_datetime: project.project_datetime ? project.project_datetime.toISOString() : null,
+//     }));
+
+//     res.status(200).json(formattedProjects);
+//   } catch (error) {
+//     console.error('!!! Error fetching projects by user !!!!', error);
+//     res.status(500).json({ message: 'เกิดข้อผิดพลาดในการดึงข้อมูลโครงการ', error });
+//   }
+// };
+
 
 
 export const getProjectActivity = async(req:Request,res:Response) => {
@@ -119,6 +156,7 @@ export const getProjectActivity = async(req:Request,res:Response) => {
         approval_datetime: true,
         project_datetime: true,
         qrCodeData: true,
+        ms_id:true
       },
       orderBy:{
         created_date: 'desc',

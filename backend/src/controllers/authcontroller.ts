@@ -48,13 +48,12 @@ export const login = async (req: Request, res: Response) => {
     if (!user) {
       user = await prisma.users_up.create({
         data: {
-          id: 1,
           ms_id,
-          givenName: `NATTITA `,
-          surname: 'DERAI',
+          givenName: `ORAWEE `,
+          surname: 'MUANGLERT',
           jobTitle: 'Student',
-          department: 'ict',
-          displayName: `NATTITA DERAI `,
+          department: 'public health',
+          displayName: `ORAWEE MUANGLERT `,
           role: 'organizer',
           qrCodeId: generateQrCodeId(),
         },
@@ -63,7 +62,7 @@ export const login = async (req: Request, res: Response) => {
 
     // สร้าง JWT token
     const token = jwt.sign(
-      { id: user.id, ms_id: user.ms_id, role: user.role },
+      {  ms_id: user.ms_id, role: user.role },
       JWT_SECRET,
       { expiresIn: '1h' }
     );
@@ -72,7 +71,7 @@ export const login = async (req: Request, res: Response) => {
     return res.status(200).json({
       token,
       user: {
-        id: user.id,
+        
         ms_id: user.ms_id,
         givenName: user.givenName ?? '',
         surname: user.surname ?? '',

@@ -7,7 +7,11 @@ export interface FormPost {
   location_post: string;
   post_datetime: string; 
   hour_post: number;
+  ms_id: string;
+  registration_start?: string; 
+  registration_end?: string;   
 }
+
 
 // ✅ ฟังก์ชันอัปโหลดรูปภาพและคืนค่า URL
 export const uploadImage = async (file: File): Promise<string | null> => {
@@ -31,8 +35,8 @@ export const uploadImage = async (file: File): Promise<string | null> => {
   }
 };
 
-// ฟังก์ชันส่งข้อมูลโพสต์ไปยัง API
-export const submitFormToAPI = async (formData: FormPost) => {
+
+export const submitFormToAPI = async (formData: FormPost): Promise<{ success: boolean; message: string }> => {
   try {
     const response = await axios.post("http://localhost:3000/event/postevent", formData, {
       headers: { "Content-Type": "application/json" },
@@ -53,7 +57,7 @@ export const submitFormToAPI = async (formData: FormPost) => {
   } catch (error) {
     if (axios.isAxiosError(error)) {
       console.error("Axios error:", error.response?.data || error.message);
-      return { success: false, message: "ส่งข้อมูลไม่สำเร็จ กรุณาลองใหม่" };
+      return { success: false, message: error.response?.data?.message || "ส่งข้อมูลไม่สำเร็จ กรุณาลองใหม่" };
     } else {
       console.error("Unexpected error:", error);
       return { success: false, message: "เกิดข้อผิดพลาดบางประการ กรุณาลองใหม่" };

@@ -10,6 +10,7 @@ datasource db {
 model event_posts {
   post_id               Int                      @id @default(autoincrement())
   project_id            Int?
+  ms_id                 String?                  @db.VarChar(255)
   post_content          String?                  @db.Text
   imge_url              String?                  @db.VarChar(255)
   post_date             DateTime?                @default(now()) @db.Timestamp(0)
@@ -17,14 +18,19 @@ model event_posts {
   location_post         String?                  @db.VarChar(255)
   hour_post             Int?
   post_datetime         DateTime?                @db.DateTime(0)
+  registration_start    DateTime?                @db.DateTime(0)
+  registration_end      DateTime?                @db.DateTime(0)
   project_activity      project_activity?        @relation(fields: [project_id], references: [project_id], onDelete: NoAction, onUpdate: NoAction, map: "event_posts_ibfk_1")
+  user                  users_up?                @relation("UserEventPosts", fields: [ms_id], references: [ms_id])
   registration_activity registration_activity[]
 
   @@index([project_id], map: "project_id")
+  @@index([ms_id])
 }
 
 model project_activity {
   project_id            Int                             @id @default(autoincrement())
+  ms_id                 String?                         @db.VarChar(255)
   project_name          String                          @db.VarChar(255)
   project_description   String?                         @db.Text
   department            String?                         @db.VarChar(255)
@@ -38,7 +44,10 @@ model project_activity {
   qrCodeData            String?                         @db.VarChar(255)
   activity_record       activity_record[]
   event_posts           event_posts[]
+  user                  users_up?                       @relation("UserProjectActivity", fields: [ms_id], references: [ms_id])
   registration_activity registration_activity[]
+
+  @@index([ms_id])
 }
 
 model registration_activity {
@@ -56,17 +65,19 @@ model registration_activity {
 }
 
 model users_up {
-  id              Int
-  ms_id           String            @id @unique(map: "ms_id") @db.VarChar(255)
-  role            String?           @default("user") @db.VarChar(50)
-  created_at      DateTime?         @default(now()) @db.Timestamp(0)
-  givenName       String?           @db.VarChar(255)
-  surname         String?           @db.VarChar(255)
-  jobTitle        String?           @db.VarChar(255)
-  department      String?           @db.VarChar(255)
-  displayName     String?           @db.VarChar(255)
-  qrCodeId        String?           @unique(map: "qrCodeId") @db.VarChar(255)
-  activity_record activity_record[]
+  id               Int?
+  ms_id            String             @id @db.VarChar(255)
+  role             String?            @default("user") @db.VarChar(50)
+  created_at       DateTime?          @default(now()) @db.Timestamp(0)
+  givenName        String?            @db.VarChar(255)
+  surname          String?            @db.VarChar(255)
+  jobTitle         String?            @db.VarChar(255)
+  department       String?            @db.VarChar(255)
+  displayName      String?            @db.VarChar(255)
+  qrCodeId         String?            @unique(map: "qrCodeId") @db.VarChar(255)
+  activity_record  activity_record[]
+  event_posts      event_posts[]      @relation("UserEventPosts")
+  project_activity project_activity[] @relation("UserProjectActivity")
 }
 
 model activity_record {

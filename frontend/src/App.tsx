@@ -11,6 +11,7 @@ import Projectstatus from './Admin/Projectstatus';
 import Searchpage from './page/record/Searchpage';
 import Regisname from './page/project/Regisname';
 import Home from './page/Home';
+import RecordActivity from './page/record/recordname';
 import RoleManager from './Admin/Rolemanager';
 import ProtectedRoute from './component/ProtectedRouter';
 import Register from './component/register';
@@ -30,21 +31,23 @@ const App: React.FC = () => {
             <Route path="/home" element={<Home />} /> 
             <Route path="/projectdetail/:id" element={<Projectdetail />} />
             <Route path="/projectrecord" element={<Projectrecord />} />
+             <Route path="/recordactivity/:project_id" element={<RecordActivity />} />
             <Route path="/search/:project_id" element={<Searchpage />} />
+            <Route path="/adminrole" element={<RoleManager />} />
             <Route path="/regisactivity/:post_id" element={<Regisname />} />
           </Route>
 
           {/* Organizer only */}
           <Route element={<ProtectedRoute allowedRoles={['organizer']} />}>
             <Route path="/projectlist" element={<Projectlist />} />
-            <Route path="/adminrole" element={<RoleManager />} />
+            
             <Route path="/createproject" element={<Createproject />} />
             <Route path="/eventlist" element={<Eventlist />} />
           </Route>
 
           {/* Admin only */}
           <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
-            <Route path="/adminrole" element={<RoleManager />} />
+            {/* <Route path="/adminrole" element={<RoleManager />} /> */}
             <Route path="/projectstatus" element={<Projectstatus />} />
           </Route>
 

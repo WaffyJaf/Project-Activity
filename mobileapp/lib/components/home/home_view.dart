@@ -46,31 +46,25 @@ class _HomeViewState extends State<HomeView> {
       },
       child: Column(
         children: [
-          // ปุ่มแสดง QR Code
-          Padding(
-            padding: const EdgeInsets.all(10.0),
-            child: ElevatedButton.icon(
-              onPressed: () {
-                if (user == null) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Please log in')),
+          if (user != null && user.role == 'user') 
+            Padding(
+              padding: const EdgeInsets.all(10.0),
+              child: ElevatedButton.icon(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const QrCodeStudent()),
                   );
-                  return;
-                }
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const QrCodeStudent()),
-                );
-              },
-              icon: const Icon(Icons.qr_code),
-              label: const Text('Show My QR Code'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.deepPurple,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+                },
+                icon: const Icon(Icons.qr_code),
+                label: const Text('Show My QR Code'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.deepPurple,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+                ),
               ),
             ),
-          ),
           // ตัวเลือกการเรียงลำดับใน AppBar
           Padding(
             padding: const EdgeInsets.all(0),

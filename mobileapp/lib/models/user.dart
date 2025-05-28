@@ -1,5 +1,5 @@
 class User {
-  final int id;
+  final int? id;              
   final String msId;
   final String givenName;
   final String surname;
@@ -11,7 +11,7 @@ class User {
   final String createdAt;
 
   User({
-    required this.id,
+    this.id,                  
     required this.msId,
     required this.givenName,
     required this.surname,
@@ -25,16 +25,16 @@ class User {
 
   factory User.fromJson(Map<String, dynamic> json) {
     return User(
-      id: json['id'],
-      msId: json['ms_id'],
+      id: json['id'] != null ? json['id'] as int : null,
+      msId: json['ms_id'] ?? '',
       givenName: json['givenName'] ?? '',
       surname: json['surname'] ?? '',
       jobTitle: json['jobTitle'] ?? '',
       department: json['department'] ?? '',
       displayName: json['displayName'] ?? '',
-      role: json['role'],
+      role: json['role'] ?? '',
       qrCodeId: json['qrCodeId'] ?? '',
-      createdAt: json['created_at'],
+      createdAt: json['created_at'] ?? '',
     );
   }
 }

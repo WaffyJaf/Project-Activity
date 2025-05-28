@@ -23,19 +23,28 @@ function Projectrecord() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-purple-50 to-white ml-50">
+    <div className="min-h-screen bg-gradient-to-br from-purple-200 via-purple-50 to-white py-7 px-4 md:px-6 ml-50">
       <Navbar />
-      <div className="container mx-auto px-4 py-12 flex flex-col items-center ">
-        <span className="text-3xl font-extrabold text-purple-800 mb-12 drop-shadow-md">
-          เลือกโครงการที่ต้องการบันทึก
-        </span>
+      <div className="mx-auto px-4 max-w-6xl">
+       <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 flex flex-col md:flex-row justify-between items-center">
+          <div className="w-full flex justify-between items-center">
+            <span className="text-2xl md:text-2xl font-extrabold text-purple-900 tracking-tight drop-shadow-sm">
+              เลือกโครงการที่ต้องการบันทึก
+            </span>
+
+            <i className="fa-solid fa-download fa-2xl text-purple-800 "></i>
+          </div>
+        
+        </div>
         {projects.length > 0 ? (
           <div className="w-full max-w-6xl bg-white rounded-2xl shadow-2xl overflow-hidden">
             {/* Table Header */}
             <div className="grid grid-cols-[2fr_1fr_1fr] gap-4 bg-purple-700 text-white p-6 font-semibold text-lg border-b border-purple-200">
               <div>ชื่อโครงการ</div>
               <div>วันที่สร้าง</div>
-              <div className="text-center">สถานะ</div>
+              
+              <div className="ml-10">สถานะ</div>
+             
             </div>
             {/* Table Body */}
             <div className="divide-y divide-gray-200">
@@ -61,11 +70,11 @@ function Projectrecord() {
                       {getThaiStatus(item.project_status)}
                       <i className="fa-solid fa-check ml-2 text-green-600"></i>
                     </span>
-                    <Link
-                      to={`/search/${item.project_id}`}
-                      className="text-gray-600 hover:text-purple-800 transition-colors"
-                    >
-                      <i className="fa-solid fa-pen fa-lg"></i>
+                    <Link to={`/recordactivity/${item.project_id}`} >
+                      <button className="bg-green-500 hover:bg-green-700 text-white px-3 py-1.5 rounded text-xs font-medium transition-all duration-200 shadow-sm hover:shadow-md flex items-center space-x-1">
+                                <i className="fa-solid fa-floppy-disk fa-xm mr-2 text-white cursor-pointer"></i>                                          
+                                <span>บันทึก</span>
+                              </button>
                     </Link>
                   </div>
                 </div>

@@ -1,5 +1,5 @@
 import express, { Request, Response } from "express";
-import { SearchUsers , ActivityRecord,ActivityRecordMobile,JoinActivity } from "../controllers/activityhourcontroller";
+import { SearchUsers , ActivityRecord,ActivityRecordMobile,JoinActivity ,getRegistrationsByProject} from "../controllers/activityhourcontroller";
 
 const router = express.Router();
 
@@ -17,6 +17,10 @@ router.post("/activityrecord2", async (req: Request, res: Response) => {
 
 router.post("/joinactivity", async (req: Request, res: Response) => {
   await JoinActivity(req, res);
+});
+
+router.get("/regis/:project_id", async (req: Request, res: Response) => {
+  await getRegistrationsByProject(req, res);
 });
 
 export default router;

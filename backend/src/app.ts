@@ -4,6 +4,7 @@ import projectRouter from "./router/pjrouter";
 import eventRouter from "./router/evenrouter";
 import authRouter from "./router/authrouter";
 import recordRouter from './router/recordrouter';
+import getby from './router/getby';
 import cors from "cors";
 
 
@@ -30,6 +31,7 @@ app.use("/event", eventRouter);
 app.use('/uploads', express.static('D:/ActivityUP/backend/uploads'));
 app.use("/auth", authRouter);
 app.use("/record", recordRouter);
+app.use("/getby", getby);
 
 
 

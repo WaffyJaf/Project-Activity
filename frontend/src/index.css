@@ -1,1 +1,10 @@
 @import "tailwindcss";
+a {
+  text-decoration: none; 
+  
+}
+
+a:hover {
+  text-decoration: none; 
+  
+}

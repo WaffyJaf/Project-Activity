@@ -76,7 +76,9 @@ class _ProjectViewState extends State<ProjectView> {
             Navigator.pop(context);
             setState(() => _isScanning = false);
           },
-          child: const Text('ยกเลิก'),
+          child: const Text(
+            'ยกเลิก',
+          ),
         ),
       ],
     ),
@@ -134,7 +136,17 @@ class _ProjectViewState extends State<ProjectView> {
                   return const Center(child: Text('ไม่พบโครงการ'));
                 }
 
-                final projects = _sortProjects(snapshot.data!);
+                //การจัดการสถานะ
+                final approvedProjects = snapshot.data!
+                    .where((project) =>
+                        project.projectStatus.toLowerCase() == 'approved')
+                    .toList();
+
+                if (approvedProjects.isEmpty) {
+                  return const Center(child: Text('ไม่พบโครงการที่ได้รับการอนุมัติ'));
+                }
+
+                final projects = _sortProjects(approvedProjects);
                 return ListView.builder(
                   itemCount: projects.length,
                   itemBuilder: (context, index) {
@@ -142,7 +154,7 @@ class _ProjectViewState extends State<ProjectView> {
                     return Card(
                       margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
                       child: ListTile(
-                        leading: const Icon(Icons.folder_copy_rounded, size: 40),
+                        
                         title: Text(project.projectName),
                         subtitle: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -163,12 +175,12 @@ class _ProjectViewState extends State<ProjectView> {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             IconButton(
-                              icon: const Icon(Icons.qr_code_scanner),
+                              icon: const Icon(Icons.flip),
                               tooltip: 'สแกน QR Code นิสิต',
                               onPressed: () => _scanQrCode(context, project),
                             ),
                             IconButton(
-                              icon: const Icon(Icons.qr_code),
+                              icon: const Icon(Icons.qr_code_2),
                               tooltip: 'แสดง QR Code กิจกรรม',
                               onPressed: () {
                                 Navigator.push(

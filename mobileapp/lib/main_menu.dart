@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:iconly/iconly.dart';
 import 'package:provider/provider.dart';
 import 'components/home/home.dart';
-import 'components/scan/projectlist.dart';
+import 'components/scan/projectlistappbar.dart';
 import 'components/doc/doc.dart';
 import 'components/scan/scanpage.dart';
 import 'providers/user_provider.dart';
@@ -37,7 +37,7 @@ class _MainMenuState extends State<MainMenu> {
       case 'organizer':
         return [
           const Home(),
-          const ProjectView(),
+          const pjAppbar(),
           const Doc(),
         ];
       case 'admin':

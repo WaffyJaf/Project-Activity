@@ -43,56 +43,94 @@ const storage = multer.diskStorage({
   };
 
   export const eventPost = async (req: Request, res: Response) => {
-    const { project_id, post_content, imge_url, location_post, post_datetime, hour_post } = req.body;
-  
-    if (!project_id || !post_content) {
-      return res.status(400).json({ message: "ข้อมูลไม่ครบถ้วน" }); 
+  const { project_id, post_content, imge_url, location_post, post_datetime, hour_post, ms_id, registration_start, registration_end } = req.body;
+
+  // Validate required fields
+  if (!project_id || !post_content || !ms_id) {
+    return res.status(400).json({ message: "ข้อมูลไม่ครบถ้วน: ต้องระบุ project_id, post_content, และ ms_id" });
+  }
+
+  // Validate dates
+  const postDate = new Date(post_datetime);
+  if (isNaN(postDate.getTime())) {
+    return res.status(400).json({ message: 'วันที่และเวลาที่ส่งมาไม่ถูกต้อง' });
+  }
+
+  // Validate registration period if provided
+  let regStart: Date | null = null;
+  let regEnd: Date | null = null;
+  if (registration_start && registration_end) {
+    regStart = new Date(registration_start);
+    regEnd = new Date(registration_end);
+    if (isNaN(regStart.getTime()) || isNaN(regEnd.getTime())) {
+      return res.status(400).json({ message: 'วันที่ลงทะเบียนไม่ถูกต้อง' });
     }
-  
-    try {
-     
-      const newEvent = await prisma.event_posts.create({
-        data: {
-          project_id: Number(project_id),
-          post_content,
-          imge_url,
-          location_post,
-          post_datetime: new Date(post_datetime),
-          hour_post: Number(hour_post), 
-        },
-      });
-  
-      console.log("✅ Save to database");
-      return res.status(201).json({ message: "Event post saved successfully", data: newEvent }); 
-    } catch (error) {
-      console.error("❌ Error saving to database:", error);
-      return res.status(500).json({ message: "Error saving to database", error }); 
+    if (regStart >= regEnd) {
+      return res.status(400).json({ message: 'วันที่เริ่มลงทะเบียนต้องมาก่อนวันที่สิ้นสุด' });
     }
-  };
+    if (regStart < new Date()) {
+      return res.status(400).json({ message: 'วันที่เริ่มลงทะเบียนต้องอยู่ในอนาคต' });
+    }
+  }
+
+  try {
+    // Verify project_id exists and is associated with ms_id
+    const project = await prisma.project_activity.findFirst({
+      where: {
+        project_id: Number(project_id),
+        ms_id: ms_id,
+      },
+    });
+
+    if (!project) {
+      return res.status(404).json({ message: 'ไม่พบโครงการที่เชื่อมโยงกับ ms_id นี้' });
+    }
+
+    const newEvent = await prisma.event_posts.create({
+      data: {
+        project_id: Number(project_id),
+        post_content,
+        imge_url,
+        location_post,
+        post_datetime: postDate,
+        hour_post: hour_post ? Number(hour_post) : null,
+        ms_id,
+        registration_start: regStart || null, // Store registration period
+        registration_end: regEnd || null,     // Store registration period
+      },
+    });
+
+    console.log("✅ Save to database");
+    return res.status(201).json({ message: "Event post saved successfully", data: newEvent });
+  } catch (error) {
+    console.error("❌ Error saving to database:", error);
+    return res.status(500).json({ message: "Error saving to database", error });
+  }
+};
     
-  export const registerActivity = async (req: Request, res: Response) => {
-    const {  post_id, student_id, student_name, faculty } = req.body;
-  
-    if (!post_id || !student_id || !student_name || !faculty) {
-      return res.status(400).json({ message: "ข้อมูลไม่ครบถ้วน" });
-    }
-  
-    try {
-      const newRegister = await prisma.registration_activity.create({
-        data: { 
-          post_id: Number(post_id),
-          student_id,
-          student_name,
-          faculty,
-        },
-      });
-      console.log("Saved to database:", newRegister);
-      res.status(201).json({ message: "ลงทะเบียนสำเร็จ", data: newRegister });
-    } catch (error) {
-      console.error("!!! Error saving to database !!!", error);
-      return res.status(500).json({ message: "เกิดข้อผิดพลาดในการบันทึก", error });
-    }
-  };
+export const registerActivity = async (req: Request, res: Response) => {
+  const { post_id, student_id, student_name, faculty } = req.body;
+
+  if (!post_id || !student_id || !student_name || !faculty) {
+    return res.status(400).json({ message: "ข้อมูลไม่ครบถ้วน" });
+  }
+
+  try {
+    const newRegister = await prisma.registration_activity.create({
+      data: {
+        post_id: Number(post_id),
+        student_id,
+        student_name,
+        faculty,
+      },
+    });
+    console.log("Saved to database:", newRegister);
+    res.status(201).json({ message: "ลงทะเบียนสำเร็จ", data: newRegister });
+  } catch (error) {
+    console.error("!!! Error saving to database !!!", error);
+    return res.status(500).json({ message: "เกิดข้อผิดพลาดในการบันทึก", error });
+  }
+};
 
   
   export const getregisACtivity = async (req: Request, res: Response) => {
