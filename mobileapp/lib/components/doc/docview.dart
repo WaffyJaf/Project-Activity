@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../services/record_api.dart';
-import '../home/home_view.dart';
+import './docdetial.dart';
 import 'package:mobileapp/models/record.dart';
 import '../../providers/user_provider.dart';
 
@@ -26,7 +26,7 @@ class _DocviewState extends State<Docview> {
 
   void _fetchRegistrations() {
     final user = Provider.of<UserProvider>(context, listen: false).user;
-    final studentId = user?.msId ?? '64222040'; // Fallback for testing
+    final studentId = user?.msId ?? '64222040'; 
     print('Fetching registrations for studentId: $studentId');
     _registrationsFuture = ApiService().getRegistrationByStudentId(studentId);
   }
@@ -110,7 +110,7 @@ class _DocviewState extends State<Docview> {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => HomeView(), 
+                                builder: (context) =>ActivityMoreDetail(), 
                               ),
                             );
                           },
@@ -150,35 +150,13 @@ class _DocviewState extends State<Docview> {
                   style: TextStyle(
                     fontFamily: 'Sarabun',
                     fontSize: 18,
-                    fontWeight: FontWeight.bold,
+                    
                   ),
                 ),
               ),
             ),
-            // Sorting dropdown
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-              child: Align(
-                alignment: Alignment.centerRight,
-                child: DropdownButton<SortOption>(
-                  value: _sortOption,
-                  onChanged: (SortOption? newValue) {
-                    setState(() {
-                      _sortOption = newValue!;
-                    });
-                  },
-                  items: SortOption.values.map((SortOption option) {
-                    return DropdownMenuItem<SortOption>(
-                      value: option,
-                      child: Text(
-                        option == SortOption.newest ? 'ใหม่สุด' : 'เก่าสุด',
-                        style: const TextStyle(fontFamily: 'Sarabun'),
-                      ),
-                    );
-                  }).toList(),
-                ),
-              ),
-            ),
+           
+            
             // Registration list
             Expanded(
               child: FutureBuilder<List<Registration>>(

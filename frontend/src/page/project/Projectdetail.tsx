@@ -38,8 +38,8 @@ function Projectdetail() {
       post_datetime: "",
       hour_post: 0,
       ms_id: "",
-      registration_start: "", // New field
-      registration_end: "",   // New field
+      registration_start: "",
+      registration_end: "",
     },
   });
 
@@ -64,7 +64,7 @@ function Projectdetail() {
           title: 'เกิดข้อผิดพลาด',
           text: 'ไม่พบข้อมูลผู้ใช้ กรุณาล็อกอินใหม่ ❌',
           confirmButtonText: 'ตกลง',
-          confirmButtonColor: '#9333ea',
+          confirmButtonColor: '#7c3aed',
         });
         return;
       }
@@ -88,7 +88,7 @@ function Projectdetail() {
             title: 'เกิดข้อผิดพลาด',
             text: 'วันที่เริ่มลงทะเบียนต้องมาก่อนวันที่สิ้นสุด ❌',
             confirmButtonText: 'ตกลง',
-            confirmButtonColor: '#9333ea',
+            confirmButtonColor: '#7c3aed',
           });
           return;
         }
@@ -98,7 +98,7 @@ function Projectdetail() {
             title: 'เกิดข้อผิดพลาด',
             text: 'วันที่เริ่มลงทะเบียนต้องอยู่ในอนาคต ❌',
             confirmButtonText: 'ตกลง',
-            confirmButtonColor: '#9333ea',
+            confirmButtonColor: '#7c3aed',
           });
           return;
         }
@@ -114,7 +114,7 @@ function Projectdetail() {
             title: 'เกิดข้อผิดพลาด',
             text: 'ไม่สามารถอัปโหลดรูปภาพได้ กรุณาลองใหม่ ❌',
             confirmButtonText: 'ตกลง',
-            confirmButtonColor: '#9333ea',
+            confirmButtonColor: '#7c3aed',
           });
           return;
         }
@@ -128,7 +128,7 @@ function Projectdetail() {
           title: 'สำเร็จ!',
           text: 'โพสต์ถูกบันทึกสำเร็จ! 🎉',
           confirmButtonText: 'ตกลง',
-          confirmButtonColor: '#9333ea',
+          confirmButtonColor: '#7c3aed',
         }).then((result) => {
           if (result.isConfirmed) {
             reset();
@@ -144,7 +144,7 @@ function Projectdetail() {
           title: 'เกิดข้อผิดพลาด',
           text: result.message || 'เกิดข้อผิดพลาดในการบันทึกโพสต์ ❌',
           confirmButtonText: 'ตกลง',
-          confirmButtonColor: '#9333ea',
+          confirmButtonColor: '#7c3aed',
         });
       }
     } catch (error) {
@@ -154,16 +154,23 @@ function Projectdetail() {
         title: 'เกิดข้อผิดพลาด',
         text: 'เกิดข้อผิดพลาด กรุณาลองใหม่ ❌',
         confirmButtonText: 'ตกลง',
-        confirmButtonColor: '#9333ea',
+        confirmButtonColor: '#7c3aed',
       });
     }
   };
 
   function getStatusClass(status: string): string {
-    if (status === 'approved') return 'bg-green-100 text-green-800 border-green-300';
-    if (status === 'rejected') return 'bg-red-100 text-red-800 border-red-300';
-    if (status === 'pending') return 'bg-yellow-100 text-yellow-800 border-yellow-300';
-    return 'bg-gray-100 text-gray-800 border-gray-300';
+    if (status === 'approved') return 'bg-gradient-to-r from-emerald-50 to-green-50 text-emerald-700 border border-emerald-200 shadow-sm';
+    if (status === 'rejected') return 'bg-gradient-to-r from-red-50 to-rose-50 text-red-700 border border-red-200 shadow-sm';
+    if (status === 'pending') return 'bg-gradient-to-r from-amber-50 to-yellow-50 text-amber-700 border border-amber-200 shadow-sm';
+    return 'bg-gradient-to-r from-gray-50 to-slate-50 text-gray-700 border border-gray-200 shadow-sm';
+  }
+
+  function getStatusIcon(status: string): string {
+    if (status === 'approved') return 'fa-check-circle text-emerald-600';
+    if (status === 'rejected') return 'fa-times-circle text-red-600';
+    if (status === 'pending') return 'fa-clock text-amber-600';
+    return 'fa-question-circle text-gray-600';
   }
 
   useEffect(() => {
@@ -186,10 +193,8 @@ function Projectdetail() {
   }, [id]);
 
   const handlePostClick = () => {
-    console.log("Current status:", postStatus);
     if (postStatus !== "approved") {
       setWarningMessage("โครงการนี้ยังไม่ได้รับการอนุมัติ ❌");
-      console.log("Setting warning modal to true");
     } else {
       if (project && project.project_description) {
         setValue("post_content", project.project_description);
@@ -201,216 +206,372 @@ function Projectdetail() {
   const isAdmin = currentUser?.role === "admin";
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-100 via-purple-50 to-white py-7 px-4 md:px-6 ml-50">
+    <div className="min-h-screen bg-gradient-to-br  mt-20 ml-50">
       <Navbar />
-      <div className="mx-auto px-4 max-w-5xl mt-10">
-        <div className="bg-purple-800 rounded-2xl shadow-lg p-6 flex flex-col md:flex-row justify-between items-center">
-          <div className="w-full flex justify-between items-center">
-            <span className="text-2xl md:text-2xl font-extrabold text-white tracking-tight drop-shadow-sm">
-              รายละเอียดโครงการ
-            </span>
-            <i className="fa-solid fa-file-invoice fa-2xl text-white"></i>
-          </div>
-        </div>
+      
+      {/* Hero Section with Academic Look */}
+      
 
+      <div className="max-w-6xl mx-auto px-6 lg:px-8 -mt-8 relative z-10">
         {loading && (
-          <motion.p
-            className="text-xl text-gray-600 animate-pulse"
+          <motion.div
+            className="bg-white rounded-2xl shadow-lg p-8 mb-8"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ duration: 0.5 }}
           >
-            กำลังโหลดข้อมูล...
-          </motion.p>
+            <div className="flex items-center justify-center space-x-3">
+              <div className="animate-spin rounded-full h-8 w-8 border-4 border-indigo-600 border-t-transparent"></div>
+              <span className="text-lg text-gray-600">กำลังโหลดข้อมูล...</span>
+            </div>
+          </motion.div>
         )}
+
         {error && (
-          <motion.p
-            className="text-red-600 bg-red-50 p-4 rounded-lg shadow-md text-base"
-            initial={{ opacity: 0, scale: 0.8 }}
+          <motion.div
+            className="bg-red-50 border border-red-200 rounded-2xl p-6 mb-8"
+            initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.5 }}
           >
-            {error}
-          </motion.p>
+            <div className="flex items-center space-x-3">
+              <i className="fa-solid fa-exclamation-triangle text-red-500 text-xl"></i>
+              <p className="text-red-700 font-medium">{error}</p>
+            </div>
+          </motion.div>
         )}
 
         {project && (
           <motion.div
-            className="w-full max-w-5xl bg-white rounded-3xl shadow-xl p-5"
-            initial={{ opacity: 0, y: 50 }}
+            className="bg-white rounded-xl shadow-xl overflow-hidden mb-8"
+            initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
           >
-            <span className="text-2xl font-extrabold text-gray-500 ml-90 py-3.5">{project.project_name}</span>
-            <div className="space-y-4 text-gray-700 text-base">
-              <p><strong>รหัสโครงการ:</strong> {project.project_id}</p>
-              <p>
-                <strong>สถานะ:</strong>
-                <span className={`inline-block py-1 px-3 rounded-full border ${getStatusClass(project.project_status)}`}>
-                  {project.project_status}
-                </span>
-              </p>
-              <p><strong>หน่วยงาน/คณะ:</strong> {project.department}</p>
-              <p><strong>สถานที่:</strong> {project.location}</p>
-              <p><strong>งบประมาณ:</strong> {project.budget}</p>
-              <p><strong>จำนวนชั่วโมงที่ได้รับ:</strong> {project.hours}</p>
-              <p><strong>วัน เวลา ที่จัดกิจกรรม:</strong> {new Date(project.project_datetime).toLocaleString('th-TH')}</p>
-              <p><strong>รายละเอียด:</strong> {project.project_description}</p>
+            {/* Project Header */}
+            <div className=" bg-purple-800 px-8 py-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-2xl font-bold text-white mb-2">{project.project_name}</h2>
+                  <div className="flex items-center space-x-4 text-indigo-100">
+                    <span className="flex items-center space-x-2">
+                      <span>รหัสโครงการ: {project.project_id}</span>
+                    </span>
+                    <span className="flex items-center space-x-2">
+                      <i className="fa-solid fa-building"></i>
+                      <span>{project.department}</span>
+                    </span>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className={`inline-flex items-center space-x-2 px-4 py-2 rounded-full font-medium ${getStatusClass(project.project_status)}`}>
+                    <i className={`fa-solid ${getStatusIcon(project.project_status)}`}></i>
+                    <span className="capitalize">{project.project_status}</span>
+                  </div>
+                </div>
+              </div>
             </div>
 
-            {!isAdmin && (
-              <motion.button
-                onClick={handlePostClick}
-                className="mt-8 bg-green-700 text-white py-2 px-3 rounded hover:bg-green-900 transition-colors duration-300 shadow-md font-semibold ml-50"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                โพสต์กิจกรรม
-                <i className="fa-solid fa-arrow-up-from-bracket ml-2 text-white text-lg"></i>
-              </motion.button>
-            )}
+            {/* Project Details Grid */}
+            <div className="p-8">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                {/* Left Column */}
+                <div className="space-y-6">
+                  <div className="bg-gradient-to-r from-blue-50 to-indigo-50  p-6 border border-blue-100">
+                    <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                      <i className="fa-solid fa-info-circle text-blue-600 mr-3"></i>
+                      ข้อมูลพื้นฐาน
+                    </h3>
+                    <div className="space-y-4">
+                      <div className="flex items-start space-x-3">
+                        <i className="fa-solid fa-map-marker-alt text-gray-500 mt-1"></i>
+                        <div>
+                          <span className="text-sm font-medium text-gray-600">สถานที่</span>
+                          <p className="text-gray-800">{project.location}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-start space-x-3">
+                        <i className="fa-solid fa-dollar-sign text-gray-500 mt-1"></i>
+                        <div>
+                          <span className="text-sm font-medium text-gray-600">งบประมาณ</span>
+                          <p className="text-gray-800 font-semibold">{project.budget}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-start space-x-3">
+                        <i className="fa-solid fa-clock text-gray-500 mt-1"></i>
+                        <div>
+                          <span className="text-sm font-medium text-gray-600">จำนวนชั่วโมง</span>
+                          <p className="text-gray-800 font-semibold">{project.hours} ชั่วโมง</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
 
-            {warningMessage && (
-              <motion.p
-                className="text-red-600 mt-4 text-center text-sm"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.5 }}
-              >
-                {warningMessage}
-              </motion.p>
-            )}
+                  <div className="bg-gradient-to-r from-green-50 to-emerald-50  p-6 border border-green-100">
+                    <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                      <i className="fa-solid fa-calendar-alt text-green-600 mr-3"></i>
+                      กำหนดการ
+                    </h3>
+                    <div className="bg-white rounded-lg p-4 border border-green-200">
+                      <p className="text-gray-800 font-medium">
+                        {new Date(project.project_datetime).toLocaleString('th-TH', {
+                          weekday: 'long',
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Right Column */}
+                <div className="space-y-6">
+                  <div className="bg-gradient-to-r from-purple-50 to-violet-50  p-6 border border-purple-100">
+                    <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                      <i className="fa-solid fa-file-text text-purple-600 mr-3"></i>
+                      รายละเอียดโครงการ
+                    </h3>
+                    <div className="bg-white rounded-lg p-4 border border-purple-200 max-h-64 overflow-y-auto">
+                      <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">
+                        {project.project_description}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Button */}
+              {!isAdmin && (
+                <motion.div 
+                  className="mt-8 flex justify-center "
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.4 }}
+                >
+                  <motion.button
+                    onClick={handlePostClick}
+                    className="bg-gradient-to-r   from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-semibold py-4 px-8  shadow-lg transition-all duration-300 flex items-center space-x-3"
+                    whileHover={{ scale: 1.05, y: -2 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <i className="fa-solid fa-paper-plane text-lg "></i>
+                    <span>โพสต์กิจกรรม</span>
+                  </motion.button>
+                </motion.div>
+              )}
+
+              {warningMessage && (
+                <motion.div
+                  className="mt-6 bg-red-50 border border-red-200 rounded-xl p-4"
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                >
+                  <div className="flex items-center space-x-3">
+                    <i className="fa-solid fa-exclamation-triangle text-red-500"></i>
+                    <p className="text-red-700 font-medium">{warningMessage}</p>
+                  </div>
+                </motion.div>
+              )}
+            </div>
           </motion.div>
         )}
       </div>
 
+      {/* Enhanced Modal */}
       {showModal && postStatus === "approved" && (
         <motion.div
-          className="fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-[1000]"
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm flex justify-center items-center z-50 p-4"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.3 }}
         >
           <motion.div
-            className="bg-white p-8 rounded-2xl w-[95%] py-15 max-w-3xl shadow-2xl max-h-[90vh] overflow-y-auto relative"
-            initial={{ scale: 0.8, y: -50 }}
+            className="bg-white rounded-3xl w-full max-w-4xl shadow-2xl max-h-[90vh] overflow-hidden"
+            initial={{ scale: 0.9, y: 30 }}
             animate={{ scale: 1, y: 0 }}
-            exit={{ scale: 0.8, y: -50 }}
-            transition={{ duration: 0.4 }}
+            exit={{ scale: 0.9, y: 30 }}
+            transition={{ type: "spring", damping: 20 }}
           >
-            <button
-              type="button"
-              className="absolute top-4 right-5 text-xl text-gray-500 hover:text-gray-800 transition-colors"
-              onClick={() => setShowModal(false)}
-              aria-label="Close Modal"
-            >
-              ×
-            </button>
-            <h2 className="text-xl font-bold text-purple-800 mb-6 pb-3 border-b border-purple-100">สร้างโพสต์กิจกรรม</h2>
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-              <div>
-                <label className="block text-gray-700 font-semibold mb-2 text-sm">
-                  เนื้อหากิจกรรม
-                </label>
-                <div className="w-full min-h-[160px] p-3 border border-gray-300 rounded-lg text-sm bg-gray-50">
-                  {project?.project_description}
-                  <input
-                    type="hidden"
-                    {...register("post_content")}
-                    value={project?.project_description || ""}
-                  />
-                </div>
-              </div>
-              <div>
-                <label className="block text-gray-700 font-semibold mb-2 text-sm">สถานที่จัดกิจกรรม</label>
-                <div className="w-full p-3 border border-gray-300 rounded-lg text-sm bg-gray-50">
-                  {project?.location || "-"}
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-gray-700 font-semibold mb-2 text-sm">วันและเวลา</label>
-                <div className="w-full p-3 border border-gray-300 rounded-lg text-sm bg-gray-50">
-                  {project?.project_datetime ? new Date(project.project_datetime).toLocaleString('th-TH') : "-"}
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-gray-700 font-semibold mb-2 text-sm">จำนวนชั่วโมงที่ได้รับ</label>
-                <div className="w-full p-3 border border-gray-300 rounded-lg text-sm bg-gray-50">
-                  {project?.hours || "-"} ชั่วโมง
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-gray-700 font-semibold mb-2 text-sm">วันที่เริ่มลงทะเบียน</label>
-                <input
-                  type="datetime-local"
-                  {...register("registration_start")}
-                  className="w-full p-3 border border-gray-300 rounded-lg text-sm bg-gray-50"
-                />
-              </div>
-
-              <div>
-                <label className="block text-gray-700 font-semibold mb-2 text-sm">วันที่สิ้นสุดลงทะเบียน</label>
-                <input
-                  type="datetime-local"
-                  {...register("registration_end")}
-                  className="w-full p-3 border border-gray-300 rounded-lg text-sm bg-gray-50"
-                />
-              </div>
-
-              <div>
-                <label className="block text-gray-700 font-semibold mb-2 text-sm">อัพโหลดรูปภาพ</label>
-                <input
-                  type="file"
-                  ref={fileInputRef}
-                  onChange={handleFileUpload}
-                  accept="image/*"
-                  className="hidden"
-                />
-                <motion.button
-                  type="button"
-                  onClick={handleUploadButtonClick}
-                  className="mb-4 text-gray-600 py-2 px-3 rounded hover:bg-gray-300 transition-colors duration-300 bg-gray-200"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  เลือกไฟล์
-                </motion.button>
-                <input type="hidden" {...register('imge_url')} />
-
-                <div className="mt-4 text-sm text-gray-600">
-                  {fileToUpload.current ? `File: ${fileToUpload.current.name}` : 'No file selected'}
-                </div>
-
-                {imagePreview && (
-                  <motion.div
-                    className="mt-4"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ duration: 0.5 }}
-                  >
-                    <img
-                      src={imagePreview}
-                      alt="Preview"
-                      className="max-w-full max-h-48 rounded-lg shadow-md"
-                    />
-                  </motion.div>
-                )}
-              </div>
-
-              <motion.button
-                type="submit"
-                disabled={isSubmitting}
-                className={`w-full py-3 bg-green-700 text-white rounded-lg font-semibold text-sm hover:bg-green-900 transition-colors shadow-md ${isSubmitting ? 'bg-gray-400 cursor-not-allowed' : ''}`}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+            {/* Modal Header */}
+            <div className=" bg-purple-700 px-8 py-6 relative">
+              <button
+                type="button"
+                className="absolute top-4 right-6 text-white/80 hover:text-white text-2xl transition-colors"
+                onClick={() => setShowModal(false)}
               >
-                {isSubmitting ? 'กำลังบันทึก...' : 'บันทึกโพสต์'}
-              </motion.button>
-            </form>
+                <i className="fa-solid fa-times"></i>
+              </button>
+              <h2 className="text-2xl font-bold text-white flex items-center">
+                <i className="fa-solid fa-plus-circle mr-3"></i>
+                สร้างโพสต์กิจกรรม
+              </h2>
+              <p className="text-indigo-100 mt-2">กรอกข้อมูลเพื่อเผยแพร่กิจกรรมสู่สาธารณะ</p>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-8 overflow-y-auto max-h-[calc(90vh-120px)]">
+              <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+                {/* Content Preview */}
+                <div className="bg-gradient-to-r from-gray-100 to-indigo-50 rounded-xl p-6 border border-blue-100">
+                  <label className=" text-gray-800 font-semibold mb-4 flex items-center">
+                    <i className="fa-solid fa-file-text text-blue-600 mr-2"></i>
+                    เนื้อหากิจกรรม
+                  </label>
+                  <div className="bg-white rounded-lg p-4 border border-blue-200 min-h-32 max-h-48 overflow-y-auto">
+                    <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">
+                      {project?.project_description}
+                    </p>
+                    <input
+                      type="hidden"
+                      {...register("post_content")}
+                      value={project?.project_description || ""}
+                    />
+                  </div>
+                </div>
+
+                {/* Info Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="bg-gray-100 rounded-xl p-6 border border-green-100">
+                    <label className=" text-gray-800 font-semibold mb-3 flex items-center">
+                      <i className="fa-solid fa-map-marker-alt text-green-600 mr-2"></i>
+                      สถานที่จัดกิจกรรม
+                    </label>
+                    <div className="bg-white rounded-lg p-4 border border-green-200">
+                      <p className="text-gray-700">{project?.location || "-"}</p>
+                    </div>
+                  </div>
+
+                  <div className="bg-gray-100 rounded-xl p-6 border border-purple-100">
+                    <label className=" text-gray-800 font-semibold mb-3 flex items-center">
+                      <i className="fa-solid fa-clock text-purple-600 mr-2"></i>
+                      จำนวนชั่วโมงที่ได้รับ
+                    </label>
+                    <div className="bg-white rounded-lg p-4 border border-purple-200">
+                      <p className="text-gray-700 font-semibold">{project?.hours || "-"} ชั่วโมง</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-gray-100  rounded-xl p-6 border border-amber-100">
+                  <label className=" text-gray-800 font-semibold mb-3 flex items-center">
+                    <i className="fa-solid fa-calendar-alt text-amber-600 mr-2"></i>
+                    วันและเวลา
+                  </label>
+                  <div className="bg-white rounded-lg p-4 border border-amber-200">
+                    <p className="text-gray-700 font-medium">
+                      {project?.project_datetime ? new Date(project.project_datetime).toLocaleString('th-TH', {
+                        weekday: 'long',
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      }) : "-"}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Registration Period */}
+                <div className="bg-gradient-to-r from-rose-50 to-pink-50 rounded-xl p-6 border border-rose-100">
+                  <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                    <i className="fa-solid fa-user-plus text-rose-600 mr-2"></i>
+                    ช่วงเวลาลงทะเบียน
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-gray-700 font-medium mb-2">เริ่มลงทะเบียน</label>
+                      <input
+                        type="datetime-local"
+                        {...register("registration_start")}
+                        className="w-full p-3 border border-rose-200 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-rose-500 transition-colors"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-gray-700 font-medium mb-2">สิ้นสุดลงทะเบียน</label>
+                      <input
+                        type="datetime-local"
+                        {...register("registration_end")}
+                        className="w-full p-3 border border-rose-200 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-rose-500 transition-colors"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Image Upload */}
+                <div className="bg-gradient-to-r from-teal-50 to-cyan-50 rounded-xl p-6 border border-teal-100">
+                  <label className=" text-gray-800 font-semibold mb-4 flex items-center">
+                    <i className="fa-solid fa-image text-teal-600 mr-2"></i>
+                    อัพโหลดรูปภาพ
+                  </label>
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleFileUpload}
+                    accept="image/*"
+                    className="hidden"
+                  />
+                  <motion.button
+                    type="button"
+                    onClick={handleUploadButtonClick}
+                    className="bg-white border-2 border-dashed border-teal-300 rounded-lg p-6 w-full hover:border-teal-400 hover:bg-teal-50 transition-colors flex flex-col items-center space-y-2"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <i className="fa-solid fa-cloud-upload-alt text-3xl text-teal-500"></i>
+                    <span className="text-teal-700 font-medium">คลิกเพื่อเลือกไฟล์</span>
+                    <span className="text-teal-600 text-sm">หรือลากไฟล์มาวางที่นี่</span>
+                  </motion.button>
+                  <input type="hidden" {...register('imge_url')} />
+
+                  {fileToUpload.current && (
+                    <div className="mt-4 bg-white rounded-lg p-3 border border-teal-200">
+                      <div className="flex items-center space-x-3">
+                        <i className="fa-solid fa-file-image text-teal-600"></i>
+                        <span className="text-gray-700">{fileToUpload.current.name}</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {imagePreview && (
+                    <motion.div
+                      className="mt-4"
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                    >
+                      <img
+                        src={imagePreview}
+                        alt="Preview"
+                        className="max-w-full max-h-64 rounded-xl shadow-md object-cover"
+                      />
+                    </motion.div>
+                  )}
+                </div>
+
+                {/* Submit Button */}
+                <motion.button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className={`w-full py-4 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white rounded-xl font-semibold text-lg shadow-lg transition-all duration-300 flex items-center justify-center space-x-3 ${
+                    isSubmitting ? 'opacity-50 cursor-not-allowed' : ''
+                  }`}
+                  whileHover={!isSubmitting ? { scale: 1.02, y: -2 } : {}}
+                  whileTap={!isSubmitting ? { scale: 0.98 } : {}}
+                >
+                  {isSubmitting ? (
+                    <>
+                      <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
+                      <span>กำลังบันทึก...</span>
+                    </>
+                  ) : (
+                    <>
+                      <i className="fa-solid fa-paper-plane"></i>
+                      <span>บันทึกโพสต์</span>
+                    </>
+                  )}
+                </motion.button>
+              </form>
+            </div>
           </motion.div>
         </motion.div>
       )}
