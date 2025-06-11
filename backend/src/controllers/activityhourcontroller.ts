@@ -1,9 +1,5 @@
 import { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
-
-
-
-
 const prisma = new PrismaClient();
 
 interface RegistrationResponse {
@@ -418,3 +414,105 @@ export const getRegistrationsByProject = async (req: Request, res: Response) => 
     await prisma.$disconnect();
   }
 };
+
+export const getUserByMsId = async (req: Request, res: Response) => {
+  const { ms_id } = req.params;
+  try {
+    const user = await prisma.users_up.findUnique({
+      where: { ms_id },
+      include: {
+        activity_record: {
+          include: {
+            project_activity: {
+              select: {
+                project_name: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    
+    const transformedUser = {
+      ...user,
+      activity_record: user.activity_record.map((record) => ({
+        id: record.id,
+        project_id: record.project_id,
+        project_name: record.project_activity?.project_name ?? 'Unknown Project',
+        ms_id: record.ms_id,
+        joined_at: record.joined_at,
+        project_activity: record.project_activity, 
+      })),
+    };
+
+    res.json(transformedUser);
+  } catch (error) {
+    console.error(`Error fetching user ${ms_id}:`, error);
+    res.status(500).json({ error: 'Failed to fetch user activity' });
+  }
+};
+
+export const getRegistrationByStudentId = async (req: Request, res: Response) => {
+  const { student_id } = req.params;
+
+  try {
+    const registrations = await prisma.registration_activity.findMany({
+      where: { student_id },
+      include: {
+        project_activity: {
+          select: {
+            project_name: true,
+          },
+        },
+        event_posts: {
+          select: {
+            post_id: true,
+            post_content: true,
+            location_post: true,
+            hour_post: true,
+            post_datetime: true,
+          },
+        },
+      },
+    });
+
+    if (registrations.length === 0) {
+      return res.status(404).json({ error: 'No registration history found for this student' });
+    }
+
+    const transformed = registrations.map((r) => ({
+      register_id: r.register_id,
+      student_id: r.student_id,
+      student_name: r.student_name,
+      faculty: r.faculty,
+      project_name: r.project_activity?.project_name ?? 'Unknown Project',
+      event: r.event_posts
+        ? {
+            post_id: r.event_posts.post_id,
+            content: r.event_posts.post_content,
+            location: r.event_posts.location_post,
+            datetime: r.event_posts.post_datetime,
+          }
+        : null,
+    }));
+
+    res.json(transformed);
+  } catch (error) {
+    console.error(`Error fetching registration history for student_id ${student_id}:`, error);
+    res.status(500).json({ error: 'Failed to fetch registration history' });
+  }
+};
+
+
+
+
+
+
+
+
+

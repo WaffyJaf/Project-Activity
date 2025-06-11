@@ -30,6 +30,7 @@ export interface LoginResponse {
 export interface ActivityRecord {
   id: number;
   project_id: number;
+  project_name: string;
   ms_id: string;
   joined_at: string | null; 
 }
@@ -41,4 +42,8 @@ export interface ActivityRecordResponse {
   data?: {
     activity?: ActivityRecord;
   };
+}
+
+export interface UserWithActivity extends User {
+  activity_record: ActivityRecord[];
 }

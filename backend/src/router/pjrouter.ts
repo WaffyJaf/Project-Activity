@@ -8,9 +8,6 @@ router.post("/createproject", async (req: Request, res: Response) => {
   await createProjectActivity(req, res);
 });
 
-// router.get("/:ms_id", async (req: Request, res: Response) => {
-//   await getProjectByUser(req, res);
-// });
 
 router.patch("/statusproject/:project_id", async (req: Request, res: Response) => {
   await updateProjectActivity(req, res);

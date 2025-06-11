@@ -1,5 +1,6 @@
 import axios, { AxiosResponse } from 'axios';
-import { User } from '../type/user';
+import { User ,UserWithActivity } from '../type/user';
+
 
 
 export interface RecordACInput {
@@ -76,6 +77,16 @@ export const fetchRegistrationsByProject = async (
       }
     }
     throw new Error('เกิดข้อผิดพลาดในการเชื่อมต่อกับเซิร์ฟเวอร์');
+  }
+};
+
+export const getUserActivity = async (ms_id: string): Promise<UserWithActivity> => {
+  try {
+    const response = await axios.get(`http://localhost:3000/record/${ms_id}`);
+    return response.data;
+  } catch (error) {
+    console.error(`Get user activity API error for ms_id ${ms_id}:`, error);
+    throw new Error('Failed to fetch user activity');
   }
 };
 

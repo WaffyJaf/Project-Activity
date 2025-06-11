@@ -49,12 +49,12 @@ export const login = async (req: Request, res: Response) => {
       user = await prisma.users_up.create({
         data: {
           ms_id,
-          givenName: `ORAWEE `,
-          surname: 'MUANGLERT',
+          givenName: `NATTITA`,
+          surname: 'DERAI',
           jobTitle: 'Student',
-          department: 'public health',
-          displayName: `ORAWEE MUANGLERT `,
-          role: 'organizer',
+          department: 'เทคโนโลยีสารสนเทศ',
+          displayName: `NATTITA DARAI`,
+          role: 'admin',
           qrCodeId: generateQrCodeId(),
         },
       });

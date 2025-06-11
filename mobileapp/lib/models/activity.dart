@@ -29,8 +29,8 @@ factory Activity.fromJson(Map<String, dynamic> json) {
     postContent: (json['post_content'] ?? json['content'] ?? '').toString(),
     postDate: (json['post_datetime'] ?? json['date'] ?? '').toString(),
     postStatus: (json['post_status'] ?? json['status'] ?? '').toString(),
-    postlocation: (json['location_post'] ?? '').toString(),
-    posthour: (json['hour_post'] ?? '').toString(),
+    postlocation: (json['location'] ?? json['location_post'] ?? '').toString(), 
+    posthour: (json['hours'] ?? json['hour_post'] ?? '').toString(), 
     imageUrl: fullUrl,
   );
 }
@@ -55,4 +55,33 @@ String formatDate(String dateString) {
     return dateString;
   }
 }
+}
+
+class Registration {
+  final String registerId;
+  final String studentId;
+  final String studentName;
+  final String faculty;
+  final String projectName;
+  final Activity? event;
+
+  Registration({
+    required this.registerId,
+    required this.studentId,
+    required this.studentName,
+    required this.faculty,
+    required this.projectName,
+    this.event,
+  });
+
+  factory Registration.fromJson(Map<String, dynamic> json) {
+    return Registration(
+      registerId: json['register_id'],
+      studentId: json['student_id'],
+      studentName: json['student_name'],
+      faculty: json['faculty'],
+      projectName: json['project_name'],
+      event: json['event'] != null ? Activity.fromJson(json['event']) : null,
+    );
+  }
 }

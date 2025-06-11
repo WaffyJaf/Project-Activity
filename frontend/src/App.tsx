@@ -14,6 +14,7 @@ import Home from './page/Home';
 import RecordActivity from './page/record/recordname';
 import RoleManager from './Admin/Rolemanager';
 import ProtectedRoute from './component/ProtectedRouter';
+import StudentActivity from './page/record/studentrecord';
 import Register from './component/register';
 import './App.css';
 
@@ -32,7 +33,8 @@ const App: React.FC = () => {
             <Route path="/projectdetail/:id" element={<Projectdetail />} />
             <Route path="/projectrecord" element={<Projectrecord />} />
              <Route path="/recordactivity/:project_id" element={<RecordActivity />} />
-            <Route path="/search/:project_id" element={<Searchpage />} />
+            <Route path="/search" element={<Searchpage />} />
+            <Route path="/student/:ms_id" element={<StudentActivity />} />
             <Route path="/adminrole" element={<RoleManager />} />
             <Route path="/regisactivity/:post_id" element={<Regisname />} />
           </Route>

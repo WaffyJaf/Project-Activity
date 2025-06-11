@@ -157,7 +157,7 @@ const Home: React.FC = () => {
               </li>
               <li className="transform transition-transform hover:scale-105">
                 <NavLink
-                  to="/home/student-history"
+                  to="/search"
                   className={({ isActive }) =>
                     `flex items-center bg-white ${
                       isActive ? 'border-yellow-400 bg-purple-700' : 'border-purple-600'

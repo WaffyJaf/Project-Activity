@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../models/activity.dart';
 import '../../services/home_api.dart';
+import '../../providers/user_provider.dart';
 
 class RegistrationPage extends StatefulWidget {
   final Activity activity;
@@ -13,19 +15,43 @@ class RegistrationPage extends StatefulWidget {
 
 class _RegistrationPageState extends State<RegistrationPage> {
   final _formKey = GlobalKey<FormState>();
-  final _studentIdController = TextEditingController();
-  final _studentNameController = TextEditingController();
-  final _facultyController = TextEditingController();
+  late TextEditingController _studentIdController;
+  late TextEditingController _studentNameController;
+  late TextEditingController _facultyController;
+
+  @override
+  void initState() {
+    super.initState();
+    // กำหนดค่าเริ่มต้นให้ตัวควบคุมโดยใช้ข้อมูลจาก UserProvider
+    final user = Provider.of<UserProvider>(context, listen: false).user;
+    _studentIdController = TextEditingController(text: user?.msId ?? '');
+    _studentNameController = TextEditingController(text: user?.displayName ?? '');
+    _facultyController = TextEditingController(text: user?.department ?? '');
+  }
 
   Future<void> _register() async {
     if (_formKey.currentState!.validate()) {
+      // ตรวจสอบว่ามีข้อมูลผู้ใช้หรือไม่
+      final user = Provider.of<UserProvider>(context, listen: false).user;
+      if (user == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('ไม่พบข้อมูลผู้ใช้ กรุณาล็อกอินใหม่'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
+      // เรียก API เพื่อลงทะเบียน
       final result = await Apiregis().register(
-        postId: widget.activity.postId.toString(), 
+        postId: widget.activity.postId.toString(),
         studentId: _studentIdController.text,
         studentName: _studentNameController.text,
         faculty: _facultyController.text,
       );
 
+      // แสดงผลลัพธ์การลงทะเบียน
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(result['message']),
@@ -34,6 +60,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
         ),
       );
 
+      // กลับไปหน้าก่อนหน้าหากลงทะเบียนสำเร็จ
       if (result['status'] == 'success') {
         Navigator.pop(context);
       }
@@ -42,6 +69,8 @@ class _RegistrationPageState extends State<RegistrationPage> {
 
   @override
   Widget build(BuildContext context) {
+    final user = Provider.of<UserProvider>(context).user;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text(
@@ -79,7 +108,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                     Text(
+                    Text(
                       widget.activity.postContent.length > 50
                           ? 'ลงทะเบียน ${widget.activity.postContent.substring(0, 20)}...'
                           : widget.activity.postContent,
@@ -96,6 +125,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
                         border: OutlineInputBorder(),
                         prefixIcon: Icon(Icons.badge),
                       ),
+                      readOnly: true, // ทำให้ช่องนี้เป็นแบบอ่านอย่างเดียว
                       validator: (value) =>
                           value!.isEmpty ? 'กรุณากรอกรหัสนักศึกษา' : null,
                     ),
@@ -107,6 +137,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
                         border: OutlineInputBorder(),
                         prefixIcon: Icon(Icons.person),
                       ),
+                      readOnly: true, // ทำให้ช่องนี้เป็นแบบอ่านอย่างเดียว
                       validator: (value) =>
                           value!.isEmpty ? 'กรุณากรอกชื่อ-นามสกุล' : null,
                     ),
@@ -118,11 +149,10 @@ class _RegistrationPageState extends State<RegistrationPage> {
                         border: OutlineInputBorder(),
                         prefixIcon: Icon(Icons.school),
                       ),
+                      readOnly: true, // ทำให้ช่องนี้เป็นแบบอ่านอย่างเดียว
                       validator: (value) =>
                           value!.isEmpty ? 'กรุณากรอกคณะ' : null,
                     ),
-
-                    //submit
                     const SizedBox(height: 24),
                     Center(
                       child: ElevatedButton(
@@ -141,7 +171,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
                         child: const Text(
                           'ยืนยันการลงทะเบียน',
                           style: TextStyle(
-                            fontFamily: 'Sarab370un',
+                            fontFamily: 'Sarabun',
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
                           ),
@@ -160,6 +190,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
 
   @override
   void dispose() {
+    // ล้างตัวควบคุมเมื่อหน้าไม่ใช้งาน
     _studentIdController.dispose();
     _studentNameController.dispose();
     _facultyController.dispose();
