@@ -15,6 +15,7 @@ import RecordActivity from './page/record/recordname';
 import RoleManager from './Admin/Rolemanager';
 import ProtectedRoute from './component/ProtectedRouter';
 import StudentActivity from './page/record/studentrecord';
+import  ParticipantsList from './page/project/ParticipantsList';
 import Register from './component/register';
 import './App.css';
 
@@ -45,6 +46,7 @@ const App: React.FC = () => {
             
             <Route path="/createproject" element={<Createproject />} />
             <Route path="/eventlist" element={<Eventlist />} />
+           <Route path="/participants/:project_id" element={<ParticipantsList />} />
           </Route>
 
           {/* Admin only */}

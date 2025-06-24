@@ -65,7 +65,7 @@ class _ActivityMoreDetailState extends State<ActivityMoreDetail> {
       appBar: AppBar(
         title: const Text(
           'กิจกรรมที่เข้าร่วมไปแล้ว',
-           style: const TextStyle(fontSize: 22 , color: Colors.white),
+           style: TextStyle(fontSize: 22 , color: Colors.white),
         ),
         backgroundColor: const Color.fromARGB(255, 94, 32, 142),
       ),

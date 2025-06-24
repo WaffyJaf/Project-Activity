@@ -16,7 +16,7 @@ class Docview extends StatefulWidget {
 
 class _DocviewState extends State<Docview> {
   late Future<List<Registration>> _registrationsFuture;
-  SortOption _sortOption = SortOption.newest;
+  final SortOption _sortOption = SortOption.newest;
 
   @override
   void initState() {

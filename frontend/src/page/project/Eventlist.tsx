@@ -273,20 +273,21 @@ function Eventlist() {
                         </span>
                       </td>
                       <td className="px-6 py-4">
-                        <div className="flex items-center justify-center space-x-2">
+                        <div className="flex items-center justify-center space-x-3">
                           <Link to={`/Regisactivity/${item.post_id}`}>
                             <button className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded text-xs font-medium transition-all duration-200 shadow-sm hover:shadow-md flex items-center space-x-1">
                               <i className="fa-solid fa-user fa-xs mr-2 text-white cursor-pointer"></i>
                               <span>รายชื่อ</span>
                             </button>
                           </Link>
+                          <div className="mr-2">
                           <button
                             onClick={() => openEditModal(item)}
-                            className="bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded text-xs font-medium transition-all duration-200 shadow-sm hover:shadow-md flex items-center space-x-1"
+                            className="bg-green-600 hover:bg-green-700 text-white px-3 py-1.5  rounded text-xs font-medium transition-all duration-200 shadow-sm hover:shadow-md flex items-center space-x-1"
                           >
                             <i className="fa-solid fa-pen fa-xs mr-2 text-white cursor-pointer"></i>
                             <span>แก้ไข</span>
-                          </button>
+                          </button></div>
                           <button
                             onClick={() => handleDeleteEvent(item.post_id)}
                             className="bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded text-xs font-medium transition-all duration-200 shadow-sm hover:shadow-md flex items-center space-x-2"

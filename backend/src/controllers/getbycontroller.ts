@@ -83,4 +83,47 @@ export const getPostByUser = async (req: Request, res: Response) => {
   }
 };
 
+export const getParticipantsByProjectId = async (req: Request, res: Response) => {
+  try {
+    const { project_id } = req.params;
+    console.log("Received Project ID for participants:", project_id);
+
+    if (!project_id) {
+      return res.status(400).json({ message: "ไม่พบ ID โครงการ" });
+    }
+
+    const projectId = Number(project_id);
+    if (isNaN(projectId)) {
+      return res.status(400).json({ message: "ID โครงการต้องเป็นตัวเลข" });
+    }
+
+    const participants = await prisma.activity_record.findMany({
+      where: {
+        project_id: projectId,
+      },
+      select: {
+        ms_id: true,
+        joined_at: true,
+        users_up: {
+          select: {
+            ms_id: true,
+            givenName: true,
+            surname: true,
+            department:true,
+          },
+        },
+      },
+    });
+
+    if (!participants.length) {
+      return res.status(200).json({ message: "ไม่มีผู้เข้าร่วมในโครงการนี้", data: [] });
+    }
+
+    res.status(200).json({ data: participants });
+  } catch (error) {
+    console.error("!!! เกิดข้อผิดพลาดในการดึงรายชื่อผู้เข้าร่วม !!!", error);
+    return res.status(500).json({ message: "เกิดข้อผิดพลาดในการดึงรายชื่อผู้เข้าร่วม", error });
+  }
+};
+
 

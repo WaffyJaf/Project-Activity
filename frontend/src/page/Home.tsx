@@ -67,7 +67,7 @@ const Home: React.FC = () => {
       <div className="min-h-screen bg-gradient-to-br from-purple-200 via-purple-50 to-white px-4 pt-2 ml-60">
         <Navbar />
         <div className="flex flex-col items-center justify-center h-96">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-900 mb-4"></div>
           <p className="text-gray-600 text-lg">กำลังโหลดข้อมูลกิจกรรม...</p>
         </div>
       </div>
@@ -132,7 +132,7 @@ const Home: React.FC = () => {
                     } rounded-xl p-4 hover:bg-purple-700 transition-all shadow-lg`
                   }
                 >
-                  <img src="/story.png" alt="ประวัติการเปิดโครงการ" className="w-14 h-18 rounded-lg mr-4" />
+                  <img src="/story.png" alt="ประวัติการเปิดโครงการ" className="w-10 h-12 rounded-lg mr-4" />
                   <div>
                     <span className="text-black font-medium text-lg block">ประวัติการเปิดโครงการ</span>
                     <span className="text-gray-500 text-sm">ตรวจสอบโครงการที่ผ่านมา</span>

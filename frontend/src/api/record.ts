@@ -1,5 +1,5 @@
 import axios, { AxiosResponse } from 'axios';
-import { User ,UserWithActivity } from '../type/user';
+import { User ,UserWithActivity , ActivityRecord } from '../type/user';
 
 
 
@@ -89,6 +89,19 @@ export const getUserActivity = async (ms_id: string): Promise<UserWithActivity> 
     throw new Error('Failed to fetch user activity');
   }
 };
+
+export async function fetchParticipantsByProjectId(projectId: string | undefined): Promise<ActivityRecord[]> {
+  if (!projectId) {
+    throw new Error("ไม่ได้ระบุ id โครงการ");
+  }
+  try {
+    const response = await axios.get<{ data: ActivityRecord[] }>(`http://localhost:3000/getby/participants/${projectId}`);
+    return response.data.data;
+  } catch (error) {
+    console.error(`Error fetching participants for project ${projectId}:`, error);
+    throw error;
+  }
+}
 
 
 

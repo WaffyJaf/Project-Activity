@@ -1,5 +1,5 @@
 import express, { Request, Response } from "express";
-import { getProjectByUser,getPostByUser } from "../controllers/getbycontroller";
+import { getProjectByUser,getPostByUser , getParticipantsByProjectId } from "../controllers/getbycontroller";
 
 const router = express.Router();
 
@@ -11,6 +11,10 @@ router.get("/:ms_id", async (req: Request, res: Response) => {
 
 router.get("/post/:ms_id", async (req: Request, res: Response) => {
   await getPostByUser(req, res);
+});
+
+router.get("/participants/:project_id", async (req: Request, res: Response) => {
+  await getParticipantsByProjectId(req, res);
 });
 
 

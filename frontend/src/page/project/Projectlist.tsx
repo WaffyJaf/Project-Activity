@@ -1,4 +1,4 @@
-import  { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { fetchProjectsByUser, Project } from '../../api/projectget';
 import Navbar from '../../component/navbar';
@@ -53,12 +53,7 @@ function Projectlist() {
     };
 
     const { icon, color, bg } = statusMap[status] || statusMap['default'];
-
-    return {
-      icon: <i className={`${icon} ${color} ${bg} mr-2`} style={{ fontSize: 20 }} />,
-      color,
-      bg,
-    };
+    return { icon: <i className={`${icon} ${color} ${bg} mr-2`} style={{ fontSize: 20 }} />, color, bg };
   };
 
   const handleViewProcess = (project: Project) => {
@@ -82,56 +77,74 @@ function Projectlist() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-100 via-purple-50 to-white py-7 px-4 md:px-6 ml-50">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6 ml-50">
       <Navbar />
-      <div className="mx-auto px-4 max-w-6xl">
-        <div className="bg-white rounded-2xl shadow-lg p-6 mb-3 flex flex-col md:flex-row justify-between items-center">
+      <div className="max-w-6xl mx-auto">
+        <div className="bg-purple-800 rounded-2xl shadow-lg p-6 mb-4 flex flex-col md:flex-row justify-between items-center">
           <div className="w-full flex justify-between items-center">
-            <span className="text-2xl md:text-2xl font-extrabold text-purple-900 tracking-tight drop-shadow-sm">
+            <span className="text-2xl font-extrabold text-white tracking-tight">
               ประวัติการเปิดโครงการ
+              <p className="text-white text-sm mt-2">จำนวนโครงการทั้งหมด: {projects.length} โครงการ</p>
             </span>
-            <i className="fa-solid fa-clock-rotate-left fa-2xl text-purple-800"></i>
+            <i className="fa-solid fa-clock-rotate-left fa-2xl text-white"></i>
           </div>
         </div>
+
         {projects.length > 0 ? (
-          <div className="bg-white shadow-lg rounded-2xl mb-8">
-            <div className="grid grid-cols-3 rounded-2xl gap-20 bg-purple-100 p-4 font-semibold text-gray-800 text-m border-b border-purple-200">
-              <div>ชื่อโครงการ</div>
-              <div>วันที่สร้าง</div>
-              <div className="text-center mr-60">สถานะ</div>
-            </div>
-            <div className="divide-y divide-gray-200">
-              {projects.map((item) => (
-                <div
-                  key={item.project_id}
-                  className="grid grid-cols-3 gap-4 p-4 transition-colors duration-200"
-                >
-                  <span className="inline-flex items-center px-3 py-1 rounded-full text-xm font-medium">
-                    {item.project_name}
-                  </span>
-                  <div className="text-xm text-gray-600 ml-5">{formatDate(item.created_date)}</div>
-                  <div className="flex justify-between items-center px-4">
-                    <span
-                      className={`inline-flex items-center px-3 py-1 rounded-full text-xm font-medium border ${getStatusClass(item.project_status)}`}
-                    >
-                      {getThaiStatus(item.project_status)}
-                      <i
-                        className="fa-solid fa-bars fa-xm ml-2 text-gray-600 cursor-pointer hover:text-red-950"
-                        onClick={() => handleViewProcess(item)}
-                      ></i>
-                    </span>
-                    <Link to={`/Projectdetail/${item.project_id}`}>
-                      <button className="bg-purple-800 text-white py-2 px-3 rounded hover:bg-purple-950 transition-colors duration-300 shadow-md text-sm">
-                        ดูรายละเอียด
-                      </button>
-                    </Link>
-                  </div>
-                </div>
-              ))}
-            </div>
+          <div className="overflow-x-auto rounded-xl border border-gray-200 shadow-lg">
+            <table className="min-w-full divide-y divide-gray-200 bg-white">
+              <thead className="bg-gradient-to-r from-gray-200 to-gray-100 sticky top-0 z-10 ">
+                <tr>
+                  <th className="px-6 py-4 text-left text-xm font-bold text-gray-900 uppercase tracking-wider">
+                    ลำดับ
+                  </th>
+                  <th className="px-6 py-4 text-left text-xm font-bold text-gray-900 uppercase tracking-wider">
+                    ชื่อโครงการ
+                  </th>
+                  <th className="px-6 py-4 text-left text-xm font-bold text-gray-900 uppercase tracking-wider">
+                    วันที่สร้าง
+                  </th>
+                  <th className="px-6 py-4 text-left text-xm font-bold text-gray-900 uppercase tracking-wider">
+                    สถานะ
+                  </th>
+                  <th className="px-6 py-4 text-left text-xm font-bold text-gray-900 uppercase tracking-wider">
+                    การดำเนินการ
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {projects.map((item, index) => (
+                  <tr key={item.project_id} className="hover:bg-gray-50 transition-colors duration-200">
+                    <td className="px-6 py-4 text-sm text-gray-700">{index + 1}</td>
+                    <td className="px-6 py-4 text-sm text-gray-700">{item.project_name}</td>
+                    <td className="px-6 py-4 text-sm text-gray-700">{formatDate(item.created_date)}</td>
+                    <td className="px-6 py-4">
+                      <span
+                        className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border ${getStatusClass(
+                          item.project_status
+                        )}`}
+                      >
+                        {getThaiStatus(item.project_status)}
+                        <i
+                          className="fa-solid fa-bars ml-2 text-gray-600 cursor-pointer hover:text-red-950"
+                          onClick={() => handleViewProcess(item)}
+                        ></i>
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <Link to={`/Projectdetail/${item.project_id}`}>
+                        <button className="bg-purple-800 text-white py-2 px-4 rounded hover:bg-purple-900 transition-colors duration-300 shadow-md text-sm">
+                          ดูรายละเอียด
+                        </button>
+                      </Link>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         ) : (
-          <p className="text-lg text-gray-600 animate-pulse">กำลังโหลดข้อมูล...</p>
+          <p className="text-lg text-gray-600 animate-pulse text-center">กำลังโหลดข้อมูล...</p>
         )}
       </div>
 
@@ -145,13 +158,12 @@ function Projectlist() {
           transition={{ duration: 0.3 }}
         >
           <motion.div
-            className="bg-white p-6 rounded-2xl w-[95%] max-w-2xl shadow-2xl max-h-[90vh] overflow-y-auto animate-slideIn relative"
+            className="bg-white p-6 rounded-2xl w-[95%] max-w-2xl shadow-2xl max-h-[90vh] overflow-y-auto"
             initial={{ scale: 0.8, y: -50 }}
             animate={{ scale: 1, y: 0 }}
             exit={{ scale: 0.8, y: -50 }}
             transition={{ duration: 0.4 }}
           >
-            {/* Header */}
             <div className="py-6 px-6">
               <div className="flex justify-between items-center">
                 <h2 className="text-xl font-bold text-gray-600 pb-3 border-b border-purple-100">
@@ -159,54 +171,48 @@ function Projectlist() {
                 </h2>
                 <button
                   onClick={() => setShowProcessModal(false)}
-                  className="text-white hover:bg-white hover:bg-opacity-20 rounded-full h-8 w-8 flex items-center justify-center transition-colors"
+                  className="text-gray-600 hover:bg-gray-100 rounded-full h-8 w-8 flex items-center justify-center transition-colors"
                 >
                   ×
                 </button>
               </div>
             </div>
-
-            {/* Content */}
             <div className="p-6">
-              {/* Status Badge */}
               {selectedProject.project_status && (
                 <div
-                  className={`${getStatusDetails(selectedProject.project_status).bg} ${getStatusDetails(selectedProject.project_status).color} rounded-lg p-3 flex items-center mb-6`}
+                  className={`${getStatusDetails(selectedProject.project_status).bg} ${getStatusDetails(
+                    selectedProject.project_status
+                  ).color} rounded-lg p-3 flex items-center mb-6`}
                 >
                   {getStatusDetails(selectedProject.project_status).icon}
                   <span className="font-medium">สถานะปัจจุบัน: {getThaiStatus(selectedProject.project_status)}</span>
                 </div>
               )}
-
-              {/* Timeline */}
               <div className="space-y-6">
                 <div className="flex items-start">
                   <div className="flex-shrink-0 rounded-full p-2 mr-4">
                     <i className="fa-solid fa-calendar ml-2 text-gray-700 cursor-pointer"></i>
                   </div>
                   <div>
-                    <p className="text-x text-gray-500">วันที่สร้างโครงการ</p>
+                    <p className="text-sm text-gray-500">วันที่สร้างโครงการ</p>
                     <p className="font-medium text-gray-800">{formatDate(selectedProject.created_date)}</p>
                   </div>
                 </div>
-
                 <div className="flex items-start">
                   <div className="flex-shrink-0 rounded-full p-2 mr-4">
                     <i className="fa-solid fa-square-check ml-2 text-gray-700 cursor-pointer"></i>
                   </div>
                   <div>
-                    <p className="text-x text-gray-500">วันที่อนุมัติโครงการ</p>
+                    <p className="text-sm text-gray-500">วันที่อนุมัติโครงการ</p>
                     <p className="font-medium text-gray-800">{formatDate(selectedProject.approval_datetime)}</p>
                   </div>
                 </div>
               </div>
             </div>
-
-            {/* Footer */}
             <div className="bg-gray-50 px-6 py-4 border-t border-gray-100">
               <button
                 onClick={() => setShowProcessModal(false)}
-                className="w-full bg-green-700 text-white py-2 rounded hover:bg-green-900 transition-all font-medium"
+                className="w-full bg-green-700 text-white py-2 rounded-lg hover:bg-green-900 transition-all font-medium"
               >
                 ปิด
               </button>

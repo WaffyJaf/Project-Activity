@@ -32,7 +32,8 @@ export interface ActivityRecord {
   project_id: number;
   project_name: string;
   ms_id: string;
-  joined_at: string | null; 
+  joined_at: string | null;
+  users_up: User; 
 }
 export interface ActivityRecordResponse {
   status?: 'success' | 'error' | 'duplicate';

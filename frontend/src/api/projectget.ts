@@ -1,4 +1,5 @@
 import axios from 'axios';
+import {User , ActivityRecord  } from '../type/user'
 
 export interface Project {
   project_id: number;
