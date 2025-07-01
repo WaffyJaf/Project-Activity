@@ -13,7 +13,7 @@ export const getProjectByUser = async (req: Request, res: Response) => {
   try {
     const projects = await prisma.project_activity.findMany({
       where: {
-        ms_id: ms_id, // Filter by ms_id
+        ms_id: ms_id, 
       },
       select: {
         project_id: true,
@@ -102,8 +102,10 @@ export const getParticipantsByProjectId = async (req: Request, res: Response) =>
         project_id: projectId,
       },
       select: {
+        id:true,
         ms_id: true,
         joined_at: true,
+        evaluation_status: true,
         users_up: {
           select: {
             ms_id: true,

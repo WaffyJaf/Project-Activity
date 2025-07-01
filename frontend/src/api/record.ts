@@ -103,5 +103,19 @@ export async function fetchParticipantsByProjectId(projectId: string | undefined
   }
 }
 
+export async function updateProjectStatus(Id: number, status: string): Promise<ActivityRecord> {
+  try {
+    const response = await axios.patch<ActivityRecord>(
+      `http://localhost:3000/record/evaluation/${Id}`,
+      { evaluation_status: status },
+      { headers: { 'Content-Type': 'application/json' } }
+    );
+    return response.data;
+  } catch (error) {
+    console.error(`เกิดข้อผิดพลาดในการอัพเดตการประเมิน ${Id}:`, error);
+    throw error;
+  }
+}
+
 
 

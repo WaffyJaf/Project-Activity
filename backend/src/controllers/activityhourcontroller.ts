@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient , activity_record_evaluation_status  } from '@prisma/client';
 const prisma = new PrismaClient();
 
 interface RegistrationResponse {
@@ -507,6 +507,57 @@ export const getRegistrationByStudentId = async (req: Request, res: Response) =>
     res.status(500).json({ error: 'Failed to fetch registration history' });
   }
 };
+
+export const updateEvaluation = async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const { evaluation_status } = req.body;
+
+ 
+  if (!id || isNaN(Number(id))) {
+    return res.status(400).json({ message: "id ไม่ครบถ้วนหรือไม่ใช่ตัวเลข" });
+  }
+  if (!evaluation_status || typeof evaluation_status !== 'string') {
+    return res.status(400).json({ message: "evaluation_status ไม่ครบถ้วนหรือไม่ใช่สตริง" });
+  }
+
+  // ตรวจสอบว่า project_status เป็นค่าที่ถูกต้องใน enum
+  const validStatuses = Object.values(activity_record_evaluation_status); 
+  if (!validStatuses.includes(evaluation_status as activity_record_evaluation_status)) {
+    return res.status(400).json({
+      message: `project_status ต้องเป็นหนึ่งใน: ${validStatuses.join(', ')}`,
+    });
+  }
+
+  try {
+    const IdNum = Number(id);
+
+    // ค้นหานิสิต
+    const existingProject = await prisma.activity_record.findUnique({
+      where: { id: IdNum },
+    });
+
+    if (!existingProject) {
+      return res.status(404).json({ message: "ไม่พบนิสิต" });
+    }
+
+    // อัปเดตสถานะ
+    const updatedProject = await prisma.activity_record.update({
+      where: { id: IdNum },
+      data: {
+        evaluation_status: { set: evaluation_status as activity_record_evaluation_status },
+      },
+    });
+
+    return res.status(200).json({ message: "อัปเดตการประเมิน", data: updatedProject });
+  } catch (error) {
+    console.error("เกิดข้อผิดพลาดในการอัปเดตการประเมิน:", error);
+    return res.status(500).json({ message: "เกิดข้อผิดพลาดในการอัปเดตการประเมิน", error });
+  } finally {
+    await prisma.$disconnect();
+  }
+};
+
+
 
 
 

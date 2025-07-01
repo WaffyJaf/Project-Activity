@@ -81,12 +81,13 @@ model users_up {
 }
 
 model activity_record {
-  id               Int              @id @default(autoincrement())
-  project_id       Int
-  ms_id            String           @db.VarChar(10)
-  joined_at        DateTime?        @default(now()) @db.DateTime(0)
-  project_activity project_activity @relation(fields: [project_id], references: [project_id], onDelete: Cascade, onUpdate: NoAction, map: "activity_record_ibfk_1")
-  users_up         users_up         @relation(fields: [ms_id], references: [ms_id], onDelete: Cascade, onUpdate: NoAction, map: "activity_record_ibfk_2")
+  id                Int                               @id @default(autoincrement())
+  project_id        Int
+  ms_id             String                            @db.VarChar(10)
+  joined_at         DateTime?                         @default(now()) @db.DateTime(0)
+  evaluation_status activity_record_evaluation_status @default(PENDING)
+  project_activity  project_activity                  @relation(fields: [project_id], references: [project_id], onDelete: Cascade, onUpdate: NoAction, map: "activity_record_ibfk_1")
+  users_up          users_up                          @relation(fields: [ms_id], references: [ms_id], onDelete: Cascade, onUpdate: NoAction, map: "activity_record_ibfk_2")
 
   @@index([ms_id], map: "ms_id")
   @@index([project_id], map: "project_id")
@@ -101,4 +102,10 @@ enum project_activity_project_status {
   pending
   approved
   rejected
+}
+
+enum activity_record_evaluation_status {
+  PENDING
+  COMPLETED
+  NOT_EVALUATED
 }

@@ -33,6 +33,8 @@ export interface ActivityRecord {
   project_name: string;
   ms_id: string;
   joined_at: string | null;
+  evaluation_status: 'PENDING' | 'COMPLETED' | 'NOT_EVALUATED';
+  
   users_up: User; 
 }
 export interface ActivityRecordResponse {

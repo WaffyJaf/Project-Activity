@@ -1,5 +1,5 @@
 import express, { Request, Response } from "express";
-import { SearchUsers , ActivityRecord,ActivityRecordMobile,JoinActivity ,getRegistrationsByProject ,getUserByMsId , getRegistrationByStudentId } from "../controllers/activityhourcontroller";
+import { SearchUsers , ActivityRecord,ActivityRecordMobile,JoinActivity ,getRegistrationsByProject ,getUserByMsId , getRegistrationByStudentId , updateEvaluation } from "../controllers/activityhourcontroller";
 
 const router = express.Router();
 
@@ -29,6 +29,10 @@ router.get("/:ms_id", async (req: Request, res: Response) => {
 
 router.get("/regisrecord/:student_id", async (req: Request, res: Response) => {
   await getRegistrationByStudentId(req, res);
+});
+
+router.patch("/evaluation/:id", async (req: Request, res: Response) => {
+  await updateEvaluation(req, res);
 });
 
 
