@@ -5,7 +5,6 @@ import Navbar from "../../component/navbar";
 import { getUsers} from '../../api/login';
 import {User} from '../../type/user';
 
-
 function StudentSearch() {
   const [searchTerm, setSearchTerm] = useState('');
   const [users, setUsers] = useState<User[]>([]);

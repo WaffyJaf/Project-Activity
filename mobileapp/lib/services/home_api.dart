@@ -4,7 +4,7 @@ import '../models/activity.dart';
 
 
 class ApiService{
-  static const String baseUrl = 'http://172.20.10.8:3000';
+  static const String baseUrl = 'http://10.0.2.2:3000';
 
     Future<List<Activity>> fetchActivities() async {
     try {
@@ -22,7 +22,7 @@ class ApiService{
 }
 
 class Apiregis{
-  static const String baseUrl = 'http://172.20.10.8:3000';
+  static const String baseUrl = 'http://10.0.2.2:3000';
 
    Future<Map<String, dynamic>> register({
   required String postId,    

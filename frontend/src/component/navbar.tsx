@@ -32,9 +32,13 @@ const Sidebar: React.FC = () => {
   };
 
   const handleLogout = () => {
+    // ลบ token
     logout();
     handleDropdownClose();
-    navigate('/login');
+
+    // พาไป logout Microsoft และกลับมาที่หน้า login
+  const logoutUrl = `https://login.microsoftonline.com/common/oauth2/v2.0/logout?post_logout_redirect_uri=${encodeURIComponent('http://localhost:5173/login')}`;
+  window.location.href = logoutUrl;
   };
 
   const menuItems: MenuItem[] = [

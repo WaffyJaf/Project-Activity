@@ -8,15 +8,15 @@ import Projectdetail from './page/project/Projectdetail';
 import Projectrecord from './page/record/Projectrecord';
 import Eventlist from './page/project/Eventlist';
 import Projectstatus from './Admin/Projectstatus';
-import Searchpage from './page/record/Searchpage';
 import Regisname from './page/project/Regisname';
 import Home from './page/Home';
 import RecordActivity from './page/record/recordname';
+import Searchpage from './page/record/Searchpage';
 import RoleManager from './Admin/Rolemanager';
 import ProtectedRoute from './component/ProtectedRouter';
 import StudentActivity from './page/record/studentrecord';
 import  ParticipantsList from './page/project/ParticipantsList';
-import Register from './component/register';
+
 import './App.css';
 
 const App: React.FC = () => {
@@ -26,15 +26,15 @@ const App: React.FC = () => {
         <Routes>
           {/* Public routes */}
           <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
+          
 
           {/* Protected routes */}
           <Route element={<ProtectedRoute />}>
             <Route path="/home" element={<Home />} /> 
             <Route path="/projectdetail/:id" element={<Projectdetail />} />
             <Route path="/projectrecord" element={<Projectrecord />} />
+             <Route path="/search" element={<Searchpage />} />
              <Route path="/recordactivity/:project_id" element={<RecordActivity />} />
-            <Route path="/search" element={<Searchpage />} />
             <Route path="/student/:ms_id" element={<StudentActivity />} />
             <Route path="/adminrole" element={<RoleManager />} />
             <Route path="/regisactivity/:post_id" element={<Regisname />} />
@@ -75,13 +75,14 @@ const App: React.FC = () => {
 // หน้า Root สำหรับจัดการ root path
 const RootRoute: React.FC = () => {
   const { currentUser } = useAuth();
-  return <Navigate to={currentUser ? '/home' : '/register'} replace />;
+  return <Navigate to={currentUser ? '/home' : '/login'} replace />;
 };
 
 // หน้า Catch-all สำหรับเส้นทางที่ไม่รู้จัก
 const CatchAllRoute: React.FC = () => {
   const { currentUser } = useAuth();
-  return <Navigate to={currentUser ? '/home' : '/register'} replace />;
+  return <Navigate to={currentUser ? '/home' : '/login'} replace />;
 };
+
 
 export default App;

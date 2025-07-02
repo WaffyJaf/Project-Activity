@@ -1,29 +1,27 @@
-import { Navigate, Outlet } from 'react-router-dom';
+import React from 'react';
+import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
-interface ProtectedRouteProps {
-  allowedRoles?: string[];
-}
-
-const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ allowedRoles }) => {
+const ProtectedRoute: React.FC<{ allowedRoles?: string[] }> = ({ allowedRoles }) => {
   const { currentUser, loading } = useAuth();
+  const location = useLocation();
 
-  // แสดง UI ขณะโหลดข้อมูล
+  console.log('ProtectedRoute: Checking authentication', { currentUser, loading, allowedRoles, pathname: location.pathname });
+
   if (loading) {
     return <div>Loading...</div>;
   }
 
-  // ถ้าไม่มีการล็อกอิน ให้ redirect ไปที่ /login
   if (!currentUser) {
-    return <Navigate to="/login" replace />;
+    console.log('ProtectedRoute: No user, redirecting to /login from', location.pathname);
+    return <Navigate to="/login" replace state={{ from: location.pathname }} />;
   }
 
-  // ถ้ามี allowedRoles และ role ของผู้ใช้ไม่ตรง ให้ redirect ไปที่ /
-  if (allowedRoles && (!currentUser.role || !allowedRoles.includes(currentUser.role))) {
-    return <Navigate to="/" replace />;
+  if (allowedRoles && !allowedRoles.includes(currentUser.role)) {
+    console.log(`ProtectedRoute: User role ${currentUser.role} not allowed, redirecting to /home from`, location.pathname);
+    return <Navigate to="/home" replace />;
   }
 
-  // แสดง nested routes
   return <Outlet />;
 };
 
