@@ -5,9 +5,14 @@ export interface FormData {
   project_description: string;
   department: string;
   location: string;
+  phone: string;
+  project_year: string;
+  project_enddate: string;
   budget: number;
   hours: number;
   project_datetime: string;
+  evaluation_form_url?: string;
+  has_evaluation: boolean;
   ms_id: string; 
 }
 

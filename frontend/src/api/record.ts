@@ -5,7 +5,7 @@ import { User ,UserWithActivity , ActivityRecord } from '../type/user';
 
 export interface RecordACInput {
   project_id: number;
-  student_id: string;
+  ms_id: string;
   student_name: string;
   faculty: string;
 }
@@ -13,7 +13,7 @@ export interface RecordACInput {
 export interface Registration {
   register_id: number;
   post_id: number;
-  student_id: string;
+  ms_id: string;
   student_name: string;
   faculty: string;
   post_content?: string;

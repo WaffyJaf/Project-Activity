@@ -59,12 +59,12 @@ function RecordActivity() {
     }
   };
 
-  const handleStudentSelect = (studentId: string) => {
+  const handleStudentSelect = (ms_id: string) => {
     const newSelected = new Set(selectedStudents);
-    if (newSelected.has(studentId)) {
-      newSelected.delete(studentId);
+    if (newSelected.has(ms_id)) {
+      newSelected.delete(ms_id);
     } else {
-      newSelected.add(studentId);
+      newSelected.add(ms_id);
     }
     setSelectedStudents(newSelected);
     
@@ -77,7 +77,7 @@ function RecordActivity() {
       setSelectedStudents(new Set());
       setSelectAll(false);
     } else {
-      const allStudentIds = new Set(registrations.map(reg => reg.student_id));
+      const allStudentIds = new Set(registrations.map(reg => reg.ms_id));
       setSelectedStudents(allStudentIds);
       setSelectAll(true);
     }
@@ -352,7 +352,7 @@ function RecordActivity() {
                       <tr
                         key={reg.register_id}
                         className={`transition-all duration-200 hover:bg-purple-50 ${
-                          selectedStudents.has(reg.student_id) 
+                          selectedStudents.has(reg.ms_id) 
                             ? 'bg-purple-25 border-l-4 border-purple-500' 
                             : index % 2 === 0 ? 'bg-gray-50' : 'bg-white'
                         }`}
@@ -362,16 +362,16 @@ function RecordActivity() {
                             <div className="relative">
                               <input
                                 type="checkbox"
-                                checked={selectedStudents.has(reg.student_id)}
-                                onChange={() => handleStudentSelect(reg.student_id)}
+                                checked={selectedStudents.has(reg.ms_id)}
+                                onChange={() => handleStudentSelect(reg.ms_id)}
                                 className="sr-only"
                               />
                               <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all duration-200 ${
-                                selectedStudents.has(reg.student_id)
+                                selectedStudents.has(reg.ms_id)
                                   ? 'bg-purple-600 border-purple-600' 
                                   : 'border-gray-300 group-hover:border-purple-400'
                               }`}>
-                                {selectedStudents.has(reg.student_id) && (
+                                {selectedStudents.has(reg.ms_id) && (
                                   <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
                                   </svg>
@@ -380,7 +380,7 @@ function RecordActivity() {
                             </div>
                           </label>
                         </td>
-                        <td className="px-6 py-4 text-sm font-medium text-gray-900">{reg.student_id}</td>
+                        <td className="px-6 py-4 text-sm font-medium text-gray-900">{reg.ms_id}</td>
                         <td className="px-6 py-4 text-sm text-gray-900">{reg.student_name}</td>
                         <td className="px-6 py-4 text-sm text-gray-700">{reg.faculty}</td>
                         

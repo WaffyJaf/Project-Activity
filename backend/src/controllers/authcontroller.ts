@@ -33,7 +33,6 @@ function generateQrCodeId(): string {
 
 export const microsoftCallback = async (req: Request, res: Response) => {
   const code = req.query.code as string;
-
   console.log('microsoftCallback: Received code:', code);
 
   if (!code) {
@@ -42,6 +41,7 @@ export const microsoftCallback = async (req: Request, res: Response) => {
   }
 
   try {
+    // 1. แลก Token
     const tokenRes = await fetch(`https://login.microsoftonline.com/${process.env.TENANT_ID}/oauth2/v2.0/token`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -54,64 +54,92 @@ export const microsoftCallback = async (req: Request, res: Response) => {
       }),
     });
 
-    const tokenData = await tokenRes.json();
-    console.log('microsoftCallback: Token response:', tokenData);
-
-    if (tokenData.error) {
-      console.error('microsoftCallback: Token error:', tokenData.error_description);
-      throw new Error(tokenData.error_description);
+    if (!tokenRes.ok) {
+      const errorText = await tokenRes.text();
+      console.error('Token request failed:', errorText);
+      return res.status(500).json({ error: 'Token request failed', detail: errorText });
     }
 
-    const userInfoRes = await fetch('https://graph.microsoft.com/v1.0/me', {
+    const tokenData = await tokenRes.json();
+    if (tokenData.error) {
+      console.error('Token error:', tokenData.error_description);
+      return res.status(500).json({ error: 'Token error', detail: tokenData.error_description });
+    }
+
+    // 2. ดึงข้อมูลผู้ใช้
+    const userInfoRes = await fetch('https://graph.microsoft.com/v1.0/me?$select=displayName,givenName,surname,jobTitle,department,userPrincipalName', {
       headers: { Authorization: `Bearer ${tokenData.access_token}` },
     });
+
+    if (!userInfoRes.ok) {
+      const errorText = await userInfoRes.text();
+      console.error('User info request failed:', errorText);
+      return res.status(500).json({ error: 'User info request failed', detail: errorText });
+    }
+
     const userInfo = await userInfoRes.json();
-    console.log('microsoftCallback: User info:', userInfo);
+    console.log('Full Microsoft UserInfo:', JSON.stringify(userInfo, null, 2));
 
     if (userInfo.error) {
-      console.error('microsoftCallback: User info error:', userInfo.error.message);
-      throw new Error(userInfo.error.message);
+      console.error('User info error:', userInfo.error.message);
+      return res.status(500).json({ error: 'User info error', detail: userInfo.error.message });
     }
 
     const ms_id = userInfo.userPrincipalName;
 
+    // 3. เช็กหรือสร้างผู้ใช้ใน DB
     let user = await prisma.users_up.findUnique({ where: { ms_id } });
-    if (!user) {
-      user = await prisma.users_up.create({
-        data: {
-          ms_id,
-          givenName: userInfo.givenName ?? '',
-          surname: userInfo.surname ?? '',
-          jobTitle: userInfo.jobTitle ?? '',
-          department: userInfo.department ?? '',
-          displayName: userInfo.displayName ?? '',
-          role: 'user' as UserRole,
-          qrCodeId: generateQrCodeId(),
-          created_at: new Date(),
-        },
-      });
-      console.log('microsoftCallback: User created:', user);
-    } else {
-      console.log('microsoftCallback: User found:', user);
-    }
 
+    if (!user) {
+  user = await prisma.users_up.create({
+    data: {
+      ms_id,
+      givenName: userInfo.givenName ?? '',
+      surname: userInfo.surname ?? '',
+      jobTitle: userInfo.jobTitle ?? '',
+      department: userInfo.department ?? '',
+      displayName: userInfo.displayName ?? '',
+      role: 'user' as UserRole,
+      qrCodeId: generateQrCodeId(),
+      created_at: new Date(),
+    },
+  });
+  console.log('User created:', user);
+} else {
+  // ✅ อัปเดตข้อมูลล่าสุดจาก Microsoft
+  user = await prisma.users_up.update({
+    where: { ms_id },
+    data: {
+      givenName: userInfo.givenName ?? '',
+      surname: userInfo.surname ?? '',
+      jobTitle: userInfo.jobTitle ?? '',
+      department: userInfo.department ?? '',
+      displayName: userInfo.displayName ?? '',
+    },
+  });
+  console.log('User updated:', user);
+}
+
+
+    // 4. สร้าง JWT
     const token = jwt.sign({ ms_id: user.ms_id, role: user.role }, process.env.JWT_SECRET!, { expiresIn: '1h' });
-    console.log('microsoftCallback: JWT generated:', token);
+    console.log('JWT generated:', token);
 
     return res.redirect(`${process.env.FRONTEND_URL}/login?token=${token}`);
   } catch (err: any) {
-    console.error('microsoftCallback: Error:', err);
-    return res.status(500).json({ error: 'Authentication failed' });
+    console.error('microsoftCallback: Unhandled Error:', err?.message || err);
+    return res.status(500).json({ error: 'Authentication failed', detail: err?.message });
   }
 };
+
 
 export const getUser = async (req: Request, res: Response) => {
   const authHeader = req.headers.authorization;
   console.log('getUser: Authorization header:', authHeader);
 
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    console.error('getUser: Missing or invalid token');
-    return res.status(401).json({ error: 'Unauthorized: Missing or invalid token' });
+    console.error('getUser: Missing or invalid token format');
+    return res.status(401).json({ error: 'Unauthorized: Missing or invalid token format' });
   }
 
   const token = authHeader.split(' ')[1];
@@ -123,11 +151,12 @@ export const getUser = async (req: Request, res: Response) => {
     const user = await prisma.users_up.findUnique({ where: { ms_id: decoded.ms_id } });
 
     if (!user) {
-      console.error('getUser: User not found for ms_id:', decoded.ms_id);
+      console.error('getUser: User not found:', decoded.ms_id);
       return res.status(404).json({ error: 'User not found' });
     }
 
     console.log('getUser: User found:', user);
+
     return res.json({
       id: user.id,
       ms_id: user.ms_id,
@@ -137,13 +166,14 @@ export const getUser = async (req: Request, res: Response) => {
       department: user.department,
       displayName: user.displayName,
       role: user.role,
-      created_at: user.created_at ? user.created_at.toISOString() : null, 
+      created_at: user.created_at ? user.created_at.toISOString() : null,
     });
   } catch (err: any) {
-    console.error('getUser: Error:', err);
-    return res.status(401).json({ error: 'Invalid token' });
+    console.error('getUser: Token validation failed:', err?.message || err);
+    return res.status(401).json({ error: 'Invalid or expired token', detail: err?.message });
   }
 };
+
 
 
 export const getUsers = async (req: Request, res: Response) => {
@@ -196,6 +226,47 @@ export const getUsers = async (req: Request, res: Response) => {
   }
 };
 
+export const getCurrentUser = async (req: Request, res: Response) => {
+  const authHeader = req.headers.authorization;
+  console.log('/auth/me: Authorization header:', authHeader);
+
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ error: 'Unauthorized: Missing or invalid token' });
+  }
+
+  const token = authHeader.split(' ')[1];
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { ms_id: string };
+
+    const user = await prisma.users_up.findUnique({
+      where: { ms_id: decoded.ms_id },
+      select: {
+        ms_id: true,
+        givenName: true,
+        surname: true,
+        displayName: true,
+        jobTitle: true,
+        department: true,
+        role: true,
+        created_at: true,
+      },
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    return res.status(200).json({
+      ...user,
+      created_at: user.created_at?.toISOString(),
+    });
+  } catch (err: any) {
+    console.error('/auth/me: Error verifying token', err);
+    return res.status(401).json({ error: 'Invalid token' });
+  }
+};
+
 
 
 export const login = async (req: Request, res: Response) => {
@@ -209,7 +280,7 @@ export const login = async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'MS_ID is required' });
     }
 
-    if (typeof ms_id !== 'string' || ms_id.trim().length === 0) {
+    if (typeof ms_id !== 'string' || ms_id.trim().length === 0) { 
       return res.status(400).json({ error: 'Invalid MS_ID format' });
     }
 
@@ -303,6 +374,94 @@ export const updateRole = async (req: Request, res: Response) => {
     return res.status(500).json({ message: 'Internal server error' });
   }
 };
+
+
+interface DeviceTokenRequest {
+  ms_id: string;
+  token: string;
+}
+
+
+export const saveDeviceToken = async (req: Request, res: Response) => {
+  try {
+    console.log('🔵 Content-Type:', req.headers['content-type']);
+    console.log('🔵 Raw request body:', req.body);
+    console.log('🔵 typeof req.body:', typeof req.body);
+
+    const { ms_id, token }: DeviceTokenRequest = req.body;
+    console.log('🟢 Parsed ms_id:', ms_id);
+    console.log('🟢 Parsed token:', token);
+
+    // Validate request body
+    if (!ms_id || !token) {
+      console.warn('⚠️ Missing ms_id or token:', { ms_id, token });
+      return res.status(400).json({ error: 'ms_id and token are required' });
+    }
+
+    if (typeof ms_id !== 'string' || ms_id.trim().length === 0) {
+      console.warn('⚠️ Invalid ms_id format:', ms_id);
+      return res.status(400).json({ error: 'Invalid ms_id format' });
+    }
+
+    if (typeof token !== 'string' || token.trim().length === 0) {
+      console.warn('⚠️ Invalid token format:', token);
+      return res.status(400).json({ error: 'Invalid token format' });
+    }
+
+    // Verify JWT token
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      console.warn('⚠️ Missing or invalid Authorization header:', authHeader);
+      return res.status(401).json({ error: 'Unauthorized: Missing or invalid token' });
+    }
+
+    const authToken = authHeader.split(' ')[1];
+    try {
+      jwt.verify(authToken, JWT_SECRET);
+    } catch (error) {
+      console.warn('⚠️ JWT verification failed:', error);
+      return res.status(401).json({ error: 'Unauthorized: Invalid token' });
+    }
+
+    const user = await prisma.users_up.findUnique({ where: { ms_id } });
+    if (!user) {
+      console.warn('⚠️ User not found:', ms_id);
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const existingToken = await prisma.device_tokens.findFirst({
+      where: { ms_id, token },
+    });
+
+    if (existingToken) {
+      console.log('🟡 Device token already exists');
+      return res.status(200).json({ message: 'Device token already exists' });
+    } else {
+      await prisma.device_tokens.upsert({
+        where: {
+          ms_id_token: {
+            ms_id,
+            token,
+          },
+        },
+        update: {}, // ถ้าไม่ต้องอัปเดตอะไร
+        create: {
+          ms_id,
+          token,
+          createdAt: new Date(),
+        },
+      });
+
+      console.log('✅ Device token saved or updated');
+    }
+
+    return res.status(201).json({ message: 'Device token saved successfully' });
+  } catch (error: any) {
+    console.error('❌ Device token error:', error);
+    return res.status(500).json({ error: error.message || 'Internal server error' });
+  }
+};
+
 
 
 

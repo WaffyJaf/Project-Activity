@@ -8,7 +8,7 @@ interface RegistrationResponse {
     registrations: Array<{
       register_id: number;
       post_id: number | null;
-      student_id: string;
+      ms_id: string;
       student_name: string;
       faculty: string;
       project_id: number | null;
@@ -135,14 +135,14 @@ export const ActivityRecord = async (req: Request, res: Response) => {
       message: 'Activity recorded successfully',
       data: { activity: activityResponse },
     });
-  } catch (error) {
-    console.error('ActivityRecord error:', error);
-    return res.status(500).json({
-      status: 'error',
-      error: 'Failed to record activity',
-      code: 'INTERNAL_SERVER_ERROR',
-    });
-  }
+  } catch (err: any) {
+  console.error("❌ ActivityRecord error:", err); 
+  return res.status(500).json({
+    status: 'error',
+    error: 'Failed to record activity',
+    code: 'INTERNAL_SERVER_ERROR',
+  });
+}
 };
 
 export const ActivityRecordMobile = async (req: Request, res: Response) => {
@@ -393,7 +393,7 @@ export const getRegistrationsByProject = async (req: Request, res: Response) => 
     const formattedRegistrations = registrations.map(reg => ({
       register_id: reg.register_id,
       post_id: reg.post_id,
-      student_id: reg.student_id,
+      ms_id: reg.ms_id,
       student_name: reg.student_name,
       faculty: reg.faculty,
       post_content: reg.event_posts?.post_content,
@@ -426,6 +426,8 @@ export const getUserByMsId = async (req: Request, res: Response) => {
             project_activity: {
               select: {
                 project_name: true,
+                has_evaluation:true,
+                evaluation_form_url:true,
               },
             },
           },
@@ -458,11 +460,11 @@ export const getUserByMsId = async (req: Request, res: Response) => {
 };
 
 export const getRegistrationByStudentId = async (req: Request, res: Response) => {
-  const { student_id } = req.params;
+  const { ms_id } = req.params;
 
   try {
     const registrations = await prisma.registration_activity.findMany({
-      where: { student_id },
+      where: { ms_id},
       include: {
         project_activity: {
           select: {
@@ -487,7 +489,7 @@ export const getRegistrationByStudentId = async (req: Request, res: Response) =>
 
     const transformed = registrations.map((r) => ({
       register_id: r.register_id,
-      student_id: r.student_id,
+      ms_id: r.ms_id,
       student_name: r.student_name,
       faculty: r.faculty,
       project_name: r.project_activity?.project_name ?? 'Unknown Project',
@@ -503,7 +505,7 @@ export const getRegistrationByStudentId = async (req: Request, res: Response) =>
 
     res.json(transformed);
   } catch (error) {
-    console.error(`Error fetching registration history for student_id ${student_id}:`, error);
+    console.error(`Error fetching registration history for student_id ${ms_id}:`, error);
     res.status(500).json({ error: 'Failed to fetch registration history' });
   }
 };

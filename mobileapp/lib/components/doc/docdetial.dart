@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../models/user.dart';
 import '../../providers/user_provider.dart';
 import '../../services/recorduser_api.dart';
@@ -21,15 +22,16 @@ class _ActivityMoreDetailState extends State<ActivityMoreDetail> {
   @override
   void initState() {
     super.initState();
-    _fetchActivities();
+    _fetchFuture = _fetchActivities();
   }
 
-  void _fetchActivities() {
+  Future<void> _fetchActivities() {
     final userProvider = Provider.of<UserProvider>(context, listen: false);
-    final msId = userProvider.user?.msId ?? ''; 
+    final msId = userProvider.user?.msId ?? '';
     print('Fetching activities for msId: $msId');
-    _fetchFuture = _apiService.getUserByMsId(msId).then((user) {
+    return _apiService.getUserByMsId(msId).then((user) {
       if (user != null) {
+        print('User fetched: ${user.toJson()}'); // Debug log
         userProvider.setUser(user);
       } else {
         userProvider.setError('User not found');
@@ -39,7 +41,11 @@ class _ActivityMoreDetailState extends State<ActivityMoreDetail> {
     });
   }
 
-  List<ActivityRecord> _sortActivities(List<ActivityRecord> activities) {
+  List<ActivityRecord> _sortActivities(List<ActivityRecord>? activities) {
+    if (activities == null || activities.isEmpty) {
+      print('No activities to sort: activities is null or empty');
+      return [];
+    }
     return activities
       ..sort((a, b) {
         switch (_sortOption) {
@@ -49,6 +55,18 @@ class _ActivityMoreDetailState extends State<ActivityMoreDetail> {
             return a.joinedAt.compareTo(b.joinedAt); // Oldest first
         }
       });
+  }
+
+  // Helper function to launch URL
+  Future<void> _launchURL(String url) async {
+    final uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('ไม่สามารถเปิดลิงก์: $url')),
+      );
+    }
   }
 
   @override
@@ -65,15 +83,14 @@ class _ActivityMoreDetailState extends State<ActivityMoreDetail> {
       appBar: AppBar(
         title: const Text(
           'กิจกรรมที่เข้าร่วมไปแล้ว',
-           style: TextStyle(fontSize: 22 , color: Colors.white),
+          style: TextStyle(fontSize: 22, color: Colors.white),
         ),
         backgroundColor: const Color.fromARGB(255, 94, 32, 142),
       ),
       body: RefreshIndicator(
         onRefresh: () async {
           userProvider.setLoading(true);
-          _fetchActivities();
-          await _fetchFuture;
+          await _fetchActivities();
           userProvider.setLoading(false);
         },
         child: Column(
@@ -111,22 +128,40 @@ class _ActivityMoreDetailState extends State<ActivityMoreDetail> {
                     return const Center(child: CircularProgressIndicator());
                   } else if (userProvider.error != null) {
                     return Center(child: Text('ข้อผิดพลาด: ${userProvider.error}'));
-                  } else if (userProvider.user == null || userProvider.user!.activityRecord.isEmpty) {
+                  } else if (userProvider.user == null) {
                     return const Center(child: Text('ไม่พบประวัติการเข้าร่วมกิจกรรม'));
                   }
 
                   final activities = _sortActivities(userProvider.user!.activityRecord);
+                  print('Activities length: ${activities.length}'); // Debug log
                   return ListView.builder(
                     itemCount: activities.length,
                     itemBuilder: (context, index) {
+                      if (index < 0 || index >= activities.length) {
+                        print('Invalid index: $index, activities length: ${activities.length}');
+                        return const SizedBox.shrink();
+                      }
                       final activity = activities[index];
+                      final hasEvaluation = activity.projectActivity?.hasEvaluation ?? false;
+                      final evaluationUrl = activity.projectActivity?.evaluationFormUrl;
+                      print('Rendering activity: ${activity.projectName}, hasEvaluation: $hasEvaluation, evaluationUrl: $evaluationUrl'); // Debug log
+
+                      final bool showEvaluationLink =
+                          hasEvaluation &&
+                          evaluationUrl != null &&
+                          evaluationUrl.trim().isNotEmpty;
+
                       return Card(
                         margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
                         child: ListTile(
                           leading: const Icon(Icons.event),
                           title: Text(
                             activity.projectName,
-                            style: const TextStyle(fontFamily: 'Sarabun', fontSize: 16, fontWeight: FontWeight.bold),
+                            style: const TextStyle(
+                              fontFamily: 'Sarabun',
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                           subtitle: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -139,6 +174,23 @@ class _ActivityMoreDetailState extends State<ActivityMoreDetail> {
                                 'วันที่เข้าร่วม: ${activity.formattedJoinedAt}',
                                 style: const TextStyle(fontFamily: 'Sarabun', fontSize: 14),
                               ),
+                              Text(
+                                'การประเมิน: ${hasEvaluation ? 'มีประเมิน' : 'ไม่มีประเมิน'}',
+                                style: const TextStyle(fontFamily: 'Sarabun', fontSize: 14),
+                              ),
+                              if (showEvaluationLink)
+                                GestureDetector(
+                                  onTap: () => _launchURL(evaluationUrl!),
+                                  child: const Text(
+                                    'ลิงก์แบบประเมิน',
+                                    style: TextStyle(
+                                      fontFamily: 'Sarabun',
+                                      fontSize: 14,
+                                      color: Colors.blue,
+                                      decoration: TextDecoration.underline,
+                                    ),
+                                  ),
+                                ),
                             ],
                           ),
                           onTap: () {

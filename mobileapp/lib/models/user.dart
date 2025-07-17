@@ -108,20 +108,31 @@ class ActivityRecord {
 
 class ProjectActivity {
   final String projectName;
+  final bool hasEvaluation;
+  final String? evaluationFormUrl;
 
   ProjectActivity({
     required this.projectName,
+    required this.hasEvaluation,
+    this.evaluationFormUrl,
   });
 
   factory ProjectActivity.fromJson(Map<String, dynamic> json) {
+    print('Parsing ProjectActivity: $json');
     return ProjectActivity(
       projectName: json['project_name'] as String,
+      hasEvaluation: json['has_evaluation'] is int
+          ? (json['has_evaluation'] as int) == 1
+          : (json['has_evaluation'] as bool? ?? false),
+      evaluationFormUrl: json['evaluation_form_url'] as String?,
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
       'project_name': projectName,
+      'has_evaluation': hasEvaluation ? 1 : 0,
+      'evaluation_form_url': evaluationFormUrl,
     };
   }
 }

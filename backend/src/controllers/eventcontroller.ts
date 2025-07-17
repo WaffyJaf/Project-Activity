@@ -2,8 +2,10 @@ import { Request, response, Response } from "express";
 import {Prisma, PrismaClient} from "@prisma/client"
 import multer from "multer";
 import path from "path";
+import { NotificationService } from '../services/notificationService';
 
 const prisma = new PrismaClient();
+const notificationService = new NotificationService();
 
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
@@ -47,7 +49,7 @@ const storage = multer.diskStorage({
 
   // Validate required fields
   if (!project_id || !post_content || !ms_id) {
-    return res.status(400).json({ message: "ข้อมูลไม่ครบถ้วน: ต้องระบุ project_id, post_content, และ ms_id" });
+    return res.status(400).json({ message: 'ข้อมูลไม่ครบถ้วน: ต้องระบุ project_id, post_content, และ ms_id' });
   }
 
   // Validate dates
@@ -78,7 +80,7 @@ const storage = multer.diskStorage({
     const project = await prisma.project_activity.findFirst({
       where: {
         project_id: Number(project_id),
-        ms_id: ms_id,
+        ms_id,
       },
     });
 
@@ -86,6 +88,7 @@ const storage = multer.diskStorage({
       return res.status(404).json({ message: 'ไม่พบโครงการที่เชื่อมโยงกับ ms_id นี้' });
     }
 
+    // Create the event post
     const newEvent = await prisma.event_posts.create({
       data: {
         project_id: Number(project_id),
@@ -93,25 +96,42 @@ const storage = multer.diskStorage({
         imge_url,
         location_post,
         post_datetime: postDate,
-        hour_post: hour_post ? Number(hour_post) : null,
+        hour_post: hour_post ? Number(hour_post) : undefined,
         ms_id,
-        registration_start: regStart || null, // Store registration period
-        registration_end: regEnd || null,     // Store registration period
+        registration_start: regStart,
+        registration_end: regEnd,
       },
     });
 
-    console.log("✅ Save to database");
+    
+    const allUsers = await prisma.users_up.findMany({
+        select: { ms_id: true },
+      });
+
+    const userIds = allUsers.map(user => user.ms_id);
+    if (userIds.length > 0) {
+      const title = `ประกาศกิจกรรมใหม่: ${post_content.substring(0, 50)}...`;
+      const body = `เปิดลงทะเบียนแล้ววันนี้ !! ได้รับ ${hour_post} ชั่วโมง }`;
+      for (const userId of userIds) {
+        await notificationService.createAndSendNotification(userId, title, body, {
+          event_id: newEvent.post_id.toString(),
+        });
+      }
+}
+
+    console.log("✅ Save to database and sent notifications");
     return res.status(201).json({ message: "Event post saved successfully", data: newEvent });
-  } catch (error) {
-    console.error("❌ Error saving to database:", error);
-    return res.status(500).json({ message: "Error saving to database", error });
+  } catch (error: any) {
+    console.error("❌ Error saving to database or sending notifications:", error);
+    return res.status(500).json({ message: error.message || "Error saving to database", error });
   }
 };
+
     
 export const registerActivity = async (req: Request, res: Response) => {
-  const { post_id, student_id, student_name, faculty } = req.body;
+  const { post_id, ms_id, student_name, faculty } = req.body;
 
-  if (!post_id || !student_id || !student_name || !faculty) {
+  if (!post_id || !ms_id || !student_name || !faculty) {
     return res.status(400).json({ message: "ข้อมูลไม่ครบถ้วน" });
   }
 
@@ -119,7 +139,7 @@ export const registerActivity = async (req: Request, res: Response) => {
     const newRegister = await prisma.registration_activity.create({
       data: {
         post_id: Number(post_id),
-        student_id,
+        ms_id,
         student_name,
         faculty,
       },
@@ -149,7 +169,7 @@ export const registerActivity = async (req: Request, res: Response) => {
         select: {
           register_id: true,
           post_id: true,
-          student_id: true,
+          ms_id: true,
           student_name: true,
           faculty: true,
         },
@@ -298,27 +318,31 @@ export const deleteRegis = async (req: Request, res: Response) => {
 };
 
 export const addRegis = async (req: Request, res: Response) => {
-  const { post_id, student_id, student_name, faculty } = req.body;
+  const { post_id, ms_id, student_name, faculty } = req.body;
 
-  if (!post_id || !student_id?.trim() || !student_name?.trim() || !faculty?.trim()) {
-    return res.status(400).json({ message: "กรุณาระบุข้อมูลที่จำเป็นทั้งหมด: post_id, รหัสนักศึกษา, ชื่อ-นามสกุล, คณะ" });
+  if (!post_id || !ms_id?.trim() || !student_name?.trim() || !faculty?.trim()) {
+    return res.status(400).json({ message: "กรุณาระบุข้อมูลที่จำเป็นทั้งหมด" });
+  }
+
+  const parsedPostId = Number(post_id);
+  if (isNaN(parsedPostId)) {
+    return res.status(400).json({ message: "post_id ต้องเป็นตัวเลขที่ถูกต้อง" });
   }
 
   try {
-    const parsedPostId = Number(post_id);
-    if (isNaN(parsedPostId)) {
-      return res.status(400).json({ message: "post_id ต้องเป็นตัวเลขที่ถูกต้อง" });
+    // เช็กว่าลงทะเบียนแล้วหรือยัง
+    const exists = await prisma.registration_activity.findFirst({
+      where: { ms_id, post_id: parsedPostId }
+    });
+    if (exists) {
+      return res.status(409).json({ message: "นิสิตนี้ลงทะเบียนไปแล้ว" });
     }
 
-    // ตรวจสอบว่ารหัสนักศึกษาเป็นตัวเลข 8 หลัก (ถ้าต้องการ)
-    if (!/^\d{8}$/.test(student_id)) {
-      return res.status(400).json({ message: "รหัสนักศึกษาต้องเป็นตัวเลข 8 หลัก" });
-    }
-
+    // สร้างรายการใหม่
     const newRegistration = await prisma.registration_activity.create({
       data: {
         post_id: parsedPostId,
-        student_id,
+        ms_id,
         student_name,
         faculty,
       },
@@ -328,11 +352,16 @@ export const addRegis = async (req: Request, res: Response) => {
       message: "เพิ่มผู้ลงทะเบียนเรียบร้อย",
       data: newRegistration,
     });
-  } catch (error) {
-    console.error("เกิดข้อผิดพลาดในการเพิ่มผู้ลงทะเบียน:", error);
-    return res.status(500).json({ message: "เกิดข้อผิดพลาดในการเพิ่มผู้ลงทะเบียน" });
+  } catch (_error) {
+  const error = _error as any;
+  if (error.code === 'P2002') {
+    return res.status(409).json({ message: "นิสิตนี้ลงทะเบียนไปแล้ว" });
   }
+  console.error(error);
+  return res.status(500).json({ message: "เกิดข้อผิดพลาดในการเพิ่มผู้ลงทะเบียน" });
+}
 };
+
 
 
 

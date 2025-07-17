@@ -42,6 +42,13 @@ model project_activity {
   project_datetime      DateTime?                       @db.DateTime(0)
   approval_datetime     DateTime?                       @db.DateTime(0)
   qrCodeData            String?                         @db.VarChar(255)
+  project_year          String?                         @db.VarChar(255)
+  phone                 String?                         @db.VarChar(20)
+  project_enddate       DateTime?                       @db.DateTime(0)
+  evaluation_form_url   String?                         @db.VarChar(500)
+  has_evaluation        Boolean?                        @default(false)
+  evaluation_statuspj  project_activity_evaluation_statuspj  @default(awaiting_evaluation)
+
   activity_record       activity_record[]
   event_posts           event_posts[]
   user                  users_up?                       @relation("UserProjectActivity", fields: [ms_id], references: [ms_id])
@@ -51,39 +58,47 @@ model project_activity {
 }
 
 model registration_activity {
-  register_id      Int               @id @default(autoincrement())
-  post_id          Int?
-  student_id       String            @db.Char(9)
-  student_name     String            @db.VarChar(255)
-  faculty          String            @db.VarChar(255)
-  project_id       Int?
+  register_id  Int    @id @default(autoincrement())
+  post_id      Int?
+  ms_id        String @db.VarChar(255) // ขนาดควรเหมือนกันกับ users_up.ms_id
+  student_name String @db.VarChar(255)
+  faculty      String @db.VarChar(255)
+  project_id   Int?
+
   event_posts      event_posts?      @relation(fields: [post_id], references: [post_id], onDelete: NoAction, onUpdate: NoAction, map: "registration_activity_ibfk_1")
   project_activity project_activity? @relation(fields: [project_id], references: [project_id], onDelete: NoAction, onUpdate: NoAction, map: "registration_activity_ibfk_2")
 
+  sers_up users_up @relation("UserRegistrationActivities", fields: [ms_id], references: [ms_id], onDelete: NoAction, onUpdate: NoAction, map: "registration_activity_ibfk_3")
+
   @@index([post_id], map: "post_id")
   @@index([project_id], map: "project_id")
+  @@index([ms_id], map: "ms_id")
 }
 
 model users_up {
-  id               Int?
-  ms_id            String             @id @db.VarChar(255)
-  role             String?            @default("user") @db.VarChar(50)
-  created_at       DateTime?          @default(now()) @db.Timestamp(0)
-  givenName        String?            @db.VarChar(255)
-  surname          String?            @db.VarChar(255)
-  jobTitle         String?            @db.VarChar(255)
-  department       String?            @db.VarChar(255)
-  displayName      String?            @db.VarChar(255)
-  qrCodeId         String?            @unique(map: "qrCodeId") @db.VarChar(255)
-  activity_record  activity_record[]
-  event_posts      event_posts[]      @relation("UserEventPosts")
-  project_activity project_activity[] @relation("UserProjectActivity")
+  id                      Int?
+  ms_id                   String                  @id @db.VarChar(255)
+  role                    String?                 @default("user") @db.VarChar(50)
+  created_at              DateTime?               @default(now()) @db.Timestamp(0)
+  givenName               String?                 @db.VarChar(255)
+  surname                 String?                 @db.VarChar(255)
+  jobTitle                String?                 @db.VarChar(255)
+  department              String?                 @db.VarChar(255)
+  displayName             String?                 @db.VarChar(255)
+  qrCodeId                String?                 @unique(map: "qrCodeId") @db.VarChar(255)
+  totalActivityHours      Int?                    @default(0)
+  activity_record         activity_record[]
+  event_posts             event_posts[]           @relation("UserEventPosts")
+  project_activity        project_activity[]      @relation("UserProjectActivity")
+  registration_activities registration_activity[] @relation("UserRegistrationActivities")
+  device_tokens device_tokens[]
+  notifications notifications[]
 }
 
 model activity_record {
   id                Int                               @id @default(autoincrement())
   project_id        Int
-  ms_id             String                            @db.VarChar(10)
+  ms_id             String                            @db.VarChar(100)
   joined_at         DateTime?                         @default(now()) @db.DateTime(0)
   evaluation_status activity_record_evaluation_status @default(PENDING)
   project_activity  project_activity                  @relation(fields: [project_id], references: [project_id], onDelete: Cascade, onUpdate: NoAction, map: "activity_record_ibfk_1")
@@ -91,6 +106,31 @@ model activity_record {
 
   @@index([ms_id], map: "ms_id")
   @@index([project_id], map: "project_id")
+}
+
+model device_tokens {
+  id        Int     @id @default(autoincrement())
+  ms_id     String  @db.VarChar(255)
+  token     String  @unique
+  createdAt DateTime @default(now())
+
+  user      users_up @relation(fields: [ms_id], references: [ms_id])
+
+  @@index([ms_id])
+  @@unique([ms_id, token])
+}
+
+model notifications {
+  id         Int       @id @default(autoincrement())
+  ms_id      String    @db.VarChar(255)
+  title      String    @db.VarChar(255)
+  body       String?   @db.Text
+  read       Boolean   @default(false)
+  created_at DateTime  @default(now())
+
+  user       users_up  @relation(fields: [ms_id], references: [ms_id])
+
+  @@index([ms_id])
 }
 
 enum event_posts_post_status {
@@ -108,4 +148,9 @@ enum activity_record_evaluation_status {
   PENDING
   COMPLETED
   NOT_EVALUATED
+}
+
+enum project_activity_evaluation_statuspj {
+  awaiting_evaluation
+  evaluated
 }

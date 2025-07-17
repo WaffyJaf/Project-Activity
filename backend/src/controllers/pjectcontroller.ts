@@ -5,53 +5,93 @@ import { PrismaClient, project_activity_project_status } from "@prisma/client";
 const prisma = new PrismaClient();
 
 export const createProjectActivity = async (req: Request, res: Response) => {
-  const { project_name, project_description, project_datetime, department, location, budget, hours, ms_id } = req.body;
+  const {
+    project_name,
+    project_year,
+    project_description,
+    project_datetime,
+    project_enddate,
+    department,
+    phone,
+    location,
+    budget,
+    hours,
+    ms_id,
+    has_evaluation,
+    evaluation_form_url,
+  } = req.body;
 
-  if (!project_name || !project_description || !project_datetime || !department || !location || !budget || !hours || !ms_id) {
-    return res.status(400).json({ message: "ข้อมูลไม่ครบถ้วน" });
+  // Validate required fields
+  if (
+    !project_name ||
+    !project_description ||
+    !project_datetime ||
+    !department ||
+    !location ||
+    !budget ||
+    !hours ||
+    !ms_id ||
+    !project_year ||
+    !phone ||
+    !project_enddate ||
+    has_evaluation === undefined
+  ) {
+    return res.status(400).json({ message: 'ข้อมูลไม่ครบถ้วน' });
   }
 
-  const projectDate = new Date(project_datetime);
-  if (isNaN(projectDate.getTime())) {
+  // Validate evaluation form URL if evaluation is required
+  if (has_evaluation && !evaluation_form_url) {
+    return res.status(400).json({ message: 'กรุณาระบุลิงก์ Google Form สำหรับการประเมิน' });
+  }
+
+  const startDate = new Date(project_datetime);
+  const endDate = new Date(project_enddate);
+
+  if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+    console.log('INVALID DATE', project_datetime, project_enddate);
     return res.status(400).json({ message: 'วันที่และเวลาที่ส่งมาไม่ถูกต้อง' });
   }
 
   const baseUrl = process.env.APP_URL || 'http://localhost:3000';
 
   try {
-    
     const newProject = await prisma.project_activity.create({
       data: {
         project_name,
+        project_year,
         project_description,
         department,
+        phone,
         location,
         budget,
         hours,
         ms_id,
         created_date: new Date(),
         project_status: 'pending',
-        project_datetime: projectDate,
-        qrCodeData: `${baseUrl}/attend?projectId=${0}`,
+        evaluation_statuspj: has_evaluation ? 'awaiting_evaluation' : 'evaluated',
+        project_datetime: startDate,
+        project_enddate: endDate,
+        qrCodeData: `${baseUrl}/attend?projectId=0`, // temp
+        has_evaluation,
+        evaluation_form_url: has_evaluation ? evaluation_form_url : null,
       },
     });
 
-    // Update qrCodeData with the actual project_id
-    const updatedProject = await prisma.project_activity.update({
+    await prisma.project_activity.update({
       where: { project_id: newProject.project_id },
       data: {
         qrCodeData: `${baseUrl}/attend?projectId=${newProject.project_id}`,
       },
     });
 
-    console.log("save to database successfully");
-    res.status(201).json({ message: "Project activity created successfully" });
-
+    console.log('✅ บันทึกโครงการเรียบร้อย');
+    res.status(201).json({ message: 'Project activity created successfully' });
   } catch (error) {
-    console.error("!!! Error save to database !!!!", error);
-    return res.status(500).json({ message: "Error save to database", error });
+    console.error('❌ เกิดข้อผิดพลาดในการบันทึก:', error);
+    return res.status(500).json({ message: 'Error save to database', error });
   }
 };
+
 
 
 

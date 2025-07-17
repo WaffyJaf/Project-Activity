@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { UserRole } from '../type/user';
 
@@ -21,7 +21,7 @@ interface SubMenuItem {
 const Sidebar: React.FC = () => {
   const { currentUser, logout } = useAuth();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const navigate = useNavigate();
+  
 
   const handleUserClick = () => {
     setIsDropdownOpen((prev) => !prev);

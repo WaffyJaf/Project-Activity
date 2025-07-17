@@ -189,7 +189,7 @@ function ParticipantsList() {
                 </div>
               </div>
             ) : participants.length ? (
-              <div className="overflow-hidden rounded-xl border border-gray-200">
+              <div className="overflow-x-auto rounded-xl border border-gray-200">
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gradient-to-r from-gray-50 to-gray-100">
                     <tr>
@@ -238,11 +238,11 @@ function ParticipantsList() {
                             className="h-4 w-4 text-purple-600 focus:ring-purple-600 rounded-md"
                           />
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td className="px-2 py-4 whitespace-nowrap">
                           <div className="flex items-center">
                             <div className="flex-shrink-0 h-10 w-10">
                               <div className="h-10 w-10 rounded-full flex items-center justify-center">
-                                <span className="text-sm font-bold text-gray-700">{index + 1}</span>
+                                <span className="text-x font-bold text-gray-700">{index + 1}</span>
                               </div>
                             </div>
                           </div>
