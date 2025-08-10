@@ -12,6 +12,9 @@
 .swiftpm/
 migrate_working_dir/
 
+# Firebase config files
+google-services.json
+
 # IntelliJ/Android Studio
 *.iml
 *.ipr
@@ -20,7 +23,6 @@ migrate_working_dir/
 
 # Environment variables
 .env
-
 
 # VS Code (ถ้าจะเก็บ config จริง ๆ ก็ไม่ต้อง ignore)
 .vscode/
@@ -51,3 +53,13 @@ app.*.map.json
 /ios/Flutter/Flutter.podspec
 /ios/Flutter/Generated.xcconfig
 /ios/Flutter/ephemeral/
+
+# เพิ่มเติมสำหรับ Flutter Android build folder
+/mobileapp/android/app/build/
+/mobileapp/build/
+
+# Node modules (React หรือ NodeJS dependencies)
+node_modules/
+
+# Sourcemaps
+*.map
