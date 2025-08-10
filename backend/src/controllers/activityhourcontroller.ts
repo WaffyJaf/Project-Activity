@@ -80,69 +80,116 @@ export const ActivityRecord = async (req: Request, res: Response) => {
   }
 
   try {
-    // ตรวจสอบ project และ user
-    const [projectExists, userExists] = await Promise.all([
-      prisma.project_activity.findUnique({ where: { project_id } }),
-      prisma.users_up.findUnique({ where: { ms_id } }),
-    ]);
+    const result = await prisma.$transaction(async (tx) => {
+      // ตรวจสอบ project และ user
+      const [projectExists, userExists] = await Promise.all([
+        tx.project_activity.findUnique({
+          where: { project_id },
+          select: { project_id: true, hours: true, has_evaluation: true, project_name: true },
+        }),
+        tx.users_up.findUnique({ where: { ms_id } }),
+      ]);
 
-    if (!projectExists) {
-      return res.status(404).json({
-        status: 'error',
-        error: 'Project not found',
-        code: 'PROJECT_NOT_FOUND',
+      if (!projectExists) {
+        return {
+          status: 'error',
+          error: 'Project not found',
+          code: 'PROJECT_NOT_FOUND',
+          httpStatus: 404,
+        };
+      }
+
+      if (!userExists) {
+        return {
+          status: 'error',
+          error: 'User not found',
+          code: 'USER_NOT_FOUND',
+          httpStatus: 404,
+        };
+      }
+
+      if (!projectExists.hours) {
+        return {
+          status: 'error',
+          error: 'Project does not have hours defined',
+          code: 'INVALID_HOURS',
+          httpStatus: 400,
+        };
+      }
+
+      // ตรวจสอบบันทึกซ้ำ
+      const existingActivity = await tx.activity_record.findFirst({
+        where: { project_id, ms_id },
       });
-    }
 
-    if (!userExists) {
-      return res.status(404).json({
-        status: 'error',
-        error: 'User not found',
-        code: 'USER_NOT_FOUND',
+      if (existingActivity) {
+        return {
+          status: 'duplicate',
+          error: 'รายชื่อนี้บันทึกไปแล้ว',
+          code: 'ALREADY_RECORDED',
+          httpStatus: 400,
+        };
+      }
+
+      // สร้าง activity_record
+      const activity = await tx.activity_record.create({
+        data: {
+          project_id,
+          ms_id,
+          joined_at: new Date(),
+          evaluation_status: projectExists.has_evaluation
+            ? activity_record_evaluation_status.PENDING
+            : activity_record_evaluation_status.COMPLETED,
+        },
       });
-    }
 
-    // ตรวจสอบบันทึกซ้ำ
-    const existingActivity = await prisma.activity_record.findFirst({
-      where: { project_id, ms_id },
+      // ถ้าไม่ต้องประเมิน อัปเดต totalActivityHours
+      if (!projectExists.has_evaluation) {
+        await tx.users_up.update({
+          where: { ms_id },
+          data: {
+            totalActivityHours: { increment: projectExists.hours },
+          },
+        });
+
+        // (ไม่บังคับ) สร้างการแจ้งเตือน
+        await tx.notifications.create({
+          data: {
+            ms_id,
+            title: "ชั่วโมงกิจกรรมถูกเพิ่ม",
+            body: `คุณได้รับ ${projectExists.hours} ชั่วโมงจากโครงการ ${projectExists.project_name}`,
+            read: false,
+            created_at: new Date(),
+          },
+        });
+      }
+
+      // จัดการ joined_at
+      const activityResponse = {
+        ...activity,
+        joined_at: activity.joined_at ? activity.joined_at.toISOString() : null,
+      };
+
+      return {
+        status: 'success',
+        message: 'Activity recorded successfully',
+        data: { activity: activityResponse },
+        httpStatus: 201,
+      };
     });
 
-    if (existingActivity) {
-      return res.status(400).json({
-        status: 'duplicate',
-        error: 'รายชื่อนี้บันทึกไปแล้ว',
-        code: 'ALREADY_RECORDED',
-      });
-    }
-
-    // บันทึก activity
-    const activity = await prisma.activity_record.create({
-      data: {
-        project_id,
-        ms_id,
-        joined_at: new Date(),
-      },
-    });
-
-    // จัดการ joined_at
-    const activityResponse = {
-      ...activity,
-      joined_at: activity.joined_at ? activity.joined_at.toISOString() : null,
-    };
-
-    return res.status(201).json({
-      status: 'success',
-      message: 'Activity recorded successfully',
-      data: { activity: activityResponse },
-    });
+    // ส่ง response จากผลลัพธ์ใน transaction
+    return res.status(result.httpStatus).json(result);
   } catch (err: any) {
-  console.error("❌ ActivityRecord error:", err); 
-  return res.status(500).json({
-    status: 'error',
-    error: 'Failed to record activity',
-    code: 'INTERNAL_SERVER_ERROR',
-  });
-}
+    console.error("❌ ActivityRecord error:", err);
+    return res.status(500).json({
+      status: 'error',
+      error: 'Failed to record activity',
+      code: 'INTERNAL_SERVER_ERROR',
+    });
+  } finally {
+    await prisma.$disconnect();
+  }
 };
 
 export const ActivityRecordMobile = async (req: Request, res: Response) => {
@@ -158,75 +205,123 @@ export const ActivityRecordMobile = async (req: Request, res: Response) => {
   }
 
   try {
-    // ค้นหา ms_id จาก qr_code_id
-    const user = await prisma.users_up.findUnique({ where: { qrCodeId: qr_code_id } });
-    if (!user) {
-      return res.status(404).json({
-        status: 'error',
-        error: 'User not found',
-        code: 'USER_NOT_FOUND',
-      });
-    }
+    const result = await prisma.$transaction(async (tx) => {
+      // ค้นหา ms_id จาก qr_code_id
+      const user = await tx.users_up.findUnique({ where: { qrCodeId: qr_code_id } });
+      if (!user) {
+        return {
+          status: 'error',
+          error: 'User not found',
+          code: 'USER_NOT_FOUND',
+          httpStatus: 404,
+        };
+      }
 
-    const ms_id = user.ms_id;
-    // ตรวจสอบความยาว ms_id
-    if (ms_id.length > 10) {
-      return res.status(400).json({
-        status: 'error',
-        error: 'ms_id exceeds maximum length of 10 characters',
-        code: 'INVALID_MS_ID_LENGTH',
-      });
-    }
+      const ms_id = user.ms_id;
+      // ตรวจสอบความยาว ms_id
+      if (ms_id.length > 10) {
+        return {
+          status: 'error',
+          error: 'ms_id exceeds maximum length of 10 characters',
+          code: 'INVALID_MS_ID_LENGTH',
+          httpStatus: 400,
+        };
+      }
 
-    // ตรวจสอบ project
-    const projectExists = await prisma.project_activity.findUnique({ where: { project_id } });
-    if (!projectExists) {
-      return res.status(404).json({
-        status: 'error',
-        error: 'Project not found',
-        code: 'PROJECT_NOT_FOUND',
+      // ตรวจสอบ project
+      const projectExists = await tx.project_activity.findUnique({
+        where: { project_id },
+        select: { project_id: true, hours: true, has_evaluation: true, project_name: true },
       });
-    }
+      if (!projectExists) {
+        return {
+          status: 'error',
+          error: 'Project not found',
+          code: 'PROJECT_NOT_FOUND',
+          httpStatus: 404,
+        };
+      }
 
-    // ตรวจสอบบันทึกซ้ำ
-    const existingActivity = await prisma.activity_record.findFirst({
-      where: { project_id, ms_id },
+      // ตรวจสอบว่า hours มีค่า
+      if (!projectExists.hours) {
+        return {
+          status: 'error',
+          error: 'Project does not have hours defined',
+          code: 'INVALID_HOURS',
+          httpStatus: 400,
+        };
+      }
+
+      // ตรวจสอบบันทึกซ้ำ
+      const existingActivity = await tx.activity_record.findFirst({
+        where: { project_id, ms_id },
+      });
+      if (existingActivity) {
+        return {
+          status: 'duplicate',
+          error: 'Activity already recorded',
+          code: 'ALREADY_RECORDED',
+          httpStatus: 400,
+        };
+      }
+
+      // บันทึก activity
+      const activity = await tx.activity_record.create({
+        data: {
+          project_id,
+          ms_id,
+          joined_at: new Date(),
+          evaluation_status: projectExists.has_evaluation
+            ? activity_record_evaluation_status.PENDING
+            : activity_record_evaluation_status.COMPLETED,
+        },
+      });
+
+      // ถ้าไม่ต้องประเมิน อัปเดต totalActivityHours
+      if (!projectExists.has_evaluation) {
+        await tx.users_up.update({
+          where: { ms_id },
+          data: {
+            totalActivityHours: { increment: projectExists.hours },
+          },
+        });
+
+        // (ไม่บังคับ) สร้างการแจ้งเตือน
+        await tx.notifications.create({
+          data: {
+            ms_id,
+            title: "ชั่วโมงกิจกรรมถูกเพิ่ม",
+            body: `คุณได้รับ ${projectExists.hours} ชั่วโมงจากโครงการ ${projectExists.project_name}`,
+            read: false,
+            created_at: new Date(),
+          },
+        });
+      }
+
+      const activityResponse = {
+        ...activity,
+        joined_at: activity.joined_at ? activity.joined_at.toISOString() : null,
+      };
+
+      return {
+        status: 'success',
+        message: 'Activity recorded successfully',
+        data: { activity: activityResponse },
+        httpStatus: 201,
+      };
     });
 
-    if (existingActivity) {
-      return res.status(400).json({
-        status: 'duplicate',
-        error: 'Activity already recorded',
-        code: 'ALREADY_RECORDED',
-      });
-    }
-
-    // บันทึก activity
-    const activity = await prisma.activity_record.create({
-      data: {
-        project_id,
-        ms_id,
-        joined_at: new Date(),
-      },
-    });
-
-    const activityResponse = {
-      ...activity,
-      joined_at: activity.joined_at ? activity.joined_at.toISOString() : null,
-    };
-
-    return res.status(201).json({
-      status: 'success',
-      message: 'Activity recorded successfully',
-      data: { activity: activityResponse },
-    });
+    // ส่ง response จากผลลัพธ์ใน transaction
+    return res.status(result.httpStatus).json(result);
   } catch (error) {
-    console.error('ActivityRecord error:', error);
+    console.error('ActivityRecordMobile error:', error);
     return res.status(500).json({
       status: 'error',
       error: 'Failed to record activity',
       code: 'INTERNAL_SERVER_ERROR',
     });
+  } finally {
+    await prisma.$disconnect();
   }
 };
 
@@ -243,13 +338,13 @@ export const JoinActivity = async (req: Request, res: Response) => {
   }
 
   try {
-    console.log('Received qr_code_data:', qr_code_data); 
-    console.log('Received user_id:', user_id); 
+    console.log('Received qr_code_data:', qr_code_data);
+    console.log('Received user_id:', user_id);
 
     // แปลง qr_code_data เป็น project_id
     const project_id = parseInt(qr_code_data);
     if (isNaN(project_id)) {
-      console.log('Invalid qr_code_data format:', qr_code_data); 
+      console.log('Invalid qr_code_data format:', qr_code_data);
       return res.status(400).json({
         status: 'error',
         error: 'Invalid qr_code_data format',
@@ -257,76 +352,121 @@ export const JoinActivity = async (req: Request, res: Response) => {
       });
     }
 
-    // ตรวจสอบ project
-    const projectExists = await prisma.project_activity.findUnique({
-      where: { project_id },
-    });
-    if (!projectExists) {
-      console.log('Project not found for project_id:', project_id); 
-      return res.status(404).json({
-        status: 'error',
-        error: 'Project not found',
-        code: 'PROJECT_NOT_FOUND',
+    const result = await prisma.$transaction(async (tx) => {
+      // ตรวจสอบ project
+      const projectExists = await tx.project_activity.findUnique({
+        where: { project_id },
+        select: { project_id: true, hours: true, has_evaluation: true, project_name: true },
       });
-    }
-    console.log('Found project:', projectExists);
+      if (!projectExists) {
+        console.log('Project not found for project_id:', project_id);
+        return {
+          status: 'error',
+          error: 'Project not found',
+          code: 'PROJECT_NOT_FOUND',
+          httpStatus: 404,
+        };
+      }
+      console.log('Found project:', projectExists);
 
-    // ค้นหา ms_id จาก user_id (qrCodeId)
-    const user = await prisma.users_up.findUnique({ where: { qrCodeId: user_id } });
-    if (!user) {
-      console.log('User not found for qrCodeId:', user_id); 
-      return res.status(404).json({
-        status: 'error',
-        error: 'User not found',
-        code: 'USER_NOT_FOUND',
+      // ตรวจสอบว่า hours มีค่า
+      if (!projectExists.hours) {
+        console.log('Project does not have hours defined:', project_id);
+        return {
+          status: 'error',
+          error: 'Project does not have hours defined',
+          code: 'INVALID_HOURS',
+          httpStatus: 400,
+        };
+      }
+
+      // ค้นหา ms_id จาก user_id (qrCodeId)
+      const user = await tx.users_up.findUnique({ where: { qrCodeId: user_id } });
+      if (!user) {
+        console.log('User not found for qrCodeId:', user_id);
+        return {
+          status: 'error',
+          error: 'User not found',
+          code: 'USER_NOT_FOUND',
+          httpStatus: 404,
+        };
+      }
+
+      const ms_id = user.ms_id;
+      // ตรวจสอบความยาว ms_id
+      if (ms_id.length > 10) {
+        console.log('ms_id too long:', ms_id);
+        return {
+          status: 'error',
+          error: 'ms_id exceeds maximum length of 10 characters',
+          code: 'INVALID_MS_ID_LENGTH',
+          httpStatus: 400,
+        };
+      }
+      console.log('Found ms_id:', ms_id);
+
+      // ตรวจสอบบันทึกซ้ำ
+      const existingActivity = await tx.activity_record.findFirst({
+        where: { project_id, ms_id },
       });
-    }
+      if (existingActivity) {
+        console.log('Activity already recorded:', { project_id, ms_id });
+        return {
+          status: 'duplicate',
+          error: 'Activity already recorded',
+          code: 'ALREADY_RECORDED',
+          httpStatus: 400,
+        };
+      }
 
-    const ms_id = user.ms_id;
-    // ตรวจสอบความยาว ms_id
-    if (ms_id.length > 10) {
-      console.log('ms_id too long:', ms_id); 
-      return res.status(400).json({
-        status: 'error',
-        error: 'ms_id exceeds maximum length of 10 characters',
-        code: 'INVALID_MS_ID_LENGTH',
+      // บันทึก activity
+      const activity = await tx.activity_record.create({
+        data: {
+          project_id,
+          ms_id,
+          joined_at: new Date(),
+          evaluation_status: projectExists.has_evaluation
+            ? activity_record_evaluation_status.PENDING
+            : activity_record_evaluation_status.COMPLETED,
+        },
       });
-    }
-    console.log('Found ms_id:', ms_id); 
 
-    // ตรวจสอบบันทึกซ้ำ
-    const existingActivity = await prisma.activity_record.findFirst({
-      where: { project_id, ms_id },
+      // ถ้าไม่ต้องประเมิน อัปเดต totalActivityHours
+      if (!projectExists.has_evaluation) {
+        await tx.users_up.update({
+          where: { ms_id },
+          data: {
+            totalActivityHours: { increment: projectExists.hours },
+          },
+        });
+
+        // (ไม่บังคับ) สร้างการแจ้งเตือน
+        await tx.notifications.create({
+          data: {
+            ms_id,
+            title: "ชั่วโมงกิจกรรมถูกเพิ่ม",
+            body: `คุณได้รับ ${projectExists.hours} ชั่วโมงจากโครงการ ${projectExists.project_name}`,
+            read: false,
+            created_at: new Date(),
+          },
+        });
+      }
+
+      const activityResponse = {
+        ...activity,
+        joined_at: activity.joined_at ? activity.joined_at.toISOString() : null,
+      };
+
+      return {
+        status: 'success',
+        message: 'Activity joined successfully',
+        data: { activity: activityResponse },
+        httpStatus: 201,
+      };
     });
 
-    if (existingActivity) {
-      console.log('Activity already recorded:', { project_id, ms_id }); 
-      return res.status(400).json({
-        status: 'duplicate',
-        error: 'Activity already recorded',
-        code: 'ALREADY_RECORDED',
-      });
-    }
-
-    // บันทึก activity
-    const activity = await prisma.activity_record.create({
-      data: {
-        project_id,
-        ms_id,
-        joined_at: new Date(),
-      },
-    });
-
-    const activityResponse = {
-      ...activity,
-      joined_at: activity.joined_at ? activity.joined_at.toISOString() : null,
-    };
-
-    return res.status(201).json({
-      status: 'success',
-      message: 'Activity joined successfully',
-      data: { activity: activityResponse },
-    });
+    // ส่ง response จากผลลัพธ์ใน transaction
+    return res.status(result.httpStatus).json(result);
   } catch (error) {
     console.error('JoinActivity error:', error);
     return res.status(500).json({
@@ -334,6 +474,8 @@ export const JoinActivity = async (req: Request, res: Response) => {
       error: 'Failed to join activity',
       code: 'INTERNAL_SERVER_ERROR',
     });
+  } finally {
+    await prisma.$disconnect();
   }
 };
 
@@ -415,8 +557,10 @@ export const getRegistrationsByProject = async (req: Request, res: Response) => 
   }
 };
 
+//รายชื่อผู้เข้าร่วมทั้งหมด
 export const getUserByMsId = async (req: Request, res: Response) => {
   const { ms_id } = req.params;
+
   try {
     const user = await prisma.users_up.findUnique({
       where: { ms_id },
@@ -426,8 +570,9 @@ export const getUserByMsId = async (req: Request, res: Response) => {
             project_activity: {
               select: {
                 project_name: true,
-                has_evaluation:true,
-                evaluation_form_url:true,
+                has_evaluation: true,
+                evaluation_form_url: true,
+                hours: true, // เพิ่มการดึง hours
               },
             },
           },
@@ -436,26 +581,30 @@ export const getUserByMsId = async (req: Request, res: Response) => {
     });
 
     if (!user) {
-      return res.status(404).json({ error: 'User not found' });
+      return res.status(404).json({ error: "User not found" });
     }
 
-    
     const transformedUser = {
       ...user,
       activity_record: user.activity_record.map((record) => ({
         id: record.id,
         project_id: record.project_id,
-        project_name: record.project_activity?.project_name ?? 'Unknown Project',
+        project_name: record.project_activity?.project_name ?? "Unknown Project",
         ms_id: record.ms_id,
         joined_at: record.joined_at,
-        project_activity: record.project_activity, 
+        evaluation_status: record.evaluation_status,
+        hours: record.project_activity?.hours ?? 0,
+        has_evaluation: record.project_activity?.has_evaluation ?? false,
+        evaluation_form_url: record.project_activity?.evaluation_form_url ?? null,
       })),
     };
 
     res.json(transformedUser);
   } catch (error) {
     console.error(`Error fetching user ${ms_id}:`, error);
-    res.status(500).json({ error: 'Failed to fetch user activity' });
+    res.status(500).json({ error: "Failed to fetch user activity" });
+  } finally {
+    await prisma.$disconnect();
   }
 };
 
@@ -514,7 +663,6 @@ export const updateEvaluation = async (req: Request, res: Response) => {
   const { id } = req.params;
   const { evaluation_status } = req.body;
 
- 
   if (!id || isNaN(Number(id))) {
     return res.status(400).json({ message: "id ไม่ครบถ้วนหรือไม่ใช่ตัวเลข" });
   }
@@ -522,38 +670,82 @@ export const updateEvaluation = async (req: Request, res: Response) => {
     return res.status(400).json({ message: "evaluation_status ไม่ครบถ้วนหรือไม่ใช่สตริง" });
   }
 
-  // ตรวจสอบว่า project_status เป็นค่าที่ถูกต้องใน enum
-  const validStatuses = Object.values(activity_record_evaluation_status); 
+  const validStatuses = Object.values(activity_record_evaluation_status);
   if (!validStatuses.includes(evaluation_status as activity_record_evaluation_status)) {
     return res.status(400).json({
-      message: `project_status ต้องเป็นหนึ่งใน: ${validStatuses.join(', ')}`,
+      message: `evaluation_status ต้องเป็นหนึ่งใน: ${validStatuses.join(', ')}`,
     });
   }
 
   try {
     const IdNum = Number(id);
 
-    // ค้นหานิสิต
-    const existingProject = await prisma.activity_record.findUnique({
-      where: { id: IdNum },
+    const result = await prisma.$transaction(async (tx) => {
+      const existingRecord = await tx.activity_record.findUnique({
+        where: { id: IdNum },
+        include: {
+          project_activity: true,
+          users_up: true,
+        },
+      });
+
+      if (!existingRecord) {
+        throw new Error("ไม่พบ activity_record");
+      }
+
+      // ตรวจสอบว่าโครงการไม่ต้องประเมิน
+      if (!existingRecord.project_activity.has_evaluation) {
+        throw new Error("โครงการนี้ไม่ต้องประเมิน ชั่วโมงถูกเพิ่มอัตโนมัติแล้ว");
+      }
+
+      if (
+        existingRecord.evaluation_status === activity_record_evaluation_status.COMPLETED &&
+        evaluation_status === activity_record_evaluation_status.COMPLETED
+      ) {
+        throw new Error("ชั่วโมงกิจกรรมนี้ถูกเพิ่มไปแล้ว");
+      }
+
+      const updatedRecord = await tx.activity_record.update({
+        where: { id: IdNum },
+        data: {
+          evaluation_status: evaluation_status as activity_record_evaluation_status,
+        },
+      });
+
+      if (evaluation_status === activity_record_evaluation_status.COMPLETED) {
+        const hoursToAdd = existingRecord.project_activity.hours;
+        if (!hoursToAdd) {
+          throw new Error("ไม่พบจำนวนชั่วโมงใน project_activity");
+        }
+
+        await tx.users_up.update({
+          where: { ms_id: existingRecord.ms_id },
+          data: {
+            totalActivityHours: { increment: hoursToAdd },
+          },
+        });
+
+        // (ไม่บังคับ) สร้างการแจ้งเตือน
+        await tx.notifications.create({
+          data: {
+            ms_id: existingRecord.ms_id,
+            title: "ชั่วโมงกิจกรรมถูกเพิ่ม",
+            body: `คุณได้รับ ${hoursToAdd} ชั่วโมงจากโครงการ ${existingRecord.project_activity.project_name}`,
+            read: false,
+            created_at: new Date(),
+          },
+        });
+      }
+
+      return updatedRecord;
     });
 
-    if (!existingProject) {
-      return res.status(404).json({ message: "ไม่พบนิสิต" });
-    }
-
-    // อัปเดตสถานะ
-    const updatedProject = await prisma.activity_record.update({
-      where: { id: IdNum },
-      data: {
-        evaluation_status: { set: evaluation_status as activity_record_evaluation_status },
-      },
-    });
-
-    return res.status(200).json({ message: "อัปเดตการประเมิน", data: updatedProject });
-  } catch (error) {
-    console.error("เกิดข้อผิดพลาดในการอัปเดตการประเมิน:", error);
-    return res.status(500).json({ message: "เกิดข้อผิดพลาดในการอัปเดตการประเมิน", error });
+    return res.status(200).json({ message: "อัปเดตการประเมินสำเร็จ", data: result });
+  } catch (error: any) {
+  return res.status(500).json({
+    message: "เกิดข้อผิดพลาดในการอัปเดตการประเมิน",
+    error: error.message,
+  });
   } finally {
     await prisma.$disconnect();
   }

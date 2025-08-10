@@ -178,7 +178,8 @@ class _DocviewState extends State<Docview> {
                       return Card(
                         margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
                         child: ListTile(
-                          leading: const Icon(Icons.event),
+                          leading: const Icon(Icons.star_half,
+                          color: Color.fromARGB(255, 81, 21, 138),),
                           
                           subtitle: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -190,12 +191,12 @@ class _DocviewState extends State<Docview> {
                                   style: const TextStyle(fontFamily: 'Sarabun', fontSize: 14),
                                 ),
                                 Text(
-                                  'Location: ${registration.event!.postlocation}',
+                                  'สถานที่: ${registration.event!.postlocation}',
                                   style: const TextStyle(fontFamily: 'Sarabun', fontSize: 14),
                                 ),
                                
                                 Text(
-                                  'Date: ${registration.event!.formatDate(registration.event!.postDate)}',
+                                  'วันที่: ${registration.event!.formatDate(registration.event!.postDate)}',
                                   style: const TextStyle(fontFamily: 'Sarabun', fontSize: 14),
                                 ),
                               ],

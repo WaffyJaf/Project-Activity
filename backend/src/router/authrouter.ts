@@ -1,5 +1,5 @@
 import express, { Request, Response } from "express";
-import {login, getUsers , microsoftCallback , getUser , saveDeviceToken , getCurrentUser} from "../controllers/authcontroller";
+import {login, getUsers , microsoftCallback , getUser , saveDeviceToken , getCurrentUser,verifyToken} from "../controllers/authcontroller";
 import {updateRole} from "../controllers/authcontroller"
 
 
@@ -11,6 +11,10 @@ router.post("/login", async (req: Request, res: Response) => {
 
 router.get("/microsoft/callback", async (req: Request, res: Response) => {
   await microsoftCallback(req, res);
+});
+
+router.get("/verify", async (req: Request, res: Response) => {
+  await verifyToken(req, res);
 });
 
 router.get("me/getCurrentUser", async (req: Request, res: Response) => {

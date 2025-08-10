@@ -24,7 +24,7 @@ function ParticipantsList() {
           throw new Error("ไม่ได้ระบุ ID โครงการ");
         }
         const data = await fetchParticipantsByProjectId(project_id);
-         console.log("Data from backend:", data);
+        console.log("Data from backend:", data);
         setParticipants(data);
       } catch (err) {
         setError("ไม่สามารถดึงรายชื่อผู้เข้าร่วมได้");
@@ -44,13 +44,13 @@ function ParticipantsList() {
   }, [project_id]);
 
   const handleSelectParticipant = (id: number) => {
-  setSelectedParticipants((prev) => {
-    const newSelection = prev.includes(id)
-      ? prev.filter((participantId) => participantId !== id)
-      : [...prev, id];
-    return newSelection;
-  });
-};
+    setSelectedParticipants((prev) => {
+      const newSelection = prev.includes(id)
+        ? prev.filter((participantId) => participantId !== id)
+        : [...prev, id];
+      return newSelection;
+    });
+  };
 
   const handleSelectAll = () => {
     if (selectedParticipants.length === participants.length) {
@@ -80,6 +80,23 @@ function ParticipantsList() {
         icon: "warning",
         title: "กรุณาเลือกสถานะ",
         text: "โปรดเลือกสถานะการประเมิน",
+        confirmButtonText: "ตกลง",
+        confirmButtonColor: "#7c3aed",
+      });
+      return;
+    }
+
+    // ตรวจสอบว่าเลือกสถานะ NOT_EVALUATED สำหรับโครงการที่ต้องประเมินหรือไม่
+    const selectedRecords = participants.filter((p) => selectedParticipants.includes(p.id));
+    const hasInvalidStatus = selectedRecords.some(
+      (record) => record.has_evaluation && selectedStatus === "NOT_EVALUATED"
+    );
+
+    if (hasInvalidStatus) {
+      Swal.fire({
+        icon: "warning",
+        title: "สถานะไม่ถูกต้อง",
+        text: "ไม่สามารถตั้งสถานะ 'ไม่ประเมิน' สำหรับโครงการที่ต้องประเมิน",
         confirmButtonText: "ตกลง",
         confirmButtonColor: "#7c3aed",
       });
@@ -150,7 +167,8 @@ function ParticipantsList() {
                   รายชื่อผู้เข้าร่วมโครงการ
                 </h1>
                 <p className="text-blue-100 mt-3 text-lg">รหัสโครงการ: {project_id}</p>
-                <p className="text-blue-200 text-sm">จำนวนผู้เข้าร่วมทั้งสิ้น: {participants.length} คน</p>
+                
+                
               </div>
               <div className="flex items-center gap-3">
                 <button
@@ -219,6 +237,10 @@ function ParticipantsList() {
                       <th className="px-6 py-4 text-left text-sm font-bold text-gray-900 uppercase tracking-wider">
                         ประเมิน
                       </th>
+                      <th className="px-6 py-4 text-left text-sm font-bold text-gray-900 uppercase tracking-wider">
+                        ต้องประเมิน
+                      </th>
+                     
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
@@ -296,6 +318,18 @@ function ParticipantsList() {
                             {getThaiStatus(record.evaluation_status)}
                           </div>
                         </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div
+                            className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border ${
+                              record.has_evaluation
+                                ? "bg-blue-100 text-blue-800 border-blue-300"
+                                : "bg-gray-100 text-gray-800 border-gray-300"
+                            }`}
+                          >
+                            {record.has_evaluation ? "ต้องประเมิน" : "ไม่ต้องประเมิน"}
+                          </div>
+                        </td>
+                        
                       </motion.tr>
                     ))}
                   </tbody>
@@ -341,6 +375,7 @@ function ParticipantsList() {
                 <option value="">เลือกสถานะ</option>
                 <option value="COMPLETED">ประเมินแล้ว</option>
                 <option value="NOT_EVALUATED">ไม่ประเมิน</option>
+                <option value="PENDING">รอประเมิน</option>
               </select>
               <div className="mt-6 flex justify-end gap-3">
                 <button

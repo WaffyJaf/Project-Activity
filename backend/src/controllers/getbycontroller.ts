@@ -97,12 +97,21 @@ export const getParticipantsByProjectId = async (req: Request, res: Response) =>
       return res.status(400).json({ message: "ID โครงการต้องเป็นตัวเลข" });
     }
 
+    // ตรวจสอบว่า project มีอยู่จริง
+    const projectExists = await prisma.project_activity.findUnique({
+      where: { project_id: projectId },
+      select: { project_id: true },
+    });
+    if (!projectExists) {
+      return res.status(404).json({ message: "ไม่พบโครงการนี้", data: [] });
+    }
+
     const participants = await prisma.activity_record.findMany({
       where: {
         project_id: projectId,
       },
       select: {
-        id:true,
+        id: true,
         ms_id: true,
         joined_at: true,
         evaluation_status: true,
@@ -111,7 +120,13 @@ export const getParticipantsByProjectId = async (req: Request, res: Response) =>
             ms_id: true,
             givenName: true,
             surname: true,
-            department:true,
+            department: true,
+          },
+        },
+        project_activity: {
+          select: {
+            has_evaluation: true,
+            evaluation_form_url: true,
           },
         },
       },
@@ -121,10 +136,20 @@ export const getParticipantsByProjectId = async (req: Request, res: Response) =>
       return res.status(200).json({ message: "ไม่มีผู้เข้าร่วมในโครงการนี้", data: [] });
     }
 
-    res.status(200).json({ data: participants });
+    // แปลง joined_at เป็น ISO string 
+    const transformedParticipants = participants.map((participant) => ({
+      ...participant,
+      joined_at: participant.joined_at ? participant.joined_at.toISOString() : null,
+      has_evaluation: participant.project_activity?.has_evaluation ?? false,
+      evaluation_form_url: participant.project_activity?.evaluation_form_url ?? null,
+    }));
+
+    res.status(200).json({ data: transformedParticipants });
   } catch (error) {
     console.error("!!! เกิดข้อผิดพลาดในการดึงรายชื่อผู้เข้าร่วม !!!", error);
     return res.status(500).json({ message: "เกิดข้อผิดพลาดในการดึงรายชื่อผู้เข้าร่วม", error });
+  } finally {
+    await prisma.$disconnect();
   }
 };
 

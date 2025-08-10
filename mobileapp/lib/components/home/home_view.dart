@@ -18,6 +18,17 @@ class HomeView extends StatefulWidget {
 class _HomeViewState extends State<HomeView> {
   SortOption _sortOption = SortOption.newest;
 
+  String getThaiStatus(String status) {
+    switch (status.toLowerCase()) {
+      case 'active':
+        return 'เปิดรับสมัคร';
+      case 'expired':
+        return 'ปิดรับสมัคร';
+      default:
+        return status;
+    }
+  }
+
   // Function for sorting activities based on the selected sort option
   List<Activity> _sortActivities(List<Activity> activities) {
     switch (_sortOption) {
@@ -149,12 +160,28 @@ class _HomeViewState extends State<HomeView> {
                         subtitle: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              'วันที่: ${activity.formatDate(activity.postDate)}',
-                              style: const TextStyle(fontFamily: 'Sarabun', fontSize: 14),
+                            // Text(
+                            //   'วันที่: ${activity.formatDate(activity.postDate)}',
+                            //   style: const TextStyle(fontFamily: 'Sarabun', fontSize: 14),
+                            // ),
+                             RichText(
+                              text: TextSpan(
+                                style: const TextStyle(fontFamily: 'Sarabun', fontSize: 13, color: Colors.black),
+                                children: [
+                                  const TextSpan(
+                                    text: 'เปิดลงทะเบียน: ',
+                                    style: TextStyle(color: Colors.purple),
+                                  ),
+                                  TextSpan(
+                                    text:
+                                        '${activity.formatDate(activity.registrationStart)} - ${activity.formatDate(activity.registrationEnd)}',
+                                  ),
+                                ],
+                              ),
                             ),
+
                             Text(
-                              'สถานะ: ${activity.postStatus}',
+                              'สถานะ: ${getThaiStatus(activity.postStatus)}',
                               style: TextStyle(
                                 fontFamily: 'Sarabun',
                                 fontSize: 14,
@@ -164,6 +191,8 @@ class _HomeViewState extends State<HomeView> {
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
+
+                    
                           ],
                         ),
                         trailing: IconButton(

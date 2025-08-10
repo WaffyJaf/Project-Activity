@@ -34,6 +34,9 @@ export interface ActivityRecord {
   ms_id: string;
   joined_at: string | null;
   evaluation_status: 'PENDING' | 'COMPLETED' | 'NOT_EVALUATED';
+  has_evaluation: string;
+  evaluation_form_url: string;
+
   
   users_up: User; 
 }

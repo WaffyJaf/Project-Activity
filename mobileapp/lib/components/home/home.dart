@@ -53,6 +53,12 @@ class Home extends StatelessWidget {
                 'Role: ${user.role}',
                 style: const TextStyle(fontSize: 16),
               ),
+              Text(
+                'จำนวนชั่วโมงสะสม: ${user.totalActivityHours}',
+                style: const TextStyle(fontSize: 16 , color: Color.fromARGB(255, 86, 6, 161),),
+                
+                
+              ),
               const SizedBox(height: 30),
               ElevatedButton.icon(
                 icon: const Icon(Icons.logout),

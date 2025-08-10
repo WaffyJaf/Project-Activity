@@ -11,6 +11,7 @@ class User {
   final String role;
   final String qrCodeId;
   final String createdAt;
+  final int totalActivityHours;
   final List<ActivityRecord> activityRecord;
 
   User({
@@ -25,25 +26,28 @@ class User {
     required this.qrCodeId,
     required this.createdAt,
     required this.activityRecord,
+    required this.totalActivityHours,
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
-    return User(
-      id: json['id'] != null ? json['id'] as int : null,
-      msId: json['ms_id'] ?? '',
-      givenName: json['givenName'] ?? '',
-      surname: json['surname'] ?? '',
-      jobTitle: json['jobTitle'] ?? '',
-      department: json['department'] ?? '',
-      displayName: json['displayName'] ?? '',
-      role: json['role'] ?? '',
-      qrCodeId: json['qrCodeId'] ?? '',
-      createdAt: json['created_at'] ?? '',
-      activityRecord: (json['activity_record'] as List? ?? [])
-          .map((record) => ActivityRecord.fromJson(record))
-          .toList(),
-    );
-  }
+  print('User JSON: $json'); // ตรวจสอบ JSON ที่ได้รับ
+  return User(
+    id: json['id'] != null ? json['id'] as int : null,
+    msId: json['ms_id'] ?? '',
+    givenName: json['givenName'] ?? '',
+    surname: json['surname'] ?? '',
+    jobTitle: json['jobTitle'] ?? '',
+    department: json['department'] ?? '',
+    displayName: json['displayName'] ?? '',
+    role: json['role'] ?? '',
+    qrCodeId: json['qrCodeId'] ?? '',
+    createdAt: json['created_at'] ?? '',
+    totalActivityHours: json['totalActivityHours'] != null ? (json['totalActivityHours'] as num).toInt() : 0,
+    activityRecord: (json['activity_record'] as List? ?? [])
+        .map((record) => ActivityRecord.fromJson(record))
+        .toList(),
+  );
+}
 
   Map<String, dynamic> toJson() {
     return {
@@ -57,6 +61,7 @@ class User {
       'role': role,
       'qrCodeId': qrCodeId,
       'created_at': createdAt,
+      'totalActivityHours': totalActivityHours,
       'activity_record': activityRecord.map((record) => record.toJson()).toList(),
     };
   }

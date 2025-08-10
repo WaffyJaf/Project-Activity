@@ -154,7 +154,8 @@ class _ActivityMoreDetailState extends State<ActivityMoreDetail> {
                       return Card(
                         margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
                         child: ListTile(
-                          leading: const Icon(Icons.event),
+                          leading: const Icon(Icons.system_update_alt,
+                          color: Color.fromARGB(255, 81, 21, 138),),
                           title: Text(
                             activity.projectName,
                             style: const TextStyle(
@@ -166,10 +167,10 @@ class _ActivityMoreDetailState extends State<ActivityMoreDetail> {
                           subtitle: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                'รหัสโปรเจกต์: ${activity.projectId}',
-                                style: const TextStyle(fontFamily: 'Sarabun', fontSize: 14),
-                              ),
+                              // Text(
+                              //   'รหัสโปรเจกต์: ${activity.projectId}',
+                              //   style: const TextStyle(fontFamily: 'Sarabun', fontSize: 14),
+                              // ),
                               Text(
                                 'วันที่เข้าร่วม: ${activity.formattedJoinedAt}',
                                 style: const TextStyle(fontFamily: 'Sarabun', fontSize: 14),

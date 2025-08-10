@@ -36,7 +36,7 @@ model project_activity {
   department            String?                         @db.VarChar(255)
   location              String?                         @db.VarChar(255)
   budget                Decimal?                        @db.Decimal(15, 2)
-  hours                 Int?
+  hours                 Int
   created_date          DateTime?                       @default(now()) @db.Timestamp(0)
   project_status        project_activity_project_status @default(pending)
   project_datetime      DateTime?                       @db.DateTime(0)
@@ -53,6 +53,7 @@ model project_activity {
   event_posts           event_posts[]
   user                  users_up?                       @relation("UserProjectActivity", fields: [ms_id], references: [ms_id])
   registration_activity registration_activity[]
+  activity_hours_log activity_hours_log[]
 
   @@index([ms_id])
 }
@@ -86,13 +87,14 @@ model users_up {
   department              String?                 @db.VarChar(255)
   displayName             String?                 @db.VarChar(255)
   qrCodeId                String?                 @unique(map: "qrCodeId") @db.VarChar(255)
-  totalActivityHours      Int?                    @default(0)
+  totalActivityHours      Int                    @default(0)
   activity_record         activity_record[]
   event_posts             event_posts[]           @relation("UserEventPosts")
   project_activity        project_activity[]      @relation("UserProjectActivity")
   registration_activities registration_activity[] @relation("UserRegistrationActivities")
   device_tokens device_tokens[]
   notifications notifications[]
+  activity_hours_log activity_hours_log[]
 }
 
 model activity_record {
@@ -131,6 +133,18 @@ model notifications {
   user       users_up  @relation(fields: [ms_id], references: [ms_id])
 
   @@index([ms_id])
+}
+
+model activity_hours_log {
+  id            Int       @id @default(autoincrement())
+  ms_id         String    @db.VarChar(255)
+  project_id    Int
+  hours_added   Int
+  added_at      DateTime  @default(now())
+  users_up      users_up  @relation(fields: [ms_id], references: [ms_id])
+  project_activity project_activity @relation(fields: [project_id], references: [project_id])
+  @@index([ms_id])
+  @@index([project_id])
 }
 
 enum event_posts_post_status {

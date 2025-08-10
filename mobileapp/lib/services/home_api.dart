@@ -1,10 +1,11 @@
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../models/activity.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 
 class ApiService{
-  static const String baseUrl = 'http://10.0.2.2:3000';
+    final String baseUrl = dotenv.env['BASE_URL'] ?? '';
 
     Future<List<Activity>> fetchActivities() async {
     try {
@@ -21,45 +22,50 @@ class ApiService{
   }
 }
 
-class Apiregis{
-  static const String baseUrl = 'http://10.0.2.2:3000';
+    class Apiregis{
+      final String baseUrl = dotenv.env['BASE_URL'] ?? '';
+      Future<Map<String, dynamic>> register({
+      required String postId,    
+      required String studentId, 
+      required String studentName, 
+      required String faculty,  
+    }) async {
+      try {
+        final response = await http.post(
+          Uri.parse('$baseUrl/event/regisactivity'),
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode({
+            'post_id': int.parse(postId),
+            'ms_id': studentId,
+            'student_name': studentName,
+            'faculty': faculty,
+          }),
+        );
 
-   Future<Map<String, dynamic>> register({
-  required String postId,    
-  required String studentId, 
-  required String studentName, 
-  required String faculty,  
-}) async {
-  try {
-    final response = await http.post(
-      Uri.parse('$baseUrl/event/regisactivity'),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
-        'post_id': int.parse(postId),
-        'student_id': studentId,
-        'student_name': studentName,
-        'faculty': faculty,
-      }),
-    );
+         final result = jsonDecode(response.body);
 
-    if (response.statusCode == 201) {
-      final result = jsonDecode(response.body);
-      return {
-        'status': 'success',
-        'message': result['message'] ?? 'ลงทะเบียนสำเร็จ',
-      };
-    } else {
-      final result = jsonDecode(response.body);
-      return {
-        'status': 'error',
-        'message': result['message'] ?? 'ลงทะเบียนล้มเหลว',
-      };
+          if (response.statusCode == 201) {
+            return {
+              'status': 'success',
+              'message': result['message'] ?? 'ลงทะเบียนสำเร็จ',
+            };
+          } else if (response.statusCode == 409) {
+            // กรณีสมัครซ้ำ
+            return {
+              'status': 'duplicate',
+              'message': result['message'] ?? 'คุณได้ลงทะเบียนกิจกรรมนี้แล้ว',
+            };
+          } else {
+            return {
+              'status': 'error',
+              'message': result['message'] ?? 'ลงทะเบียนล้มเหลว',
+            };
+          }
+        } catch (e) {
+          return {
+            'status': 'error',
+            'message': 'เกิดข้อผิดพลาดในการเชื่อมต่อ: $e',
+          };
+      }
     }
-  } catch (e) {
-    return {
-      'status': 'error',
-      'message': 'เกิดข้อผิดพลาดในการเชื่อมต่อ: $e',
-    };
   }
-}
-}

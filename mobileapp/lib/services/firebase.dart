@@ -13,11 +13,12 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter_app_badger/flutter_app_badger.dart';
 import 'dart:io';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class NotificationService {
   final FirebaseMessaging _firebaseMessaging = FirebaseMessaging.instance;
   final LoginApi _loginApi = LoginApi();
-  final String _backendUrl = 'http://10.0.2.2:3000/auth/device_tokens';
+  final String _backendUrl = dotenv.env['BACKENDFIREBASE_URL'] ?? '';
 
   Future<void> _requestNotificationPermissionIfNeeded() async {
     if (kIsWeb) return;
@@ -181,7 +182,7 @@ class NotificationService {
       if (response.statusCode == 200 || response.statusCode == 201) {
         print('ส่ง FCM token ไป backend สำเร็จ');
         final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('token', fcmToken);
+        await prefs.setString('fcm_token', fcmToken);
       } else {
         print('ส่ง FCM token ล้มเหลว: ${response.statusCode} - ${response.body}');
       }
@@ -215,7 +216,7 @@ class NotificationService {
       _firebaseMessaging.onTokenRefresh.listen((String newToken) async {
         print('FCM token ถูกรีเฟรช: $newToken');
         final prefs = await SharedPreferences.getInstance();
-        final oldToken = prefs.getString('token');
+        final oldToken = prefs.getString('fcm_token');
         if (oldToken != newToken) {
           print('Token เปลี่ยนแปลง, ส่ง token ใหม่ไป backend');
           await sendTokenToBackend(msId);

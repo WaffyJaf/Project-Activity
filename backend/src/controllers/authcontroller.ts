@@ -33,7 +33,8 @@ function generateQrCodeId(): string {
 
 export const microsoftCallback = async (req: Request, res: Response) => {
   const code = req.query.code as string;
-  console.log('microsoftCallback: Received code:', code);
+  const state = req.query.state as string;
+  console.log('microsoftCallback: Received code:', code, 'State:', state);
 
   if (!code) {
     console.error('microsoftCallback: Missing code');
@@ -41,7 +42,10 @@ export const microsoftCallback = async (req: Request, res: Response) => {
   }
 
   try {
-    // 1. แลก Token
+    // 1. ใช้ redirect URI ที่ลงทะเบียนไว้เสมอ (localhost)
+    const redirectUri = process.env.MICROSOFT_REDIRECT_URI!; 
+
+    // 2. แลก Token
     const tokenRes = await fetch(`https://login.microsoftonline.com/${process.env.TENANT_ID}/oauth2/v2.0/token`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -49,7 +53,7 @@ export const microsoftCallback = async (req: Request, res: Response) => {
         client_id: process.env.MICROSOFT_CLIENT_ID!,
         client_secret: process.env.MICROSOFT_CLIENT_SECRET!,
         code,
-        redirect_uri: process.env.MICROSOFT_REDIRECT_URI!,
+        redirect_uri: redirectUri,
         grant_type: 'authorization_code',
       }),
     });
@@ -66,7 +70,7 @@ export const microsoftCallback = async (req: Request, res: Response) => {
       return res.status(500).json({ error: 'Token error', detail: tokenData.error_description });
     }
 
-    // 2. ดึงข้อมูลผู้ใช้
+    // 3. ดึงข้อมูลผู้ใช้
     const userInfoRes = await fetch('https://graph.microsoft.com/v1.0/me?$select=displayName,givenName,surname,jobTitle,department,userPrincipalName', {
       headers: { Authorization: `Bearer ${tokenData.access_token}` },
     });
@@ -87,45 +91,50 @@ export const microsoftCallback = async (req: Request, res: Response) => {
 
     const ms_id = userInfo.userPrincipalName;
 
-    // 3. เช็กหรือสร้างผู้ใช้ใน DB
+    // 4. ตรวจสอบหรือสร้างผู้ใช้ในฐานข้อมูล
     let user = await prisma.users_up.findUnique({ where: { ms_id } });
 
     if (!user) {
-  user = await prisma.users_up.create({
-    data: {
-      ms_id,
-      givenName: userInfo.givenName ?? '',
-      surname: userInfo.surname ?? '',
-      jobTitle: userInfo.jobTitle ?? '',
-      department: userInfo.department ?? '',
-      displayName: userInfo.displayName ?? '',
-      role: 'user' as UserRole,
-      qrCodeId: generateQrCodeId(),
-      created_at: new Date(),
-    },
-  });
-  console.log('User created:', user);
-} else {
-  // ✅ อัปเดตข้อมูลล่าสุดจาก Microsoft
-  user = await prisma.users_up.update({
-    where: { ms_id },
-    data: {
-      givenName: userInfo.givenName ?? '',
-      surname: userInfo.surname ?? '',
-      jobTitle: userInfo.jobTitle ?? '',
-      department: userInfo.department ?? '',
-      displayName: userInfo.displayName ?? '',
-    },
-  });
-  console.log('User updated:', user);
-}
+      user = await prisma.users_up.create({
+        data: {
+          ms_id,
+          givenName: userInfo.givenName ?? '',
+          surname: userInfo.surname ?? '',
+          jobTitle: userInfo.jobTitle ?? '',
+          department: userInfo.department ?? '',
+          displayName: userInfo.displayName ?? '',
+          role: 'user' as UserRole,
+          qrCodeId: generateQrCodeId(),
+          created_at: new Date(),
+        },
+      });
+      console.log('User created:', user);
+    } else {
+      // อัปเดตข้อมูลผู้ใช้ด้วยข้อมูลล่าสุดจาก Microsoft
+      user = await prisma.users_up.update({
+        where: { ms_id },
+        data: {
+          givenName: userInfo.givenName ?? '',
+          surname: userInfo.surname ?? '',
+          jobTitle: userInfo.jobTitle ?? '',
+          department: userInfo.department ?? '',
+          displayName: userInfo.displayName ?? '',
+        },
+      });
+      console.log('User updated:', user);
+    }
 
-
-    // 4. สร้าง JWT
+    // 5. สร้าง JWT
     const token = jwt.sign({ ms_id: user.ms_id, role: user.role }, process.env.JWT_SECRET!, { expiresIn: '1h' });
     console.log('JWT generated:', token);
 
-    return res.redirect(`${process.env.FRONTEND_URL}/login?token=${token}`);
+    // 6. Redirect ตามประเภท client
+    const isFlutter = state === 'flutter';
+    if (isFlutter) {
+      return res.redirect(`myapp://auth?token=${token}`);
+    } else {
+      return res.redirect(`${process.env.FRONTEND_URL}/login?token=${token}`);
+    }
   } catch (err: any) {
     console.error('microsoftCallback: Unhandled Error:', err?.message || err);
     return res.status(500).json({ error: 'Authentication failed', detail: err?.message });
@@ -206,6 +215,7 @@ export const getUsers = async (req: Request, res: Response) => {
         displayName: true,
         role: true,
         created_at: true,
+        totalActivityHours:true,
       },
       orderBy: {
         created_at: 'desc',
@@ -250,6 +260,7 @@ export const getCurrentUser = async (req: Request, res: Response) => {
         department: true,
         role: true,
         created_at: true,
+        totalActivityHours:true,
       },
     });
 
@@ -320,6 +331,7 @@ export const login = async (req: Request, res: Response) => {
         jobTitle: user.jobTitle ?? '',
         department: user.department ?? '',
         displayName: user.displayName ?? '',
+        totalActivityHours: user.totalActivityHours?? '',
         role: user.role,
         qrCodeId: user.qrCodeId ?? '',
         created_at: user.created_at ? user.created_at.toISOString() : new Date().toISOString(),
@@ -331,7 +343,29 @@ export const login = async (req: Request, res: Response) => {
   }
 };
 
+export const verifyToken = async (req: Request, res: Response) => {
+  const token = req.query.token as string;
 
+  if (!token) {
+    return res.status(400).json({ error: 'Missing token' });
+  }
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { ms_id: string, role: string };
+    const user = await prisma.users_up.findUnique({
+      where: { ms_id: decoded.ms_id },
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    return res.status(200).json({ user });
+  } catch (err: any) {
+    console.error('Token verification error:', err.message);
+    return res.status(401).json({ error: 'Invalid token' });
+  }
+};
 
 
 
@@ -383,7 +417,17 @@ interface DeviceTokenRequest {
 
 
 export const saveDeviceToken = async (req: Request, res: Response) => {
-  try {
+ try {
+    // เพิ่มโค้ดนี้ตรงนี้เลย
+    if (typeof req.body === 'string') {
+      try {
+        req.body = JSON.parse(req.body);
+        console.log('✅ Parsed req.body to object:', req.body);
+      } catch {
+        console.warn('⚠️ req.body เป็น string แต่ไม่สามารถแปลง JSON ได้');
+        return res.status(400).json({ error: 'Invalid JSON body' });
+      }
+    }
     console.log('🔵 Content-Type:', req.headers['content-type']);
     console.log('🔵 Raw request body:', req.body);
     console.log('🔵 typeof req.body:', typeof req.body);
@@ -434,27 +478,30 @@ export const saveDeviceToken = async (req: Request, res: Response) => {
     });
 
     if (existingToken) {
-      console.log('🟡 Device token already exists');
+  console.log('🟡 Device token already exists');
+  return res.status(200).json({ message: 'Device token already exists' });
+} else {
+  try {
+    await prisma.device_tokens.create({
+      data: {
+        ms_id,
+        token,
+        createdAt: new Date(),
+      },
+    });
+    console.log('✅ Device token saved');
+  } catch (error: any) {
+    // ตรวจจับ duplicate key error ของ Prisma
+    if (
+      error.code === 'P2002' && // unique constraint failed
+      error.meta?.target?.includes('token')
+    ) {
+      console.log('🟡 Device token already exists (caught in catch)');
       return res.status(200).json({ message: 'Device token already exists' });
-    } else {
-      await prisma.device_tokens.upsert({
-        where: {
-          ms_id_token: {
-            ms_id,
-            token,
-          },
-        },
-        update: {}, // ถ้าไม่ต้องอัปเดตอะไร
-        create: {
-          ms_id,
-          token,
-          createdAt: new Date(),
-        },
-      });
-
-      console.log('✅ Device token saved or updated');
     }
-
+    throw error; // error อื่นให้ throw ต่อไป
+  }
+}
     return res.status(201).json({ message: 'Device token saved successfully' });
   } catch (error: any) {
     console.error('❌ Device token error:', error);

@@ -4,3 +4,18 @@ node_modules
 activity-7f7f1-firebase-adminsdk-fbsvc-9040751b95.json
 
 /src/generated/prisma
+
+# Flutter build outputs
+/build/
+/ios/Flutter/Flutter.framework/
+/ios/Flutter/Flutter.podspec
+/ios/Flutter/engine/
+/android/app/build/
+/flutter_assets/
+
+# Firebase / Google Services
+google-services.json
+
+# IDE / Editor files
+.idea/
+.vscode/

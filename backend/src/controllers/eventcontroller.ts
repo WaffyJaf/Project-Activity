@@ -131,11 +131,27 @@ const storage = multer.diskStorage({
 export const registerActivity = async (req: Request, res: Response) => {
   const { post_id, ms_id, student_name, faculty } = req.body;
 
+  console.log("➡️ Request body:", req.body);
+
+
   if (!post_id || !ms_id || !student_name || !faculty) {
     return res.status(400).json({ message: "ข้อมูลไม่ครบถ้วน" });
   }
 
   try {
+    // 🔍 ตรวจสอบว่ามีการลงทะเบียนซ้ำหรือไม่
+    const existing = await prisma.registration_activity.findFirst({
+      where: {
+        post_id: Number(post_id),
+        ms_id: ms_id,
+      },
+    });
+
+    if (existing) {
+      return res.status(409).json({ message: "คุณได้ลงทะเบียนกิจกรรมนี้แล้ว" });
+    }
+
+    // ✅ ถ้าไม่ซ้ำ ให้ทำการบันทึก
     const newRegister = await prisma.registration_activity.create({
       data: {
         post_id: Number(post_id),
@@ -144,13 +160,16 @@ export const registerActivity = async (req: Request, res: Response) => {
         faculty,
       },
     });
+
     console.log("Saved to database:", newRegister);
     res.status(201).json({ message: "ลงทะเบียนสำเร็จ", data: newRegister });
+
   } catch (error) {
     console.error("!!! Error saving to database !!!", error);
     return res.status(500).json({ message: "เกิดข้อผิดพลาดในการบันทึก", error });
   }
 };
+
 
   
   export const getregisACtivity = async (req: Request, res: Response) => {
@@ -196,6 +215,8 @@ export const registerActivity = async (req: Request, res: Response) => {
           hour_post: true,
           location_post:true,
           post_status: true,
+          registration_start: true,
+          registration_end: true,
           imge_url: true,
         },
         orderBy: {

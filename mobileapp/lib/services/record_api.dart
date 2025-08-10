@@ -1,9 +1,10 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:mobileapp/models/record.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class ApiService {
-  static const String baseUrl = 'http://10.0.2.2:3000'; 
+  final String baseUrl = dotenv.env['BASE_URL'] ?? ''; 
 
   Future<List<Registration>> getRegistrationByStudentId(String studentId) async {
     try {

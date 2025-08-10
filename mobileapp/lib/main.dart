@@ -9,9 +9,19 @@ import 'main_menu.dart';
 import './components/notify/notification_screen.dart';
 import 'services/login_api.dart';
 import 'services/firebase.dart';
+import 'package:intl/date_symbol_data_local.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'dart:io';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  try {
+    await dotenv.load(fileName: ".env");
+    print('Loaded BASE_URL: ${dotenv.env['BASE_URL']}');
+  } catch (e) {
+    print('Error loading .env: $e');
+  }
+  await initializeDateFormatting('th', null);
   try {
     await Firebase.initializeApp();
     print('Firebase initialized successfully');
