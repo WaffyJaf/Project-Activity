@@ -52,6 +52,21 @@ const storage = multer.diskStorage({
     return res.status(400).json({ message: 'ข้อมูลไม่ครบถ้วน: ต้องระบุ project_id, post_content, และ ms_id' });
   }
 
+  // Validate project_id is a number
+  const projectIdNum = Number(project_id);
+  if (isNaN(projectIdNum)) {
+    return res.status(400).json({ message: 'project_id ต้องเป็นตัวเลข' });
+  }
+
+  // Validate hour_post if provided
+  let hourPostNum: number | undefined;
+  if (hour_post !== undefined) {
+    hourPostNum = Number(hour_post);
+    if (isNaN(hourPostNum) || hourPostNum <= 0) {
+      return res.status(400).json({ message: 'hour_post ต้องเป็นตัวเลขที่มากกว่า 0' });
+    }
+  }
+
   // Validate dates
   const postDate = new Date(post_datetime);
   if (isNaN(postDate.getTime())) {
@@ -79,7 +94,7 @@ const storage = multer.diskStorage({
     // Verify project_id exists and is associated with ms_id
     const project = await prisma.project_activity.findFirst({
       where: {
-        project_id: Number(project_id),
+        project_id: projectIdNum,
         ms_id,
       },
     });
@@ -91,39 +106,44 @@ const storage = multer.diskStorage({
     // Create the event post
     const newEvent = await prisma.event_posts.create({
       data: {
-        project_id: Number(project_id),
+        project_id: projectIdNum,
         post_content,
         imge_url,
         location_post,
         post_datetime: postDate,
-        hour_post: hour_post ? Number(hour_post) : undefined,
+        hour_post: hourPostNum,
         ms_id,
         registration_start: regStart,
         registration_end: regEnd,
       },
     });
 
-    
+    // Fetch all users to notify
     const allUsers = await prisma.users_up.findMany({
-        select: { ms_id: true },
-      });
+      select: { ms_id: true },
+    });
 
+    // Send notifications to all users in a single batch
     const userIds = allUsers.map(user => user.ms_id);
     if (userIds.length > 0) {
-      const title = `ประกาศกิจกรรมใหม่: ${post_content.substring(0, 50)}...`;
-      const body = `เปิดลงทะเบียนแล้ววันนี้ !! ได้รับ ${hour_post} ชั่วโมง }`;
-      for (const userId of userIds) {
-        await notificationService.createAndSendNotification(userId, title, body, {
-          event_id: newEvent.post_id.toString(),
-        });
-      }
-}
+      const title = `ประกาศกิจกรรมใหม่: ${post_content.substring(0, 50)}${post_content.length > 50 ? '...' : ''}`;
+      const body = `เปิดลงทะเบียนแล้ววันนี้! ได้รับ ${hourPostNum ?? 'ไม่ระบุ'} ชั่วโมง`;
+      
+      // Use Promise.all to send notifications concurrently
+      await Promise.all(
+        userIds.map(userId =>
+          notificationService.createAndSendNotification(userId, title, body, {
+            eventId: newEvent.post_id, // Use number type as expected by NotificationService
+          })
+        )
+      );
+    }
 
-    console.log("✅ Save to database and sent notifications");
-    return res.status(201).json({ message: "Event post saved successfully", data: newEvent });
+    return res.status(201).json({ message: 'บันทึกโพสต์กิจกรรมและส่งการแจ้งเตือนสำเร็จ', data: newEvent });
   } catch (error: any) {
-    console.error("❌ Error saving to database or sending notifications:", error);
-    return res.status(500).json({ message: error.message || "Error saving to database", error });
+    return res.status(500).json({ message: 'เกิดข้อผิดพลาดในการบันทึกหรือส่งการแจ้งเตือน', error: error.message });
+  } finally {
+    await prisma.$disconnect();
   }
 };
 
