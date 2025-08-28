@@ -161,21 +161,32 @@ function ParticipantsList() {
         >
           <div className="bg-purple-800 px-8 py-6">
             <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-3xl font-bold text-white flex items-center">
-                  <i className="mr-3 fa-solid fa-user"></i>
-                  รายชื่อผู้เข้าร่วมโครงการ
-                </h1>
-                <p className="text-blue-100 mt-3 text-lg">รหัสโครงการ: {project_id}</p>
+              <div className="flex items-center gap-4   ">
+                  {/* ปุ่มย้อนกลับ */}
+                  <button
+                    onClick={() => navigate(-1)}
+                    className="p-2"
+                  >
+                    <i className="fa-solid fa-arrow-left fa-2xl text-white"></i>
+                  </button>
+
+                  {/* หัวข้อ + ไอคอน + รหัสโครงการ */}
+                  <div className="flex items-center gap-4">
+                    <h3 className="text-3xl font-bold text-white flex items-center">
+                      รายชื่อผู้เข้าร่วมโครงการ
+                      
+                    </h3>
+                    <p className="text-blue-100 text-lg mt-3">รหัสโครงการ: {project_id}</p>
+                  </div>
+                </div>
                 
-                
-              </div>
+
               <div className="flex items-center gap-3">
                 <button
                   onClick={() => navigate(`/recordactivity/${project_id}`)}
                   className="bg-green-500 text-white font-semibold py-2 px-4 rounded hover:bg-green-900 transition-colors"
                 >
-                  เพิ่มรายชื่อ
+                  เพิ่มรายชื่อ <i className="ml-3 fa-solid fa-user"></i>
                 </button>
                 <button
                   onClick={handleManageEvaluation}
@@ -185,7 +196,9 @@ function ParticipantsList() {
                 </button>
               </div>
             </div>
+            
           </div>
+          
 
           <div className="p-8">
             {loading ? (

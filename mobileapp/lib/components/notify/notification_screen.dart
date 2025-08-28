@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import 'package:badges/badges.dart' as badges;
 import '../../providers/notification_provider.dart';
 import '../../providers/user_provider.dart';
+import '../../services/home_api.dart';                
+import '../home/detailview.dart';      
 
 
 class NotificationScreen extends StatelessWidget {
@@ -170,15 +172,34 @@ class NotificationScreen extends StatelessWidget {
                             ],
                           ),
                           onTap: () async {
-                            if (!notification.read) {
-                              print('Marking as read: ${notification.id}');
-                              await notificationProvider.markAsRead(notification.id);
-                            }
-                            if (notification.eventId != null) {
-                              print('Navigate to event: ${notification.eventId}');
-                              Navigator.pushNamed(context, '/main_menu');
-                            }
-                          },
+  if (!notification.read) {
+    await notificationProvider.markAsRead(notification.id);
+  }
+
+  final id = notification.eventId; // int?
+  if (id == null) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('ไม่พบรหัสกิจกรรมในแจ้งเตือนนี้')),
+    );
+    // ชั่วคราว: ดูข้อมูลดิบว่ามีอะไรมา
+    // debugPrint('RAW notification: ${jsonEncode({...})}'); // ถ้ามีเก็บ raw ไว้
+    return;
+  }
+
+  try {
+    final activity = await ApiService().findActivityByIdFromList(id);
+    if (!context.mounted) return;
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => DetailView(activity: activity)),
+    );
+  } catch (e) {
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('เปิดรายละเอียดไม่สำเร็จ: $e')),
+    );
+  }
+},
                           tileColor: notification.read
                               ? Colors.white
                               : const Color.fromARGB(255, 243, 227, 253),

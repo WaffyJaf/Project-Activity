@@ -30,24 +30,24 @@ class User {
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
-  print('User JSON: $json'); // ตรวจสอบ JSON ที่ได้รับ
-  return User(
-    id: json['id'] != null ? json['id'] as int : null,
-    msId: json['ms_id'] ?? '',
-    givenName: json['givenName'] ?? '',
-    surname: json['surname'] ?? '',
-    jobTitle: json['jobTitle'] ?? '',
-    department: json['department'] ?? '',
-    displayName: json['displayName'] ?? '',
-    role: json['role'] ?? '',
-    qrCodeId: json['qrCodeId'] ?? '',
-    createdAt: json['created_at'] ?? '',
-    totalActivityHours: json['totalActivityHours'] != null ? (json['totalActivityHours'] as num).toInt() : 0,
-    activityRecord: (json['activity_record'] as List? ?? [])
-        .map((record) => ActivityRecord.fromJson(record))
-        .toList(),
-  );
-}
+    print('User JSON: $json'); // ตรวจสอบ JSON ที่ได้รับ
+    return User(
+      id: json['id'] != null ? json['id'] as int : null,
+      msId: json['ms_id'] ?? '',
+      givenName: json['givenName'] ?? '',
+      surname: json['surname'] ?? '',
+      jobTitle: json['jobTitle'] ?? '',
+      department: json['department'] ?? '',
+      displayName: json['displayName'] ?? '',
+      role: json['role'] ?? '',
+      qrCodeId: json['qrCodeId'] ?? '',
+      createdAt: json['created_at'] ?? '',
+      totalActivityHours: (json['totalActivityHours'] as num?)?.toInt() ?? 0,
+      activityRecord: (json['activity_record'] as List? ?? [])
+          .map((record) => ActivityRecord.fromJson(record))
+          .toList(),
+    );
+  }
 
   Map<String, dynamic> toJson() {
     return {
@@ -72,6 +72,9 @@ class ActivityRecord {
   final int projectId;
   final String projectName;
   final String msId;
+  final int hours; // <-- แก้ตรงนี้
+  final bool hasEvaluation;
+  final String? evaluationFormUrl;
   final DateTime joinedAt;
   final ProjectActivity? projectActivity;
 
@@ -80,6 +83,9 @@ class ActivityRecord {
     required this.projectId,
     required this.projectName,
     required this.msId,
+    required this.hours,
+    required this.hasEvaluation,
+    this.evaluationFormUrl,
     required this.joinedAt,
     this.projectActivity,
   });
@@ -92,6 +98,9 @@ class ActivityRecord {
       projectId: json['project_id'] as int,
       projectName: json['project_name'] as String,
       msId: json['ms_id'] as String,
+      hours: (json['hours'] as num?)?.toInt() ?? 0,
+      hasEvaluation: json['has_evaluation'] as bool? ?? false,
+      evaluationFormUrl: json['evaluation_form_url'] as String?,
       joinedAt: DateTime.parse(json['joined_at'] as String),
       projectActivity: json['project_activity'] != null
           ? ProjectActivity.fromJson(json['project_activity'])
@@ -105,6 +114,9 @@ class ActivityRecord {
       'project_id': projectId,
       'project_name': projectName,
       'ms_id': msId,
+      'hours': hours,
+      'has_evaluation': hasEvaluation,
+      'evaluation_form_url': evaluationFormUrl,
       'joined_at': joinedAt.toIso8601String(),
       'project_activity': projectActivity?.toJson(),
     };
@@ -115,10 +127,12 @@ class ProjectActivity {
   final String projectName;
   final bool hasEvaluation;
   final String? evaluationFormUrl;
+  final String hours;
 
   ProjectActivity({
     required this.projectName,
     required this.hasEvaluation,
+    required this.hours,
     this.evaluationFormUrl,
   });
 
@@ -130,14 +144,16 @@ class ProjectActivity {
           ? (json['has_evaluation'] as int) == 1
           : (json['has_evaluation'] as bool? ?? false),
       evaluationFormUrl: json['evaluation_form_url'] as String?,
+      hours: json['hours']?.toString() ?? '0',
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
       'project_name': projectName,
-      'has_evaluation': hasEvaluation ? 1 : 0,
+      'has_evaluation': hasEvaluation,
       'evaluation_form_url': evaluationFormUrl,
+      'hours': hours,
     };
   }
 }

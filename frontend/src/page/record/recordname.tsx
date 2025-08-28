@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { fetchRegistrationsByProject, Registration, recordActivity } from '../../api/record';
 import Navbar from '../../component/navbar';
+import {  useNavigate } from "react-router-dom";
 import Swal from 'sweetalert2';
 
 function RecordActivity() {
@@ -16,6 +17,7 @@ function RecordActivity() {
   const [loading, setLoading] = useState<boolean>(true);
   const [recordingLoading, setRecordingLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   async function fetchRegistrations(page: number = 1) {
     if (!project_id || isNaN(Number(project_id))) {
@@ -249,10 +251,18 @@ function RecordActivity() {
             <div className="bg-white rounded-xl shadow-lg p-6 mb-6 border border-purple-100">
               <div className="flex items-center justify-between mb-4">
                 <span className="text-xl font-semibold text-purple-700 flex items-center">
-                  <svg className="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+
+                  <button
+                    onClick={() => navigate(-1)}
+                    className="p-2"
+                  >
+                    <i className="fa-solid fa-arrow-left fa-xl text-purple-700"></i>
+                  </button>
+                  เลือกรายชื่อที่ต้องการบันทึกการเข้าร่วม
+                  <svg className="w-6 h-6 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
-                  เลือกรายชื่อที่ต้องการบันทึกการเข้าร่วม
+                  
                 </span>
                 <div className="text-sm text-gray-500">
                   เลือกแล้ว: <span className="font-semibold text-purple-600">{selectedStudents.size}</span> รายการ

@@ -20,6 +20,15 @@ class ApiService{
       throw Exception('Error fetching activities: $e');
     }
   }
+
+  Future<Activity> findActivityByIdFromList(int postId) async {
+    final list = await fetchActivities();
+    return list.firstWhere(
+      (a) => a.postId == postId,
+      orElse: () => throw Exception('ไม่พบกิจกรรม id=$postId'),
+    );
+  }
+
 }
 
     class Apiregis{

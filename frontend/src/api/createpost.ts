@@ -36,31 +36,41 @@ export const uploadImage = async (file: File): Promise<string | null> => {
 };
 
 
-export const submitFormToAPI = async (formData: FormPost): Promise<{ success: boolean; message: string }> => {
+export const submitFormToAPI = async (
+  formData: FormPost
+): Promise<{ success: boolean; message: string }> => {
   try {
-    const response = await axios.post("http://localhost:3000/event/postevent", formData, {
-      headers: { "Content-Type": "application/json" },
-    });
+    const response = await axios.post(
+      "http://localhost:3000/event/postevent",
+      formData,
+      { headers: { "Content-Type": "application/json" } }
+    );
 
-    if (response.status === 200 || response.status === 201) {
-      if (response.data.message === "Event post saved successfully") {
-        console.log("Form submitted successfully:", response.data);
-        return { success: true, message: "Project successfully sent." };
-      } else {
-        console.error("Unexpected response:", response.data);
-        return { success: false, message: "ส่งข้อมูลไม่สำเร็จ กรุณาลองใหม่" };
-      }
-    } else {
-      console.error("Unexpected response status:", response.status);
-      return { success: false, message: "ส่งข้อมูลไม่สำเร็จ กรุณาลองใหม่" };
-    }
+    const payload = response?.data ?? {};
+    const okStatus = response.status >= 200 && response.status < 300;
+
+    // ถือว่าสำเร็จถ้า:
+    // 1) backend ระบุ success=true หรือ
+    // 2) สถานะ 2xx และมี message หรือ data ใด ๆ กลับมา
+    const success =
+      payload?.success === true ||
+      (okStatus &&
+        (typeof payload?.message === "string" || payload?.data != null));
+
+    return {
+      success,
+      message:
+        payload?.message ??
+        (success ? "บันทึกโพสต์กิจกรรมและส่งการแจ้งเตือนสำเร็จ" : "ส่งข้อมูลไม่สำเร็จ กรุณาลองใหม่"),
+    };
   } catch (error) {
     if (axios.isAxiosError(error)) {
-      console.error("Axios error:", error.response?.data || error.message);
-      return { success: false, message: error.response?.data?.message || "ส่งข้อมูลไม่สำเร็จ กรุณาลองใหม่" };
-    } else {
-      console.error("Unexpected error:", error);
-      return { success: false, message: "เกิดข้อผิดพลาดบางประการ กรุณาลองใหม่" };
+      const msg =
+        error.response?.data?.message ||
+        error.message ||
+        "ส่งข้อมูลไม่สำเร็จ กรุณาลองใหม่";
+      return { success: false, message: msg };
     }
+    return { success: false, message: "เกิดข้อผิดพลาดบางประการ กรุณาลองใหม่" };
   }
 };

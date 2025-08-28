@@ -4,6 +4,7 @@ import Navbar from "../../component/navbar";
 import Swal from 'sweetalert2';
 import { Link } from "react-router-dom";
 import { useAuth } from '../../context/AuthContext';
+import { useNavigate } from "react-router-dom";
 
 function Eventlist() {
   const { currentUser } = useAuth();
@@ -13,6 +14,7 @@ function Eventlist() {
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const navigate = useNavigate();
 
   async function getEvents() {
     if (!currentUser?.ms_id) {
@@ -183,14 +185,27 @@ function Eventlist() {
       <Navbar />
       <div className="max-w-7xl mx-auto px-4 py-6">
         {/* Header */}
-        <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 flex flex-col md:flex-row justify-between items-center">
-          <div className="w-full flex justify-between items-center">
-            <span className="text-2xl font-extrabold text-purple-900 tracking-tight drop-shadow-sm">
-              การจัดการกิจกรรม
-            </span>
-            <i className="fa-solid fa-newspaper fa-2xl text-purple-800"></i>
-          </div>
-        </div>
+        {/* Header */}
+<div className="bg-white rounded-2xl shadow-lg p-6 mb-4 flex flex-col md:flex-row justify-between items-center">
+  <div className="w-full flex justify-between items-center">
+    {/* กล่องฝั่งซ้าย: ปุ่มย้อนกลับ + หัวข้อ */}
+    <div className="flex items-center ">
+      <button
+        onClick={() => navigate(-1)}
+        className=" text-purple-900 py-2 px-4 r"
+      >
+        <i className="fa-solid fa-arrow-left fa-2xl text-purple-800"></i>
+      </button>
+      <span className="text-2xl font-extrabold text-purple-900 tracking-tight drop-shadow-sm">
+        การจัดการกิจกรรม
+      </span>
+    </div>
+
+    {/* ไอคอนฝั่งขวา */}
+    <i className="fa-solid fa-newspaper fa-2xl text-purple-800"></i>
+  </div>
+</div>
+
 
         {/* Stats */}
         <div className="mb-2 flex justify-end">

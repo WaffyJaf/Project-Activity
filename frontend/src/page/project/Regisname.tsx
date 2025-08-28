@@ -5,6 +5,8 @@ import { getUsers} from "../../api/login";
 import {User} from "../../type/user";
 import Navbar from "../../component/navbar";
 import Swal from "sweetalert2";
+import { useNavigate } from "react-router-dom";
+
 
 function Regisactivity() {
   const { post_id } = useParams<{ post_id: string }>();
@@ -15,6 +17,8 @@ function Regisactivity() {
   const [users, setUsers] = useState<User[]>([]);
   const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const navigate = useNavigate();
+
 
   // Fetch registrations for the activity
   async function fetchRegistrations() {
@@ -162,15 +166,30 @@ function Regisactivity() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-purple-50 to-white ml-50">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-indigo-100 ml-65">
       <Navbar />
-      <div className="container mx-auto px-4 py-12 flex flex-col items-center">
-        <span className="text-3xl font-extrabold text-purple-800 drop-shadow-md">
-          รายชื่อผู้ลงทะเบียนเข้าร่วมกิจกรรม
-        </span>
+      <div className="max-w-5xl mx-auto px-4 py-6">
+        <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 flex flex-col md:flex-row justify-between items-center">
+          <div className="w-full flex justify-between items-center">
+            {/* กล่องฝั่งซ้าย: ปุ่มย้อนกลับ + หัวข้อ */}
+            <div className="flex items-center ">
+              <button
+                onClick={() => navigate(-1)}
+                className=" text-purple-900 py-2 px-4 "
+              >
+                <i className="fa-solid fa-arrow-left fa-2xl text-purple-800"></i>
+              </button>
+              <span className="text-2xl font-extrabold text-purple-900 tracking-tight drop-shadow-sm">
+                รายชื่อผู้ลงทะเบียนเข้าร่วมกิจกรรม
+              </span>
+            </div>
 
+            {/* ไอคอนฝั่งขวา */}
+            <i className="fa-solid fa-newspaper fa-2xl text-purple-800"></i>
+          </div>
+        </div>
         {/* Button to open search modal */}
-        <div className="w-full max-w-lg mt-4 ml-280">
+        <div className="w-full max-w-lg mt-4 ml-200">
           <button
             onClick={() => setIsModalOpen(true)}
             className="bg-purple-600 text-white py-2 px-4 rounded hover:bg-purple-700 transition-colors duration-300 shadow"

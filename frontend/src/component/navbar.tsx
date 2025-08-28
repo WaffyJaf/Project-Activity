@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { UserRole } from '../type/user';
+import { NavLink, useLocation, Link } from 'react-router-dom';
 
 interface MenuItem {
   path: string;
@@ -21,6 +21,11 @@ interface SubMenuItem {
 const Sidebar: React.FC = () => {
   const { currentUser, logout } = useAuth();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const location = useLocation();
+  const isParentActive = (item: MenuItem) =>
+  location.pathname === item.path ||
+  (item.subMenu?.some(s => location.pathname.startsWith(s.path)) ?? false);
+
   
 
   const handleUserClick = () => {
@@ -55,29 +60,23 @@ const Sidebar: React.FC = () => {
       icon: 'fa-solid fa-clock',
     },
     {
-      path: '/record',
-      label: 'สรุปประเมิน',
-      allowedRoles: ['admin', 'organizer'],
-      icon: 'fa-solid fa-file-lines',
-    },
-    {
       path: '/adminrole',
       label: 'กำหนด Role',
       allowedRoles: ['admin', 'organizer'],
       icon: 'fa-solid fa-user-shield',
     },
-    {
-      path: '/petition',
-      label: 'คำร้อง',
-      allowedRoles: ['admin', 'organizer'],
-      icon: 'fa-solid fa-comments',
-      subMenu: [
-        { path: '/projectstatus', label: 'ยื่นคำร้อง', allowedRoles: ['organizer'], icon: 'fa-solid fa-inbox' },
-        { path: '/adminrole', label: 'ตรวจสอบคำร้อง', allowedRoles: ['organizer'], icon: 'fa-solid fa-bars' },
-        { path: '/projectstatus', label: 'คำร้องเปิดโครงการ', allowedRoles: ['admin'], icon: 'fa-solid fa-inbox' },
-        { path: '/changerole', label: 'คำร้องขอเป็นผู้จัดกิจกรรม', allowedRoles: ['admin'], icon: 'fa-solid fa-check' },
-      ],
-    },
+    // {
+    //   path: '/petition',
+    //   label: 'คำร้อง',
+    //   allowedRoles: ['admin', 'organizer'],
+    //   icon: 'fa-solid fa-comments',
+    //   subMenu: [
+    //     { path: '/projectstatus', label: 'ยื่นคำร้อง', allowedRoles: ['organizer'], icon: 'fa-solid fa-inbox' },
+    //     { path: '/adminrole', label: 'ตรวจสอบคำร้อง', allowedRoles: ['organizer'], icon: 'fa-solid fa-bars' },
+    //     { path: '/projectstatus', label: 'คำร้องเปิดโครงการ', allowedRoles: ['admin'], icon: 'fa-solid fa-inbox' },
+    //     { path: '/changerole', label: 'คำร้องขอเป็นผู้จัดกิจกรรม', allowedRoles: ['admin'], icon: 'fa-solid fa-check' },
+    //   ],
+    // },
   ];
 
   return (
@@ -154,37 +153,52 @@ const Sidebar: React.FC = () => {
             menuItems.map((item) =>
               item.allowedRoles.includes(currentUser.role) ? (
                 <li key={item.path} className="relative group mb-2">
-                  <Link
+                  <NavLink
                     to={item.path}
-                    className="flex items-center justify-between text-xl font-medium text-white py-4 px-4 rounded-md hover:bg-purple-950 transition-colors duration-200 no-underline"
+                    end                              // สำคัญสำหรับ path '/'
+                    className={({ isActive }) =>
+                      `flex items-center justify-between text-xl font-medium py-4 px-4 rounded-md transition-colors duration-200 no-underline
+                      ${isActive || isParentActive(item)
+                        ? 'bg-purple-950 text-white shadow-inner'
+                        : 'text-white hover:bg-purple-900'}`
+                    }
                     style={{ textDecoration: 'none' }}
                   >
                     <div className="flex items-center">
-                      <i className={`${item.icon} mr-3`}></i>
+                      <i className={`${item.icon} mr-3`} />
                       <span>{item.label}</span>
                     </div>
                     {item.subMenu && (
-                      <i className="fa-solid fa-angle-right text-sm"></i>
+                      <i
+                        className={`fa-solid fa-angle-right text-sm transition-transform
+                          ${isParentActive(item) ? 'rotate-90' : ''}`}
+                      />
                     )}
-                  </Link>
+                  </NavLink>
                   
                   {item.subMenu && (
-                    <ul className="hidden group-hover:block absolute left-full top-0 bg-purple-800 shadow-lg rounded-md p-2 w-53 z-40">
-                      {item.subMenu.map((subItem) =>
-                        subItem.allowedRoles.includes(currentUser.role) ? (
-                          <li key={subItem.path}>
-                            <Link
-                              to={subItem.path}
-                              className="flex items-center py-2 px-2 text-white hover:bg-purple-950 rounded-md transition-colors duration-200 no-underline"
-                              style={{ textDecoration: 'none' }}
-                            >
-                              <i className={`${subItem.icon} mr-3`}></i>
-                              <span>{subItem.label}</span>
-                            </Link>
-                          </li>
-                        ) : null
-                      )}
-                    </ul>
+                  <ul
+                    className={`absolute left-full top-0 bg-purple-800 shadow-lg rounded-md p-2 w-56 z-40
+                      ${isParentActive(item) ? 'block' : 'hidden group-hover:block'}`}
+                  >
+                    {item.subMenu.map((sub) =>
+                      sub.allowedRoles.includes(currentUser!.role) ? (
+                        <li key={sub.path}>
+                          <NavLink
+                            to={sub.path}
+                            className={({ isActive }) =>
+                              `flex items-center py-2 px-3 rounded-md transition-colors no-underline
+                              ${isActive ? 'bg-purple-900 text-white' : 'text-white hover:bg-purple-900'}`
+                            }
+                            style={{ textDecoration: 'none' }}
+                          >
+                            {sub.icon && <i className={`${sub.icon} mr-3`} />}
+                            <span>{sub.label}</span>
+                          </NavLink>
+                        </li>
+                      ) : null
+                    )}
+                  </ul>
                   )}
                 </li>
               ) : null

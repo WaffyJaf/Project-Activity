@@ -142,8 +142,9 @@ class _ActivityMoreDetailState extends State<ActivityMoreDetail> {
                         return const SizedBox.shrink();
                       }
                       final activity = activities[index];
-                      final hasEvaluation = activity.projectActivity?.hasEvaluation ?? false;
-                      final evaluationUrl = activity.projectActivity?.evaluationFormUrl;
+                      final hasEvaluation = activity.hasEvaluation;
+                      final evaluationUrl = activity.evaluationFormUrl;
+
                       print('Rendering activity: ${activity.projectName}, hasEvaluation: $hasEvaluation, evaluationUrl: $evaluationUrl'); // Debug log
 
                       final bool showEvaluationLink =
@@ -192,6 +193,10 @@ class _ActivityMoreDetailState extends State<ActivityMoreDetail> {
                                     ),
                                   ),
                                 ),
+                              Text(
+                                'ชั่วโมงกิจกรรม: ${activity.hours} ชั่วโมง',
+                                style:  const TextStyle(color:Color.fromARGB(255, 35, 156, 14), ),
+                              )
                             ],
                           ),
                           onTap: () {

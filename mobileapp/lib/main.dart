@@ -72,7 +72,10 @@ class MyApp extends StatelessWidget {
         routes: {
           '/': (context) => const AuthWrapper(),
           '/main_menu': (context) => const MainMenu(),
+          
           '/notifications': (context) => const NotificationScreen(),
+          
+
         },
         onUnknownRoute: (settings) {
           print('Route ไม่รู้จัก: ${settings.name}');

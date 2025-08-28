@@ -12,7 +12,7 @@ class Notification {
   final String? body;
   final bool read;
   final DateTime createdAt;
-  final String? eventId;
+  final int? eventId;
 
   Notification({
     required this.id,
@@ -25,15 +25,52 @@ class Notification {
   });
 
   factory Notification.fromJson(Map<String, dynamic> json) {
-    print('JSON ที่ได้รับใน Notification.fromJson: $json');
+    int? _toInt(dynamic v) {
+      if (v == null) return null;
+      if (v is int) return v;
+      if (v is String) return int.tryParse(v);
+      return int.tryParse(v.toString());
+    }
+
+    Map<String, dynamic>? _toMap(dynamic v) {
+      if (v == null) return null;
+      if (v is Map<String, dynamic>) return v;
+      if (v is String) {
+        try { final m = jsonDecode(v); if (m is Map<String, dynamic>) return m; } catch (_) {}
+      }
+      return null;
+    }
+
+    int? _extractEventId(Map<String, dynamic> root) {
+      final dataMap = _toMap(root['data']);
+
+      // รองรับทั้งชื่อ event_id / eventId / post_id / postId ทั้งบน root และใน data
+      final candidates = [
+        root['event_id'], root['eventId'], root['post_id'], root['postId'],
+        dataMap?['event_id'], dataMap?['eventId'], dataMap?['post_id'], dataMap?['postId'],
+      ];
+
+      for (final c in candidates) {
+        final v = _toInt(c);
+        if (v != null) return v;
+      }
+      return null;
+    }
+
+    bool _toBool(dynamic v) => v == true || v == 1 || v == '1';
+
+    final evId = _extractEventId(json);
+    // debug ช่วยดู payload
+    // debugPrint('Notif.fromJson => id=${json['id']} eventId=$evId data=${json['data']}');
+
     return Notification(
-      id: json['id'],
-      msId: json['ms_id'],
-      title: json['title'],
-      body: json['body'],
-      read: json['read'],
-      createdAt: DateTime.parse(json['created_at']),
-      eventId: json['data'] != null ? jsonDecode(json['data'])['event_id'] : null,
+      id: json['id'] as int,
+      msId: (json['ms_id'] ?? '').toString(),
+      title: (json['title'] ?? '').toString(),
+      body: json['body']?.toString(),
+      read: _toBool(json['read']),
+      createdAt: DateTime.parse(json['created_at'].toString()),
+      eventId: evId,
     );
   }
 }

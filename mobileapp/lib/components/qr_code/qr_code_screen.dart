@@ -117,31 +117,7 @@ class QrCodeStudent extends StatelessWidget {
                       ),
                       const SizedBox(height: 16),
                       // Optional: Share button
-                      ElevatedButton(
-                        onPressed: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('QR Code sharing coming soon!'),
-                              backgroundColor: Colors.deepPurple,
-                            ),
-                          );
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.deepPurple,
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 20,
-                            vertical: 12,
-                          ),
-                        ),
-                        child: const Text(
-                          'แชร์ QR Code',
-                          style: TextStyle(fontSize: 16),
-                        ),
-                      ),
+                      
                     ],
                   ),
                 )

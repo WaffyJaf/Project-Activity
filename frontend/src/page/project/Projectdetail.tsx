@@ -46,7 +46,6 @@ function Projectdetail() {
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-67
     if (file) {
       const objectUrl = URL.createObjectURL(file);
       setImagePreview(objectUrl);
@@ -78,7 +77,7 @@ function Projectdetail() {
         formData.post_datetime = project.project_datetime
           ? new Date(project.project_datetime).toISOString()
           : "";
-        formData.hour_post = project.hours || 0;
+        formData.hour_post = project.hours && project.hours > 0 ? project.hours : (undefined as any);
         formData.ms_id = currentUser.ms_id;
       }
 
@@ -254,6 +253,12 @@ function Projectdetail() {
               <div className="flex items-center justify-between">
                 <div className="flex-1">
                   <div className="flex items-center space-x-3 mb-3">
+                    <button
+                onClick={() => navigate(-1)}
+                className=" text-white  p-2"
+              >
+                <i className="fa-solid fa-arrow-left fa-2xl text-white"></i>
+              </button>
                     <h2 className="text-3xl font-bold text-white">{project.project_name}</h2>
                   </div>
                   <div className="flex items-center space-x-6 text-indigo-100">

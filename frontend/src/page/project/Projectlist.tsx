@@ -4,12 +4,14 @@ import { fetchProjectsByUser, Project } from '../../api/projectget';
 import Navbar from '../../component/navbar';
 import { motion } from 'framer-motion';
 import { useAuth } from '../../context/AuthContext';
+import { useNavigate } from "react-router-dom";
 
 function Projectlist() {
   const { currentUser } = useAuth();
   const [projects, setProjects] = useState<Project[]>([]);
   const [showProcessModal, setShowProcessModal] = useState(false);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     async function getProjects() {
@@ -81,18 +83,25 @@ function Projectlist() {
       <Navbar />
       <div className="max-w-6xl mx-auto">
         <div className="bg-purple-800 rounded-2xl shadow-lg p-6 mb-4 flex flex-col md:flex-row justify-between items-center">
+          <button
+                onClick={() => navigate(-1)}
+                className=" text-white py-2 px-4 "
+              >
+                <i className="fa-solid fa-arrow-left fa-2xl text-white"></i>
+            </button>
           <div className="w-full flex justify-between items-center">
+            
             <span className="text-2xl font-extrabold text-white tracking-tight">
               ประวัติการเปิดโครงการ
-              <p className="text-white text-sm mt-2">จำนวนโครงการทั้งหมด: {projects.length} โครงการ</p>
+              
             </span>
             <i className="fa-solid fa-clock-rotate-left fa-2xl text-white"></i>
           </div>
         </div>
-
+        <div><p className="text-black text-sm mt-2 ml-4">จำนวนโครงการทั้งหมด: {projects.length} โครงการ</p></div>
         {projects.length > 0 ? (
           <div className="overflow-x-auto rounded-xl border border-gray-200 shadow-lg">
-            <table className="min-w-full divide-y divide-gray-200 bg-white">
+            <table className="min-w-full divide-y divide-gray-200 bg-white">              
               <thead className="bg-gradient-to-r from-gray-200 to-gray-100 sticky top-0 z-10 ">
                 <tr>
                   <th className="px-6 py-4 text-left text-xm font-bold text-gray-900 uppercase tracking-wider">

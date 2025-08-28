@@ -65,9 +65,15 @@ function StudentSearch() {
       <div className="mx-auto px-4 max-w-6xl">
         {/* Header Section */}
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-8 flex flex-col md:flex-row justify-between items-center">
-          <div>
+          <div className='flex items-center'>
+            <button
+                    onClick={() => navigate(-1)}
+                    className="p-3"
+                  >
+                    <i className="fa-solid fa-arrow-left fa-2xl text-purple-900"></i>
+                  </button>
             <span className="text-2xl md:text-3xl font-extrabold text-purple-900 tracking-tight drop-shadow-sm">
-              ค้นหารายชื่อนิสิต
+              ค้นหารายชื่อนิสิต <i className="ml-3 fa-solid fa-user"></i>
             </span>
           </div>
         </div>
