@@ -63,3 +63,11 @@ node_modules/
 
 # Sourcemaps
 *.map
+
+# Android build outputs
+*.apk
+*.aab
+/android/app/build/
+/build/
+/outputs/
+
