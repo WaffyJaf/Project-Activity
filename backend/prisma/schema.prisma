@@ -51,6 +51,9 @@ model project_activity {
   has_evaluation      Boolean?                             @default(false)
   evaluation_statuspj project_activity_evaluation_statuspj @default(awaiting_evaluation)
 
+
+  rejected_reason     String?                              @db.Text
+
   activity_record       activity_record[]
   event_posts           event_posts[]
   user                  users_up?               @relation("UserProjectActivity", fields: [ms_id], references: [ms_id])
@@ -59,6 +62,7 @@ model project_activity {
 
   @@index([ms_id])
 }
+
 
 model registration_activity {
   register_id  Int    @id @default(autoincrement())
@@ -97,6 +101,29 @@ model users_up {
   device_tokens           device_tokens[]
   notifications           notifications[]
   activity_hours_log      activity_hours_log[]
+  roleChangeRequests RoleChangeRequest[] @relation("UserRequests")
+  reviewedRequests   RoleChangeRequest[] @relation("ReviewedByUser")
+}
+
+model RoleChangeRequest {
+  id             Int           @id @default(autoincrement())
+  userId         String
+  user           users_up      @relation("UserRequests", fields: [userId], references: [ms_id])
+
+  currentRole    UserRole
+  requestedRole  UserRole
+
+  reason         String?
+  status         RequestStatus @default(pending)
+
+  reviewedBy     String?
+  reviewedByUser users_up?     @relation("ReviewedByUser", fields: [reviewedBy], references: [ms_id])
+  reviewedAt     DateTime?
+
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@index([userId, status])
 }
 
 model activity_record {
@@ -176,4 +203,17 @@ enum activity_record_evaluation_status {
 enum project_activity_evaluation_statuspj {
   awaiting_evaluation
   evaluated
+}
+
+enum RequestStatus {
+  pending
+  approved
+  rejected
+  canceled
+}
+
+enum UserRole {
+  admin
+  organizer
+  user
 }

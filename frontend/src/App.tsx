@@ -16,6 +16,9 @@ import RoleManager from './Admin/Rolemanager';
 import ProtectedRoute from './component/ProtectedRouter';
 import StudentActivity from './page/record/studentrecord';
 import  ParticipantsList from './page/project/ParticipantsList';
+import RoleChangeRequestManager from './Admin/RoleRequestManager';
+import RoleChangeRequestForm from './page/project/RoleChangeRequestForm';
+
 
 import './App.css';
 
@@ -38,21 +41,25 @@ const App: React.FC = () => {
             <Route path="/student/:ms_id" element={<StudentActivity />} />
             <Route path="/adminrole" element={<RoleManager />} />
             <Route path="/regisactivity/:post_id" element={<Regisname />} />
+            <Route path="/participants/:project_id" element={<ParticipantsList />} />
           </Route>
 
           {/* Organizer only */}
           <Route element={<ProtectedRoute allowedRoles={['organizer']} />}>
-            <Route path="/projectlist" element={<Projectlist />} />
-            
+            <Route path="/projectlist" element={<Projectlist />} />            
             <Route path="/createproject" element={<Createproject />} />
             <Route path="/eventlist" element={<Eventlist />} />
-           <Route path="/participants/:project_id" element={<ParticipantsList />} />
+            <Route path="/rolechangform" element={<RoleChangeRequestForm />} />
+            
+           
           </Route>
 
           {/* Admin only */}
           <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
             {/* <Route path="/adminrole" element={<RoleManager />} /> */}
             <Route path="/projectstatus" element={<Projectstatus />} />
+            <Route path="/rolechang" element={<RoleChangeRequestManager />} />
+            
           </Route>
 
           {/* Root path redirect */}

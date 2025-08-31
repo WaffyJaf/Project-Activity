@@ -1,9 +1,11 @@
 import { Prisma } from '@prisma/client';
 
-export enum UserRole {
+export enum UserRoleEnum {
   Student = 'user',
   Admin = 'admin',
 }
+// src/types.ts
+export type UserRole = 'admin' | 'organizer' | 'user';
 
 export interface User {
   id?: number;

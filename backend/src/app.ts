@@ -6,6 +6,7 @@ import authRouter from "./router/authrouter";
 import recordRouter from './router/recordrouter';
 import notificationRouter from './router/notificationroutes';
 import getby from './router/getby';
+import roleRouter from './router/rolerouter';
 import cors from "cors";
 
 
@@ -38,6 +39,7 @@ app.use("/auth", authRouter);
 app.use("/notifications", notificationRouter);
 app.use("/record", recordRouter);
 app.use("/getby", getby);
+app.use("/api", roleRouter);
 
 
 

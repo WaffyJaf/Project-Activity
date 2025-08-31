@@ -1,15 +1,15 @@
 export type UserRole = 'admin' | 'organizer'| 'user';
 
 export interface User {
-  id: number;
+  id: number | null;
   ms_id: string;
-  givenName: string;
-  surname: string;
-  jobTitle: string;
-  department: string;
-  displayName: string;
-  role: UserRole;
-  created_at: Date;
+  givenName: string | null;
+  surname: string | null;
+  jobTitle: string | null;
+  department: string | null;
+  displayName: string | null;
+  role: UserRole | null;
+  created_at: Date | null;
 }
 
 export interface LoginResponse {

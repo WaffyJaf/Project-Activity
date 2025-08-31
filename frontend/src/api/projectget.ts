@@ -3,25 +3,28 @@ import axios from 'axios';
 export interface Project {
   project_id: number;
   project_name: string;
-  created_date: string;
+  created_date: string | Date;
   project_status: string;
-  project_description: string;
-  department: string;
-  location: string;
-  budget: string;
-  hours: number;
-  project_datetime: string;
-  approval_datetime: string;
+  approval_datetime?: string | Date;
+  project_datetime?: string | Date;
+  qrCodeData?: string;
+  ms_id?: string;
+  created_by?: string; // เพิ่มจาก API
+  project_description?: string | null;
+  rejected_reason?: string;
 }
 
-const API_URL = "http://localhost:3000/project/getproject"
+const API_URL = 'http://localhost:3000/project/getproject';
+const UPDATE_API_URL = 'http://localhost:3000/project/statusproject';
+
 
 export async function fetchProjects(): Promise<Project[]> {
   try {
-    const response = await axios.get<Project[]>(`${API_URL}`);
-    return response.data;
-  } catch (error) {
-    console.error("เกิดข้อผิดพลาดในการดึงข้อมูลโครงการ", error);
+    const res = await axios.get<Project[]>(API_URL);
+    // เผื่อ backend เปลี่ยนแปลง ถ้าไม่ใช่อาร์เรย์ให้คืน []
+    return Array.isArray(res.data) ? res.data : [];
+  } catch (err) {
+    console.error('เกิดข้อผิดพลาดในการดึงข้อมูลโครงการ', err);
     return [];
   }
 }
@@ -66,16 +69,21 @@ export async function fetchProjectByID(id: string | undefined): Promise<Project>
 
 
 
-export async function updateProjectStatus(projectId: number, status: string): Promise<Project> {
+export async function updateProjectStatus(projectId: number, status: string, reason?: string): Promise<void> {
   try {
-    const response = await axios.patch<Project>(
-      `http://localhost:3000/project/statusproject/${projectId}`,
-      { project_status: status },
-      { headers: { 'Content-Type': 'application/json' } }
+    await axios.patch(
+      `${UPDATE_API_URL}/${projectId}`,
+      {
+        project_status: status,
+        rejected_reason: reason || null, 
+        updated_date: new Date().toISOString(),
+      },
+      {
+        headers: { 'Content-Type': 'application/json' },
+      }
     );
-    return response.data;
-  } catch (error) {
-    console.error(`เกิดข้อผิดพลาดในการอัพเดทสถานะโครงการ ${projectId}:`, error);
-    throw error;
+  } catch (err) {
+    console.error(`เกิดข้อผิดพลาดในการอัพเดทสถานะโครงการ ${projectId}:`, err);
+    throw err;
   }
 }

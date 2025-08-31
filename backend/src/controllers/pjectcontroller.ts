@@ -146,30 +146,54 @@ export const updateProjectActivity = async (req: Request, res: Response) => {
 };
 
 
-export const getProjectActivity = async(req:Request,res:Response) => {
-  try{
+export const getProjectActivity = async (req: Request, res: Response) => {
+  try {
     const getproject = await prisma.project_activity.findMany({
       select: {
         project_id: true,
         project_name: true,
         created_date: true,
-        project_status:true,
+        project_status: true,
         approval_datetime: true,
         project_datetime: true,
         qrCodeData: true,
-        ms_id:true
+        ms_id: true,
+        project_description: true, // เพิ่ม field วิชาการ (abstract)
+        rejected_reason: true,     // 👈 เพิ่มเหตุผลที่ถูกปฏิเสธ
+        user: {
+          // Include ข้อมูลจาก users_up
+          select: {
+            givenName: true,
+            surname: true,
+            displayName: true,
+          },
+        },
       },
-      orderBy:{
+      orderBy: {
         created_date: 'desc',
       },
     });
-    if(getproject.length == 0){
-      return res.status(404).json({message: 'ไม่พบโครงการ'});
+
+    if (getproject.length === 0) {
+      return res.status(404).json({ message: 'ไม่พบโครงการ' });
     }
-    res.status(200).json(getproject);
-  }catch(error){
-  console.error("!!! เกิดข้อผิดพลาดในการดึงข้อมูลโครงการ' !!!",error);
-  return res.status(500).json({message: "!!! เกิดข้อผิดพลาดในการดึงข้อมูลโครงการ' !!!",error});
+
+    // ปรับ response เพื่อรวมชื่อผู้ใช้ในรูปแบบที่ต้องการ
+    const formattedProjects = getproject.map(project => ({
+      ...project,
+      created_by: project.user
+        ? project.user.displayName || `${project.user.givenName || ''} ${project.user.surname || ''}`.trim()
+        : 'ไม่ระบุ', // รวม givenName + surname หรือใช้ displayName
+      user: undefined, // ลบ field user ออกจาก response เพื่อลดขนาด payload
+    }));
+
+    res.status(200).json(formattedProjects);
+  } catch (error) {
+    console.error('!!! เกิดข้อผิดพลาดในการดึงข้อมูลโครงการ !!!', error);
+    return res.status(500).json({
+      message: '!!! เกิดข้อผิดพลาดในการดึงข้อมูลโครงการ !!!',
+      error,
+    });
   }
 };
 

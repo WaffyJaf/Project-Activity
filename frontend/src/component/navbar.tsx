@@ -65,10 +65,28 @@ const Sidebar: React.FC = () => {
       allowedRoles: ['admin', 'organizer'],
       icon: 'fa-solid fa-user-shield',
     },
+    {
+      path: '/projectstatus',
+      label: 'อนุมัติการเปิดโครงการ',
+      allowedRoles: ['admin'],
+      icon: 'fa-solid fa-circle-check',
+    },
+    {
+      path: '/rolechang',
+      label: 'คำร้อง',
+      allowedRoles: ['admin'],
+      icon: 'fa-solid fa-circle-check',
+    },
+    {
+      path: '/rolechangform',
+      label: 'ส่งคำร้อง',
+      allowedRoles: ['organizer'],
+      icon: 'fa-solid fa-circle-check',
+    },
     // {
-    //   path: '/petition',
+    //   path: '/rolechang',
     //   label: 'คำร้อง',
-    //   allowedRoles: ['admin', 'organizer'],
+    //   allowedRoles: ['admin'],
     //   icon: 'fa-solid fa-comments',
     //   subMenu: [
     //     { path: '/projectstatus', label: 'ยื่นคำร้อง', allowedRoles: ['organizer'], icon: 'fa-solid fa-inbox' },

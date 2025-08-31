@@ -287,8 +287,8 @@ function ParticipantsList() {
                             <div className="flex-shrink-0 h-10 w-10">
                               <div className="h-8 w-8 rounded-full bg-gradient-to-r from-purple-950 to-purple-500 flex items-center justify-center">
                                 <span className="text-sm font-medium text-white">
-                                  {record.users_up.givenName.charAt(0)}
-                                  {record.users_up.surname.charAt(0)}
+                                  { (record.users_up?.givenName?.[0] ?? '').toUpperCase() }
+                                  { (record.users_up?.surname?.[0]    ?? '').toUpperCase() }
                                 </span>
                               </div>
                             </div>

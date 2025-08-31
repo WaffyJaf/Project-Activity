@@ -18,6 +18,7 @@ router.post("/regisactivity", async (req: Request, res: Response) => {
 
 router.get("/getevent", async (req: Request, res: Response) => {
   await getEventActivity(req, res);
+  
 });
 
 router.get("/getregisactivity/:post_id", async (req: Request, res: Response) => {
