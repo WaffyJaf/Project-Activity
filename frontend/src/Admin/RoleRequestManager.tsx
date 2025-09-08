@@ -259,14 +259,12 @@ useEffect(() => {
       <Navbar />
       <div className="min-h-screen bg-gradient-to-b from-purple-50 to-white py-12 px-4 ml-65">
         <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 ">
-          <h1 className="text-3xl font-bold text-gray-800 mb-8 text-center drop-shadow-sm">
-            จัดการคำร้องขอเปลี่ยนบทบาท
-          </h1>
+          
 
           {/* Form for submitting role change request (non-admin users) */}
           {!isAdmin && (
             <div className="bg-white rounded-2xl shadow-lg p-6 mb-8">
-              <h2 className="text-xl font-semibold text-gray-800 mb-4">ส่งคำร้องขอเปลี่ยนบทบาท</h2>
+              
               <div className="grid gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700">บทบาทที่ต้องการ</label>
@@ -308,7 +306,10 @@ useEffect(() => {
           {/* Admin: Filter and Request List */}
           {isAdmin && (
             <div className="bg-white rounded-2xl shadow-lg p-6 mb-8">
-              <h2 className="text-xl font-semibold text-gray-800 mb-4">ตัวกรอง</h2>
+              <h3 className="text-3xl font-bold text-gray-800 mb-8  drop-shadow-sm">
+            จัดการคำร้อง
+          </h3>
+              
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700">สถานะ</label>
@@ -331,7 +332,7 @@ useEffect(() => {
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="w-full p-2 border border-gray-200 rounded-lg bg-white text-gray-700 focus:ring-2 focus:ring-purple-400 focus:border-purple-400"
-                    placeholder="ค้นหาด้วย userId หรือเหตุผล"
+                    placeholder="ค้นหาโดยชื่อผู้ใช้หรือ MS ID"
                   />
                 </div>
               </div>

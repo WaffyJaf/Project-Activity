@@ -18,6 +18,7 @@ import StudentActivity from './page/record/studentrecord';
 import  ParticipantsList from './page/project/ParticipantsList';
 import RoleChangeRequestManager from './Admin/RoleRequestManager';
 import RoleChangeRequestForm from './page/project/RoleChangeRequestForm';
+import AdminDashboard from './Admin/AdminDashboard';
 
 
 import './App.css';
@@ -42,6 +43,7 @@ const App: React.FC = () => {
             <Route path="/adminrole" element={<RoleManager />} />
             <Route path="/regisactivity/:post_id" element={<Regisname />} />
             <Route path="/participants/:project_id" element={<ParticipantsList />} />
+            <Route path="/rolechangform" element={<RoleChangeRequestForm />} />
           </Route>
 
           {/* Organizer only */}
@@ -49,7 +51,7 @@ const App: React.FC = () => {
             <Route path="/projectlist" element={<Projectlist />} />            
             <Route path="/createproject" element={<Createproject />} />
             <Route path="/eventlist" element={<Eventlist />} />
-            <Route path="/rolechangform" element={<RoleChangeRequestForm />} />
+            
             
            
           </Route>
@@ -59,8 +61,12 @@ const App: React.FC = () => {
             {/* <Route path="/adminrole" element={<RoleManager />} /> */}
             <Route path="/projectstatus" element={<Projectstatus />} />
             <Route path="/rolechang" element={<RoleChangeRequestManager />} />
+            <Route path="/adminDashboard" element={<AdminDashboard />} />
             
           </Route>
+
+        
+          
 
           {/* Root path redirect */}
           <Route

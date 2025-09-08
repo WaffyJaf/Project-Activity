@@ -200,7 +200,7 @@ function ParticipantsList() {
           </div>
           
 
-          <div className="p-8">
+          <div className="p-2">
             {loading ? (
               <div className="flex items-center justify-center py-16">
                 <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-600 border-t-transparent mr-4"></div>
@@ -220,134 +220,132 @@ function ParticipantsList() {
                 </div>
               </div>
             ) : participants.length ? (
-              <div className="overflow-x-auto rounded-xl border border-gray-200">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gradient-to-r from-gray-50 to-gray-100">
-                    <tr>
-                      <th className="px-6 py-4 text-left text-sm font-bold text-gray-900 uppercase tracking-wider">
-                        <input
-                          type="checkbox"
-                          checked={selectedParticipants.length === participants.length && participants.length > 0}
-                          onChange={handleSelectAll}
-                          className="h-4 w-4 text-purple-600 focus:ring-purple-600 rounded-md"
-                        />
-                      </th>
-                      <th className="px-6 py-4 text-left text-sm font-bold text-gray-900 uppercase tracking-wider">
-                        ลำดับ
-                      </th>
-                      <th className="px-6 py-4 text-left text-sm font-bold text-gray-900 uppercase tracking-wider">
-                        ชื่อ-นามสกุล
-                      </th>
-                      <th className="px-6 py-4 text-right text-sm font-bold text-gray-900 uppercase tracking-wider">
-                        รหัสนิสิต
-                      </th>
-                      <th className="px-6 py-4 text-left text-sm font-bold text-gray-900 uppercase tracking-wider">
-                        คณะ
-                      </th>
-                      <th className="px-6 py-4 text-left text-sm font-bold text-gray-900 uppercase tracking-wider">
-                        วันที่เข้าร่วม
-                      </th>
-                      <th className="px-6 py-4 text-left text-sm font-bold text-gray-900 uppercase tracking-wider">
-                        ประเมิน
-                      </th>
-                      <th className="px-6 py-4 text-left text-sm font-bold text-gray-900 uppercase tracking-wider">
-                        ต้องประเมิน
-                      </th>
-                     
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {participants.map((record, index) => (
-                      <motion.tr
-                        key={record.id}
-                        className="hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 transition-all duration-200"
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ duration: 0.3, delay: index * 0.1 }}
-                      >
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <input
-                            type="checkbox"
-                            checked={selectedParticipants.includes(record.id)}
-                            onChange={() => handleSelectParticipant(record.id)}
-                            className="h-4 w-4 text-purple-600 focus:ring-purple-600 rounded-md"
-                          />
-                        </td>
-                        <td className="px-2 py-4 whitespace-nowrap">
-                          <div className="flex items-center">
-                            <div className="flex-shrink-0 h-10 w-10">
-                              <div className="h-10 w-10 rounded-full flex items-center justify-center">
-                                <span className="text-x font-bold text-gray-700">{index + 1}</span>
-                              </div>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex items-center">
-                            <div className="flex-shrink-0 h-10 w-10">
-                              <div className="h-8 w-8 rounded-full bg-gradient-to-r from-purple-950 to-purple-500 flex items-center justify-center">
-                                <span className="text-sm font-medium text-white">
-                                  { (record.users_up?.givenName?.[0] ?? '').toUpperCase() }
-                                  { (record.users_up?.surname?.[0]    ?? '').toUpperCase() }
-                                </span>
-                              </div>
-                            </div>
-                            <div className="ml-2">
-                              <div className="text-xm font-bold text-gray-900">
-                                {record.users_up.givenName} {record.users_up.surname}
-                              </div>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-semibold text-gray-900 px-3 py-1 rounded-full inline-block">
-                            {record.ms_id}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900 font-medium">{record.users_up.department}</div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                          <div className="flex items-center">
-                            <span className="font-medium">
-                              {record.joined_at
-                                ? new Date(record.joined_at).toLocaleString("th-TH", {
-                                    year: "numeric",
-                                    month: "long",
-                                    day: "numeric",
-                                    hour: "2-digit",
-                                    minute: "2-digit",
-                                  })
-                                : "-"}
-                            </span>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div
-                            className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border ${getStatusClass(
-                              record.evaluation_status
-                            )}`}
-                          >
-                            {getThaiStatus(record.evaluation_status)}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div
-                            className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border ${
-                              record.has_evaluation
-                                ? "bg-blue-100 text-blue-800 border-blue-300"
-                                : "bg-gray-100 text-gray-800 border-gray-300"
-                            }`}
-                          >
-                            {record.has_evaluation ? "ต้องประเมิน" : "ไม่ต้องประเมิน"}
-                          </div>
-                        </td>
-                        
-                      </motion.tr>
-                    ))}
-                  </tbody>
-                </table>
+              <div className="rounded-xl border border-gray-200 overflow-hidden">
+  <div className="max-h-[70vh] overflow-auto">
+    <table className="min-w-full table-fixed border-collapse">
+      <thead className="sticky top-0 z-10 bg-white/90 backdrop-blur border-b">
+        <tr className="text-xs font-semibold text-gray-700 uppercase tracking-wider">
+          <th className="w-10 px-3 py-3 text-left">
+            <input
+              type="checkbox"
+              aria-label="เลือกทั้งหมด"
+              checked={selectedParticipants.length === participants.length && participants.length > 0}
+              onChange={handleSelectAll}
+              className="h-4 w-4 text-purple-600 focus:ring-purple-600 rounded"
+            />
+          </th>
+          <th className="w-14 px-3 py-3 text-left">ลำดับ</th>
+          <th className="px-3 py-3 text-left">ชื่อ–นามสกุล</th>
+          <th className="w-40 px-3 py-3 text-right">รหัสนิสิต</th>
+          <th className="w-48 px-3 py-3 text-left">คณะ/หน่วยงาน</th>
+          <th className="w-56 px-3 py-3 text-left">วันที่เข้าร่วม</th>
+          <th className="w-36 px-3 py-3 text-left">ประเมิน</th>
+          <th className="w-36 px-3 py-3 text-left">ต้องประเมิน</th>
+        </tr>
+      </thead>
+
+      <tbody className="text-sm">
+        {participants.map((record, index) => (
+          <tr
+            key={record.id}
+            className={`
+              group transition-colors
+              ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50/70'}
+              hover:bg-indigo-50
+            `}
+          >
+            {/* เลือกแถว */}
+            <td className="px-3 py-3 align-top">
+              <input
+                type="checkbox"
+                aria-label={`เลือก ${record.users_up?.givenName ?? ''} ${record.users_up?.surname ?? ''}`}
+                checked={selectedParticipants.includes(record.id)}
+                onChange={() => handleSelectParticipant(record.id)}
+                className="h-4 w-4 text-purple-600 focus:ring-purple-600 rounded"
+              />
+            </td>
+
+            {/* ลำดับ */}
+            <td className="px-3 py-3 align-top">
+              <span className="inline-flex items-center justify-center min-w-[2rem] h-6 rounded-full bg-gray-100 text-gray-700 font-medium">
+                {index + 1}
+              </span>
+            </td>
+
+            {/* ชื่อ–นามสกุล */}
+            <td className="px-3 py-3 align-top">
+              <div className="flex items-center gap-3">
+                
+                <div className="leading-tight">
+                  <div className="font-semibold text-gray-900">
+                    {(record.users_up?.givenName ?? '')} {(record.users_up?.surname ?? '')}
+                  </div>
+                  <div className="text-xs text-gray-500">
+                    {record.users_up?.displayName ?? ''}
+                  </div>
+                </div>
               </div>
+            </td>
+
+            {/* รหัสนิสิต */}
+            <td className="px-3 py-3 align-top text-right text-gray-800">
+              <code className="text-[13px] px-2 py-0.5 rounded">
+                {record.ms_id}
+              </code>
+            </td>
+
+            {/* คณะ/หน่วยงาน */}
+            <td className="px-3 py-3 align-top">
+              <span className="text-gray-800">
+                {record.users_up?.department ?? '-'}
+              </span>
+            </td>
+
+            {/* วันที่เข้าร่วม */}
+            <td className="px-3 py-3 align-top">
+              <span className="font-medium text-gray-700">
+                {record.joined_at
+                  ? new Date(record.joined_at).toLocaleString('th-TH', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })
+                  : '-'}
+              </span>
+            </td>
+
+            {/* สถานะประเมิน */}
+            <td className="px-3 py-3 align-top">
+              <span
+                className={`inline-flex items-center px-2.5 py-1 rounded-full border text-xs font-medium ${getStatusClass(
+                  record.evaluation_status
+                )}`}
+              >
+                {getThaiStatus(record.evaluation_status)}
+              </span>
+            </td>
+
+            {/* ต้องประเมิน */}
+            <td className="px-3 py-3 align-top">
+              <span
+                className={`inline-flex items-center px-2.5 py-1 rounded-full border text-xs font-medium ${
+                  record.has_evaluation
+                    ? 'bg-blue-50 text-blue-700 border-blue-200'
+                    : 'bg-gray-50 text-gray-700 border-gray-200'
+                }`}
+              >
+                {record.has_evaluation ? 'ต้องประเมิน' : 'ไม่ต้องประเมิน'}
+              </span>
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+</div>
+
             ) : (
               <div className="text-center py-16">
                 <svg

@@ -2,7 +2,42 @@ import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { getUser } from '../api/login';
-import { User } from '../type/user';
+
+import type { User, LoginResponse, UserRole } from '../type/user';
+
+const isLoginResponse = (x: any): x is LoginResponse =>
+  x && typeof x === 'object' && 'user' in x && 'token' in x;
+
+const toDateOrNull = (v: unknown): Date | null => {
+  if (!v) return null;
+  const d = new Date(v as any);
+  return Number.isNaN(d.getTime()) ? null : d;
+};
+
+const toSafeRole = (role: any): UserRole =>
+  (['admin', 'organizer', 'user'] as const).includes(role) ? role : 'user';
+
+function normalizeUser(input: User | LoginResponse): User {
+  if (isLoginResponse(input)) {
+    const u = input.user;
+    return {
+      id: typeof u.id === 'number' ? u.id : null,
+      ms_id: u.ms_id,
+      givenName: u.givenName ?? null,
+      surname: u.surname ?? null,
+      jobTitle: u.jobTitle ?? null,
+      department: u.department ?? null,
+      displayName: u.displayName ?? null,
+      role: toSafeRole(u.role),
+      created_at: toDateOrNull(u.created_at),
+    };
+  }
+  return {
+    ...input,
+    role: toSafeRole(input.role ?? 'user'),
+    created_at: toDateOrNull(input.created_at),
+  };
+}
 
 const Login: React.FC = () => {
   const { pathname, search } = useLocation();
@@ -13,50 +48,38 @@ const Login: React.FC = () => {
 
   // Handle Microsoft OAuth callback
   useEffect(() => {
-    const query = new URLSearchParams(search);
-    const token = query.get('token');
+  const query = new URLSearchParams(search);
+  const token = query.get('token');
 
-    console.log('Login: Pathname:', pathname);
-    console.log('Login: Query params:', search);
-    console.log('Login: Token received:', token);
+  if (token && !isLoading) {
+    localStorage.setItem('authToken', token);
+    setIsLoading(true);
+    setError(null);
 
-    if (token && !isLoading) {
-      localStorage.setItem('authToken', token);
-      setIsLoading(true);
-      setError(null);
+    (async () => {
+      try {
+        const raw = await getUser();                 // ได้ทั้ง User หรือ LoginResponse
+        const normalized = normalizeUser(raw);       // แปลงให้เป็น User แบบชัวร์
+        if (!normalized.ms_id) throw new Error('Invalid user data received');
 
-      getUser()
-        .then((user: User) => {
-          console.log('Login: User fetched:', user);
-          if (user && user.ms_id) {
-            user.created_at = new Date(user.created_at);
-            if (isNaN(user.created_at.getTime())) {
-              console.error('Login: Invalid created_at date:', user.created_at);
-              user.created_at = new Date(); // Fallback to current date
-            }
-            login(user);
-            localStorage.setItem('currentUser', JSON.stringify(user));
-            console.log('Login: User set and redirecting to /home');
-            navigate('/home', { replace: true });
-          } else {
-            throw new Error('Invalid user data received');
-          }
-        })
-        .catch((error: Error) => {
-          console.error('Login: Error fetching user:', error);
-          setError(error.message || 'Failed to fetch user data');
-          localStorage.removeItem('authToken');
-          localStorage.removeItem('currentUser');
-          navigate('/login', { replace: true });
-        })
-        .finally(() => {
-          setIsLoading(false);
-          console.log('Login: Loading finished');
-        });
-    } else if (!token) {
-      console.log('Login: No token found in query parameters');
-    }
-  }, [pathname, search, navigate, login]);
+        const createdAt = normalized.created_at ?? new Date();
+        const finalUser: User = { ...normalized, created_at: createdAt };
+
+        login(finalUser);
+        localStorage.setItem('currentUser', JSON.stringify(finalUser));
+        navigate('/home', { replace: true });
+      } catch (err: any) {
+        console.error('Login: Error fetching user:', err);
+        setError(err?.message || 'Failed to fetch user data');
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('currentUser');
+        navigate('/login', { replace: true });
+      } finally {
+        setIsLoading(false);
+      }
+    })();
+  }
+}, [pathname, search, navigate, login, isLoading]);
 
   const handleMicrosoftLogin = () => {
     const clientId = import.meta.env.VITE_MICROSOFT_CLIENT_ID;

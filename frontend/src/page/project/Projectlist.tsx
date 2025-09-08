@@ -1,23 +1,32 @@
-import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useEffect, useMemo, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { fetchProjectsByUser, Project } from '../../api/projectget';
 import Navbar from '../../component/navbar';
 import { motion } from 'framer-motion';
 import { useAuth } from '../../context/AuthContext';
-import { useNavigate } from "react-router-dom";
+
+type TabKey = 'all' | 'pending' | 'approved' | 'rejected';
 
 function Projectlist() {
   const { currentUser } = useAuth();
   const [projects, setProjects] = useState<Project[]>([]);
   const [showProcessModal, setShowProcessModal] = useState(false);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+
+  // --- NEW: filters ---
+  const [activeTab, setActiveTab] = useState<TabKey>('all');
+  const [search, setSearch] = useState('');
+  const [dateFrom, setDateFrom] = useState<string>('');
+  const [dateTo, setDateTo] = useState<string>('');
+  const [deptFilter, setDeptFilter] = useState<string>('all');
+
   const navigate = useNavigate();
 
   useEffect(() => {
     async function getProjects() {
       if (currentUser?.ms_id) {
         const data = await fetchProjectsByUser(currentUser.ms_id);
-        setProjects(data);
+        setProjects(data ?? []);
       } else {
         console.error('No ms_id found for the current user');
         setProjects([]);
@@ -35,25 +44,20 @@ function Projectlist() {
 
   function getThaiStatus(status: string): string {
     switch (status) {
-      case 'approved':
-        return 'อนุมัติ';
-      case 'rejected':
-        return 'ปฏิเสธ';
-      case 'pending':
-        return 'รอดำเนินการ';
-      default:
-        return 'ไม่ระบุ';
+      case 'approved': return 'อนุมัติ';
+      case 'rejected': return 'ปฏิเสธ';
+      case 'pending':  return 'รอดำเนินการ';
+      default:         return 'ไม่ระบุ';
     }
   }
 
   const getStatusDetails = (status: string) => {
     const statusMap: Record<string, { icon: string; color: string; bg: string }> = {
       approved: { icon: 'fa-solid fa-check-circle', color: 'text-green-600', bg: 'bg-green-50' },
-      pending: { icon: 'fa-solid fa-clock', color: 'text-amber-600', bg: 'bg-amber-50' },
+      pending:  { icon: 'fa-solid fa-clock',        color: 'text-amber-600', bg: 'bg-amber-50' },
       rejected: { icon: 'fa-solid fa-exclamation-circle', color: 'text-red-600', bg: 'bg-red-50' },
-      default: { icon: 'fa-solid fa-bookmark', color: 'text-blue-600', bg: 'bg-blue-50' },
+      default:  { icon: 'fa-solid fa-bookmark',     color: 'text-blue-600',  bg: 'bg-blue-50' },
     };
-
     const { icon, color, bg } = statusMap[status] || statusMap['default'];
     return { icon: <i className={`${icon} ${color} ${bg} mr-2`} style={{ fontSize: 20 }} />, color, bg };
   };
@@ -67,91 +71,223 @@ function Projectlist() {
     if (!dateString) return '-';
     try {
       return new Date(dateString).toLocaleString('th-TH', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
+        year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit',
       });
-    } catch (e) {
+    } catch {
       return '-';
     }
   };
 
+  // --- helpers: department (ถ้ามีใน Project) ---
+  const getDepartment = (p: Project): string => ((p as any)?.department ?? '') as string;
+
+  // --- counts per status ---
+  const counts = useMemo(() => {
+    const c = { all: projects.length, pending: 0, approved: 0, rejected: 0 };
+    projects.forEach(p => {
+      if (p.project_status === 'pending')  c.pending++;
+      if (p.project_status === 'approved') c.approved++;
+      if (p.project_status === 'rejected') c.rejected++;
+    });
+    return c;
+  }, [projects]);
+
+  // --- department options (ถ้ามี) ---
+  const deptOptions = useMemo(() => {
+    const set = new Set<string>();
+    projects.forEach(p => {
+      const d = getDepartment(p);
+      if (d) set.add(d);
+    });
+    return Array.from(set).sort();
+  }, [projects]);
+
+  // --- filtered list ---
+  const filteredProjects = useMemo(() => {
+    let list = [...projects];
+
+    // tab / status
+    if (activeTab !== 'all') {
+      list = list.filter(p => p.project_status === activeTab);
+    }
+
+    // search by name / id
+    const q = search.trim().toLowerCase();
+    if (q) {
+      list = list.filter(p =>
+        p.project_name?.toLowerCase().includes(q) ||
+        String(p.project_id).includes(q)
+      );
+    }
+
+    // department
+    if (deptFilter !== 'all') {
+      list = list.filter(p => getDepartment(p) === deptFilter);
+    }
+
+    // date range on created_date
+    if (dateFrom) {
+      const from = new Date(dateFrom);
+      list = list.filter(p => p.created_date ? new Date(p.created_date) >= from : false);
+    }
+    if (dateTo) {
+      const to = new Date(dateTo);
+      // รวมสิ้นสุดวัน
+      to.setHours(23, 59, 59, 999);
+      list = list.filter(p => p.created_date ? new Date(p.created_date) <= to : false);
+    }
+
+    return list;
+  }, [projects, activeTab, search, deptFilter, dateFrom, dateTo]);
+
+  const TABS: { key: TabKey; label: string; badge: number; icon: string }[] = [
+    { key: 'all',      label: 'ทั้งหมด',       badge: counts.all,      icon: 'fa-solid fa-layer-group' },
+    { key: 'pending',  label: 'รอดำเนินการ',  badge: counts.pending,  icon: 'fa-solid fa-clock' },
+    { key: 'approved', label: 'อนุมัติ',       badge: counts.approved, icon: 'fa-solid fa-check-circle' },
+    { key: 'rejected', label: 'ปฏิเสธ',        badge: counts.rejected, icon: 'fa-solid fa-xmark-circle' },
+  ];
+
+  const tabButtonClass = (k: TabKey) =>
+    `inline-flex items-center gap-2 px-4 py-2 rounded-full border text-sm transition
+     ${activeTab === k ? 'bg-purple-700 text-white border-purple-700' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100'}`;
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6 ml-50">
       <Navbar />
+
       <div className="max-w-6xl mx-auto">
+        {/* Header */}
         <div className="bg-purple-800 rounded-2xl shadow-lg p-6 mb-4 flex flex-col md:flex-row justify-between items-center">
-          <button
-                onClick={() => navigate(-1)}
-                className=" text-white py-2 px-4 "
-              >
-                <i className="fa-solid fa-arrow-left fa-2xl text-white"></i>
-            </button>
+          <button onClick={() => navigate(-1)} className="text-white py-2 px-4">
+            <i className="fa-solid fa-arrow-left fa-2xl text-white"></i>
+          </button>
           <div className="w-full flex justify-between items-center">
-            
-            <span className="text-2xl font-extrabold text-white tracking-tight">
-              ประวัติการเปิดโครงการ
-              
-            </span>
+            <span className="text-2xl font-extrabold text-white tracking-tight">ประวัติการเปิดโครงการ</span>
             <i className="fa-solid fa-clock-rotate-left fa-2xl text-white"></i>
           </div>
         </div>
-        <div><p className="text-black text-sm mt-2 ml-4">จำนวนโครงการทั้งหมด: {projects.length} โครงการ</p></div>
-        {projects.length > 0 ? (
-          <div className="overflow-x-auto rounded-xl border border-gray-200 shadow-lg">
-            <table className="min-w-full divide-y divide-gray-200 bg-white">              
-              <thead className="bg-gradient-to-r from-gray-200 to-gray-100 sticky top-0 z-10 ">
-                <tr>
-                  <th className="px-6 py-4 text-left text-xm font-bold text-gray-900 uppercase tracking-wider">
-                    ลำดับ
-                  </th>
-                  <th className="px-6 py-4 text-left text-xm font-bold text-gray-900 uppercase tracking-wider">
-                    ชื่อโครงการ
-                  </th>
-                  <th className="px-6 py-4 text-left text-xm font-bold text-gray-900 uppercase tracking-wider">
-                    วันที่สร้าง
-                  </th>
-                  <th className="px-6 py-4 text-left text-xm font-bold text-gray-900 uppercase tracking-wider">
-                    สถานะ
-                  </th>
-                  <th className="px-6 py-4 text-left text-xm font-bold text-gray-900 uppercase tracking-wider">
-                    การดำเนินการ
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {projects.map((item, index) => (
-                  <tr key={item.project_id} className="hover:bg-gray-50 transition-colors duration-200">
-                    <td className="px-6 py-4 text-sm text-gray-700">{index + 1}</td>
-                    <td className="px-6 py-4 text-sm text-gray-700">{item.project_name}</td>
-                    <td className="px-6 py-4 text-sm text-gray-700">{formatDate(item.created_date)}</td>
-                    <td className="px-6 py-4">
-                      <span
-                        className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border ${getStatusClass(
-                          item.project_status
-                        )}`}
-                      >
-                        {getThaiStatus(item.project_status)}
-                        <i
-                          className="fa-solid fa-bars ml-2 text-gray-600 cursor-pointer hover:text-red-950"
-                          onClick={() => handleViewProcess(item)}
-                        ></i>
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <Link to={`/Projectdetail/${item.project_id}`}>
-                        <button className="bg-purple-800 text-white py-2 px-4 rounded hover:bg-purple-900 transition-colors duration-300 shadow-md text-sm">
-                          ดูรายละเอียด
-                        </button>
-                      </Link>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+
+        {/* Tabs + Filters */}
+        <div className="bg-white/70 backdrop-blur rounded-2xl border border-gray-200 shadow-sm p-4 mb-4">
+          {/* Tabs */}
+          <div className="flex flex-wrap items-center gap-2">
+            {TABS.map(t => (
+              <button key={t.key} className={tabButtonClass(t.key)} onClick={() => setActiveTab(t.key)}>
+                <i className={`${t.icon}`}></i>
+                {t.label}
+                <span className={`ml-1 inline-flex items-center justify-center rounded-full px-2 text-xs font-semibold
+                                  ${activeTab === t.key ? 'bg-white/20' : 'bg-gray-200 text-gray-700'}`}>
+                  {t.badge}
+                </span>
+              </button>
+            ))}
           </div>
+
+          {/* Filters */}
+          <div className="mt-4 grid grid-cols-1 md:grid-cols-4 gap-3">
+            <div className="col-span-1 md:col-span-2">
+              <div className="relative">
+                <i className="fa-solid fa-magnifying-glass absolute left-3 top-3 text-gray-400"></i>
+                <input
+                  value={search}
+                  onChange={e => setSearch(e.target.value)}
+                  placeholder="ค้นหาชื่อโครงการหรือรหัส..."
+                  className="w-full pl-10 pr-3 py-2 rounded-lg border border-gray-300 bg-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                />
+              </div>
+            </div>
+
+            {/* department filter (แสดงต่อเมื่อมี options) */}
+            <div>
+              <select
+                value={deptFilter}
+                onChange={e => setDeptFilter(e.target.value)}
+                className="w-full py-2 px-3 rounded-lg border border-gray-300 bg-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+              >
+                <option value="all">ทุกคณะ</option>
+                {deptOptions.map(d => (
+                  <option key={d} value={d}>{d}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
+              <input
+                type="date"
+                value={dateFrom}
+                onChange={e => setDateFrom(e.target.value)}
+                className="py-2 px-3 rounded-lg border border-gray-300 bg-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                placeholder="จากวันที่"
+              />
+              <input
+                type="date"
+                value={dateTo}
+                onChange={e => setDateTo(e.target.value)}
+                className="py-2 px-3 rounded-lg border border-gray-300 bg-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                placeholder="ถึงวันที่"
+              />
+            </div>
+          </div>
+
+          <div className="mt-3 flex justify-between items-center text-sm text-gray-600">
+            <p>จำนวนรายการที่แสดง: <span className="font-semibold text-gray-900">{filteredProjects.length}</span> / ทั้งหมด {projects.length}</p>
+            <button
+              onClick={() => { setActiveTab('all'); setSearch(''); setDeptFilter('all'); setDateFrom(''); setDateTo(''); }}
+              className="text-purple-700 hover:text-purple-900"
+            >
+              รีเซ็ตตัวกรอง
+            </button>
+          </div>
+        </div>
+
+        {/* Table */}
+        {projects.length > 0 ? (
+          filteredProjects.length > 0 ? (
+            <div className="overflow-x-auto rounded-xl border border-gray-200 shadow-lg">
+              <table className="min-w-full divide-y divide-gray-200 bg-white">
+                <thead className="bg-gradient-to-r from-gray-200 to-gray-100 sticky top-0 z-10 ">
+                  <tr>
+                    <th className="px-6 py-4 text-left text-xm font-bold text-gray-900 uppercase tracking-wider">ลำดับ</th>
+                    <th className="px-6 py-4 text-left text-xm font-bold text-gray-900 uppercase tracking-wider">ชื่อโครงการ</th>
+                    <th className="px-6 py-4 text-left text-xm font-bold text-gray-900 uppercase tracking-wider">วันที่สร้าง</th>
+                    <th className="px-6 py-4 text-left text-xm font-bold text-gray-900 uppercase tracking-wider">สถานะ</th>
+                    <th className="px-6 py-4 text-left text-xm font-bold text-gray-900 uppercase tracking-wider">การดำเนินการ</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {filteredProjects.map((item, index) => (
+                    <tr key={item.project_id} className="hover:bg-gray-50 transition-colors duration-200">
+                      <td className="px-6 py-4 text-sm text-gray-700">{index + 1}</td>
+                      <td className="px-6 py-4 text-sm text-gray-700">{item.project_name}</td>
+                      <td className="px-6 py-4 text-sm text-gray-700">{formatDate(item.created_date)}</td>
+                      <td className="px-6 py-4">
+                        <span
+                          className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border ${getStatusClass(item.project_status)}`}
+                        >
+                          {getThaiStatus(item.project_status)}
+                          <i
+                            className="fa-solid fa-bars ml-2 text-gray-600 cursor-pointer hover:text-red-950"
+                            onClick={() => handleViewProcess(item)}
+                          ></i>
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <Link to={`/Projectdetail/${item.project_id}`}>
+                          <button className="bg-purple-800 text-white py-2 px-4 rounded hover:bg-purple-900 transition-colors duration-300 shadow-md text-sm">
+                            ดูรายละเอียด
+                          </button>
+                        </Link>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div className="bg-white rounded-xl border border-gray-200 shadow p-8 text-center text-gray-600">
+              ไม่พบข้อมูลที่ตรงกับตัวกรอง
+            </div>
+          )
         ) : (
           <p className="text-lg text-gray-600 animate-pulse text-center">กำลังโหลดข้อมูล...</p>
         )}
@@ -175,9 +311,7 @@ function Projectlist() {
           >
             <div className="py-6 px-6">
               <div className="flex justify-between items-center">
-                <h2 className="text-xl font-bold text-gray-600 pb-3 border-b border-purple-100">
-                  ตรวจสอบสถานะคำร้อง
-                </h2>
+                <h2 className="text-xl font-bold text-gray-600 pb-3 border-b border-purple-100">ตรวจสอบสถานะคำร้อง</h2>
                 <button
                   onClick={() => setShowProcessModal(false)}
                   className="text-gray-600 hover:bg-gray-100 rounded-full h-8 w-8 flex items-center justify-center transition-colors"

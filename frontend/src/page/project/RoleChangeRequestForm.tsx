@@ -177,9 +177,7 @@ const RoleChangeRequestForm: React.FC = () => {
       <Navbar />
       <div className="min-h-screen bg-gradient-to-b from-purple-50 to-white py-12 px-4 ml-65">
         <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-          <h1 className="text-3xl font-bold text-gray-800 mb-8 text-center drop-shadow-sm">
-            ส่งคำร้องขอเปลี่ยนบทบาท
-          </h1>
+          
 
           {/* Form for submitting role change request */}
           <div className="bg-white rounded-2xl shadow-lg p-6 mb-8">
