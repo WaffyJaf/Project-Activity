@@ -137,7 +137,7 @@ function Projectdetail() {
             setImagePreview(null);
             fileToUpload.current = null;
             setShowModal(false);
-            navigate("/Eventlist");
+            navigate("/home");
           }
         });
       } else {
@@ -316,14 +316,18 @@ function Projectdetail() {
                       </h3>
                       <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
                         <p className="text-gray-800 font-medium">
-                          {new Date(project.project_datetime).toLocaleString("th-TH", {
-                            weekday: "long",
-                            year: "numeric",
-                            month: "long",
-                            day: "numeric",
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
+                          {project?.project_datetime ? (
+                              new Date(project.project_datetime).toLocaleString("th-TH", {
+                                weekday: "long",
+                                year: "numeric",
+                                month: "long",
+                                day: "numeric",
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })
+                            ) : (
+                              "-"
+                            )}
                         </p>
                       </div>
                     </div>

@@ -8,6 +8,7 @@ import notificationRouter from './router/notificationroutes';
 import getby from './router/getby';
 import roleRouter from './router/rolerouter';
 import dasboard from './router/dashboardrouter';
+import hoursRouter from './router/hoursrouter';
 import cors from "cors";
 
 
@@ -42,6 +43,7 @@ app.use("/record", recordRouter);
 app.use("/getby", getby);
 app.use("/api", roleRouter);
 app.use("/api", dasboard);
+app.use("/api", hoursRouter);
 
 
 

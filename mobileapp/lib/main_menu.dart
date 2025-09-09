@@ -42,7 +42,7 @@ class _MainMenuState extends State<MainMenu> {
         return [
           const Home(),
           const pjAppbar(),
-          const Doc(),
+          
         ];
       case 'admin':
         return [
@@ -80,7 +80,7 @@ class _MainMenuState extends State<MainMenu> {
         return [
           CrystalNavigationBarItem(icon: IconlyBold.home, selectedColor: Colors.white),
           CrystalNavigationBarItem(icon: IconlyBold.scan, selectedColor: Colors.white),
-          CrystalNavigationBarItem(icon: IconlyBold.document, selectedColor: Colors.white),
+          
         ];
       case 'admin':
         return [

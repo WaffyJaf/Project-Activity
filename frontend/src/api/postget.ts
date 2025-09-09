@@ -6,6 +6,7 @@ export interface Event {
   post_date: string;
   post_status: string;
   imge_url: string;
+  project_id?: number;
 }
 
 export async function Eventget(): Promise<Event[]> {

@@ -30,6 +30,15 @@ class _RegistrationPageState extends State<RegistrationPage> {
   }
 
   Future<void> _register() async {
+    if (widget.activity.postStatus.toLowerCase() != 'active') {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('กิจกรรมนี้ปิดรับสมัครแล้ว'),
+        backgroundColor: Colors.red,
+      ),
+    );
+    return;
+  }
     if (_formKey.currentState!.validate()) {
       // ตรวจสอบว่ามีข้อมูลผู้ใช้หรือไม่
       final user = Provider.of<UserProvider>(context, listen: false).user;

@@ -153,12 +153,30 @@ export const registerActivity = async (req: Request, res: Response) => {
 
   console.log("➡️ Request body:", req.body);
 
-
   if (!post_id || !ms_id || !student_name || !faculty) {
     return res.status(400).json({ message: "ข้อมูลไม่ครบถ้วน" });
   }
 
   try {
+    // 🔍 ตรวจสอบสถานะกิจกรรมก่อน
+    const activity = await prisma.event_posts.findUnique({
+      where: { post_id: Number(post_id) },
+      select: { post_status: true, registration_end: true }
+    });
+
+    if (!activity) {
+      return res.status(404).json({ message: "ไม่พบข้อมูลกิจกรรม" });
+    }
+
+    // ❌ ถ้าสถานะไม่ใช่ active หรือหมดเวลาลงทะเบียน
+    if (activity.post_status !== "active") {
+      return res.status(400).json({ message: "กิจกรรมนี้ปิดรับสมัครแล้ว" });
+    }
+
+    if (activity.registration_end && new Date(activity.registration_end) < new Date()) {
+      return res.status(400).json({ message: "หมดเขตรับสมัครแล้ว" });
+    }
+
     // 🔍 ตรวจสอบว่ามีการลงทะเบียนซ้ำหรือไม่
     const existing = await prisma.registration_activity.findFirst({
       where: {
@@ -182,7 +200,7 @@ export const registerActivity = async (req: Request, res: Response) => {
     });
 
     console.log("Saved to database:", newRegister);
-    res.status(201).json({ message: "ลงทะเบียนสำเร็จ", data: newRegister });
+    res.status(201).json({ status: "success", message: "ลงทะเบียนสำเร็จ", data: newRegister });
 
   } catch (error) {
     console.error("!!! Error saving to database !!!", error);

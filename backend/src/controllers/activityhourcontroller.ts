@@ -67,6 +67,22 @@ export const SearchUsers = async (req: Request, res: Response) => {
   }
 };
 
+
+function getAcademicYear() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth() + 1;
+  return month >= 8 ? `${year}/${(year + 1).toString().slice(-2)}` 
+                    : `${year - 1}/${year.toString().slice(-2)}`;
+}
+
+function getCurrentTerm() {
+  const month = new Date().getMonth() + 1;
+  if (month >= 8 && month <= 12) return 1; // ภาคเรียนที่ 1
+  if (month >= 1 && month <= 5) return 2;  // ภาคเรียนที่ 2
+  return 3;                                // ภาคฤดูร้อน
+}
+
 export const ActivityRecord = async (req: Request, res: Response) => {
   const { project_id, ms_id } = req.body;
 
@@ -145,12 +161,25 @@ export const ActivityRecord = async (req: Request, res: Response) => {
 
       // ถ้าไม่ต้องประเมิน อัปเดต totalActivityHours
       if (!projectExists.has_evaluation) {
-        await tx.users_up.update({
-          where: { ms_id },
-          data: {
-            totalActivityHours: { increment: projectExists.hours },
-          },
-        });
+      // อัปเดตยอดรวมใน users_up
+      await tx.users_up.update({
+        where: { ms_id },
+        data: {
+          totalActivityHours: { increment: projectExists.hours },
+        },
+      });
+
+      // ✨ เพิ่มการบันทึกลง activity_hours_log
+      await tx.activity_hours_log.create({
+        data: {
+          ms_id,
+          project_id,
+          hours_added: projectExists.hours,
+          effective_date: new Date(),            // วันที่เพิ่มชั่วโมง
+          academic_year: getAcademicYear(),      // เขียนฟังก์ชันคำนวณปีการศึกษา
+          term: getCurrentTerm(),                // เขียนฟังก์ชันคำนวณเทอม
+        },
+      });
 
         // (ไม่บังคับ) สร้างการแจ้งเตือน
         await tx.notifications.create({
@@ -718,10 +747,23 @@ export const updateEvaluation = async (req: Request, res: Response) => {
           throw new Error("ไม่พบจำนวนชั่วโมงใน project_activity");
         }
 
+        // อัปเดต totalActivityHours
         await tx.users_up.update({
           where: { ms_id: existingRecord.ms_id },
           data: {
             totalActivityHours: { increment: hoursToAdd },
+          },
+        });
+
+        // ✨ เพิ่มการบันทึกลง activity_hours_log
+        await tx.activity_hours_log.create({
+          data: {
+            ms_id: existingRecord.ms_id,
+            project_id: existingRecord.project_id,
+            hours_added: hoursToAdd,
+            effective_date: new Date(),
+            academic_year: getAcademicYear(), // helper function คำนวณปีการศึกษา
+            term: getCurrentTerm(),           // helper function คำนวณภาคเรียน
           },
         });
 

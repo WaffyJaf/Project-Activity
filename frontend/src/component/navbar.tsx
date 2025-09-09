@@ -41,7 +41,8 @@ const Sidebar: React.FC = () => {
 
   const menuItems: MenuItem[] = [
     { path: '/',              label: 'หน้าแรก',                allowedRoles: ['organizer'],           icon: 'fa-solid fa-clipboard-list' },
-    { path: '/projectrecord', label: 'บันทึกชั่วโมง',          allowedRoles: ['admin', 'organizer'],  icon: 'fa-solid fa-clock' },
+    { path: '/projectrecord', label: 'บันทึกชั่วโมง',          allowedRoles: ['admin'],  icon: 'fa-solid fa-clock' },
+    { path: '/projectrecordbyid', label: 'บันทึกชั่วโมง',          allowedRoles: ['organizer'],  icon: 'fa-solid fa-clock' },
     { path: '/projectstatus', label: 'อนุมัติการเปิดโครงการ',   allowedRoles: ['admin'],               icon: 'fa-solid fa-circle-check' },
     { path: '/rolechang',     label: 'คำร้อง',                  allowedRoles: ['admin'],               icon: 'fa-solid fa-comments' },
     { path: '/rolechangform', label: 'ส่งคำร้อง',               allowedRoles: ['organizer', 'user'],   icon: 'fa-solid fa-comments' },

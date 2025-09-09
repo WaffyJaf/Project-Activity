@@ -147,7 +147,7 @@ const AdminDashboard: React.FC = () => {
                   <i className="fa-solid fa-sitemap text-purple-700/90"></i>
                   <Select value={departmentFilter} onValueChange={setDepartmentFilter}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Filter by Department" />
+                      <SelectValue placeholder="เลือกคณะ" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="">ทั้งหมด</SelectItem>
@@ -165,7 +165,7 @@ const AdminDashboard: React.FC = () => {
                   <i className="fa-solid fa-filter text-purple-700/90"></i>
                   <Select value={statusFilter} onValueChange={setStatusFilter}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Filter by Status" />
+                      <SelectValue placeholder="เลือกสถานะ" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="">ทั้งหมด</SelectItem>
@@ -197,9 +197,9 @@ const AdminDashboard: React.FC = () => {
                     </CardHeader>
                     <CardContent>
                       <div className="space-y-1">
-                        {stats.activitiesByFaculty.map((item, index) => (
+                        {stats.activitiesByDepartment.map((item, index) => (
                           <div key={index} className="flex items-center justify-between text-sm">
-                            <span className="text-purple-900/90">{item.faculty}</span>
+                            <span className="text-purple-900/90">{item.department}</span>
                             <span className="font-semibold text-purple-700">{item.count}</span>
                           </div>
                         ))}

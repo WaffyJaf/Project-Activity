@@ -9,9 +9,13 @@ export interface Project {
   project_datetime?: string | Date;
   qrCodeData?: string;
   ms_id?: string;
-  created_by?: string; // เพิ่มจาก API
+  created_by?: string; 
   project_description?: string | null;
   rejected_reason?: string;
+  location?: string;
+  hours?: number;
+  budget?: string | number;
+  department?: string;
 }
 
 const API_URL = 'http://localhost:3000/project/getproject';
@@ -31,25 +35,17 @@ export async function fetchProjects(): Promise<Project[]> {
 
 export const fetchProjectsByUser = async (ms_id: string): Promise<Project[]> => {
   try {
-    const response = await axios.get(`http://localhost:3000/getby/${ms_id}`, {
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
+    const response = await axios.get<Project[]>(`http://localhost:3000/getby/${ms_id}`);
+    if (!Array.isArray(response.data)) return [];
 
-    const data = response.data;
-    return data.map((project: any) => ({
+    return response.data.map((project) => ({
       ...project,
-      created_date: new Date(project.created_date),
-      approval_datetime: project.approval_datetime ? new Date(project.approval_datetime) : null,
-      project_datetime: project.project_datetime ? new Date(project.project_datetime) : null,
+      created_date: project.created_date ? new Date(project.created_date) : new Date(),
+      approval_datetime: project.approval_datetime ? new Date(project.approval_datetime) : undefined,
+      project_datetime: project.project_datetime ? new Date(project.project_datetime) : undefined,
     }));
   } catch (error) {
-    if (axios.isAxiosError(error)) {
-      console.error('Axios error:', error.response?.data || error.message);
-    } else {
-      console.error('Unexpected error:', error);
-    }
+    console.error("fetchProjectsByUser error:", error);
     return [];
   }
 };

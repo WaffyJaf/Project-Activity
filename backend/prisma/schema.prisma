@@ -176,12 +176,28 @@ model activity_hours_log {
   project_id       Int
   hours_added      Int
   added_at         DateTime         @default(now())
+
+  // ใช้คำนวณ bucket (ยืดหยุ่นกว่า added_at เพราะอิงวันกิจกรรมจริงได้)
+  effective_date   DateTime?
+
+  // bucket ที่ denormalize ลงมาเพื่อ query เร็ว
+  academic_year    String?          @db.VarChar(9) // รูปแบบ "YYYY/YY" เช่น "2024/25"
+  term             Int?             // 1,2,3
+
   users_up         users_up         @relation(fields: [ms_id], references: [ms_id])
   project_activity project_activity @relation(fields: [project_id], references: [project_id])
 
   @@index([ms_id])
   @@index([project_id])
+  @@index([added_at])
+  @@index([effective_date])
+
+  // เอาไว้กรองรายเทอม/รายปีแบบเร็ว
+  @@index([academic_year, term])
+  // แนะนำอันนี้เพิ่มด้วย (ค้นของ user คนนึงบ่อยสุด)
+  @@index([ms_id, academic_year, term])
 }
+
 
 enum event_posts_post_status {
   active

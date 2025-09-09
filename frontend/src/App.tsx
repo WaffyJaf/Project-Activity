@@ -19,6 +19,7 @@ import  ParticipantsList from './page/project/ParticipantsList';
 import RoleChangeRequestManager from './Admin/RoleRequestManager';
 import RoleChangeRequestForm from './page/project/RoleChangeRequestForm';
 import AdminDashboard from './Admin/AdminDashboard';
+import ProjectrecordByID from './page/record/Projectrecordbyid';
 
 
 import './App.css';
@@ -36,7 +37,6 @@ const App: React.FC = () => {
           <Route element={<ProtectedRoute />}>
             <Route path="/home" element={<Home />} /> 
             <Route path="/projectdetail/:id" element={<Projectdetail />} />
-            <Route path="/projectrecord" element={<Projectrecord />} />
              <Route path="/search" element={<Searchpage />} />
              <Route path="/recordactivity/:project_id" element={<RecordActivity />} />
             <Route path="/student/:ms_id" element={<StudentActivity />} />
@@ -51,6 +51,7 @@ const App: React.FC = () => {
             <Route path="/projectlist" element={<Projectlist />} />            
             <Route path="/createproject" element={<Createproject />} />
             <Route path="/eventlist" element={<Eventlist />} />
+            <Route path="/projectrecordbyid" element={<ProjectrecordByID />} />
             
             
            
@@ -62,6 +63,7 @@ const App: React.FC = () => {
             <Route path="/projectstatus" element={<Projectstatus />} />
             <Route path="/rolechang" element={<RoleChangeRequestManager />} />
             <Route path="/adminDashboard" element={<AdminDashboard />} />
+            <Route path="/projectrecord" element={<Projectrecord />} />
             
           </Route>
 

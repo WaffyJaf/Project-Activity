@@ -278,7 +278,7 @@ const Home: React.FC = () => {
             <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            ประวัติกิจกรรม
+            ประชาสัมพันธ์กิจกรรม
           </span>
           <div className="mb-2 flex justify-end">
             <div className="inline-block">
@@ -301,9 +301,17 @@ const Home: React.FC = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
               {events.map((event) => (
                 <div
-                  key={event.post_id}
-                  className="bg-white rounded-xl shadow-lg p-3 hover:shadow-xl transition-shadow duration-200 border border-purple-100"
-                >
+                 key={event.post_id}
+    onClick={() => event.project_id && navigate(`/projectdetail/${event.project_id}`)}
+    onKeyDown={(e) => {
+      if (e.key === 'Enter' && event.project_id) {
+        navigate(`/projectdetail/${event.project_id}`);
+      }
+    }}
+    role="button"
+    tabIndex={0}
+    className="group bg-white rounded-xl shadow-lg p-3 hover:shadow-xl transition-[transform,box-shadow] duration-200 border border-purple-100 hover:-translate-y-0.5 cursor-pointer"
+  >
                   <div className="flex flex-col">
                     {event.imge_url ? (
                       <img

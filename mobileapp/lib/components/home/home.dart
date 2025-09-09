@@ -4,6 +4,7 @@ import 'package:mobileapp/components/home/home_view.dart';
 import 'package:provider/provider.dart';
 import '../../providers/user_provider.dart';
 import '../../services/login_api.dart';
+import 'package:mobileapp/components/page/hours_page.dart';
 import '../../login.dart';
 
 class Home extends StatelessWidget {
@@ -110,6 +111,17 @@ class Home extends StatelessWidget {
       ),
       backgroundColor: const Color.fromARGB(255, 94, 32, 142),
       actions: [
+        IconButton(
+        tooltip: 'ชั่วโมงกิจกรรมสะสม',
+        icon: const Icon(Icons.access_time_rounded),
+        color: Colors.white,
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const HoursPage()),
+          );
+        },
+      ),
         IconButton(
           icon: const Icon(IconlyBold.profile),
           color: Colors.white,
