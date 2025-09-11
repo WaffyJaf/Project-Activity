@@ -18,7 +18,26 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 class NotificationService {
   final FirebaseMessaging _firebaseMessaging = FirebaseMessaging.instance;
   final LoginApi _loginApi = LoginApi();
-  final String _backendUrl = dotenv.env['BACKENDFIREBASE_URL'] ?? '';
+ late final String _backendUrl;
+
+  NotificationService() {
+    _backendUrl = _getBackendUrl();
+  }
+
+  String _getBackendUrl() {
+    // URL สำหรับแต่ละกรณี (ตั้งค่าใน .env)
+    final emulatorUrl = dotenv.env['EMULATOR_BACKENDFIREBASE_URL'] ?? 'http://10.0.2.2:3000';
+    final deviceUrl   = dotenv.env['DEVICE_BACKENDFIREBASE_URL']   ?? 'http://172.20.10.3:3000';
+    final iosUrl      = dotenv.env['IOS_BACKEND_URL']      ?? 'http://localhost:3000';
+
+    if (Platform.isAndroid) {
+      return emulatorUrl; // emulator Android ใช้ 10.0.2.2
+    } else if (Platform.isIOS) {
+      return iosUrl; // iOS simulator ใช้ localhost ได้เลย
+    } else {
+      return deviceUrl; // อุปกรณ์จริง ใช้ IP LAN ของ dev
+    }
+  }
 
   Future<void> _requestNotificationPermissionIfNeeded() async {
     if (kIsWeb) return;

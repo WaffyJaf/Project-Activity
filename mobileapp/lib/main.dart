@@ -7,28 +7,36 @@ import 'providers/notification_provider.dart';
 import 'login.dart';
 import 'main_menu.dart';
 import './components/notify/notification_screen.dart';
+import './components/home/detailview.dart';
 import 'services/login_api.dart';
 import 'services/firebase.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'dart:io';
+import 'config.dart';
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+ WidgetsFlutterBinding.ensureInitialized();
+
   try {
     await dotenv.load(fileName: ".env");
-    print('Loaded BASE_URL: ${dotenv.env['BASE_URL']}');
+    print('✅ Loaded ENV successfully');
   } catch (e) {
-    print('Error loading .env: $e');
+    print('❌ Error loading .env: $e');
   }
+
   await initializeDateFormatting('th', null);
+
   try {
     await Firebase.initializeApp();
-    print('Firebase initialized successfully');
+    print('✅ Firebase initialized successfully');
   } catch (e) {
-    print('Firebase initialization error: $e');
-    // Optionally, show an error screen or fallback UI
+    print('❌ Firebase initialization error: $e');
+    // TODO: show fallback UI
   }
+
+  // ทดสอบ baseUrl ที่เลือกได้จริง
+  print('🌐 Base URL in use: ${AppConfig.baseUrl}');
 
   runApp(const MyApp());
 }
@@ -74,6 +82,7 @@ class MyApp extends StatelessWidget {
           '/main_menu': (context) => const MainMenu(),
           
           '/notifications': (context) => const NotificationScreen(),
+          
           
 
         },

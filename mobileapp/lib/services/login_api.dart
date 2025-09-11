@@ -3,18 +3,39 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:mobileapp/models/user.dart';
+import 'package:device_info_plus/device_info_plus.dart';
 import 'dart:io';
 
 
 class LoginApi {
- String get baseUrl {
-    String defaultUrl = Platform.isAndroid ? 'http://10.0.2.2:3000' : 'http://localhost:3000';
-    return dotenv.env['BASE_URL'] ?? defaultUrl;
+ static String? _cachedBaseUrl;
+
+  /// เลือก Base URL อัตโนมัติ (Emulator / มือถือจริง / iOS)
+  static Future<String> getBaseUrl() async {
+    if (_cachedBaseUrl != null) return _cachedBaseUrl!;
+
+    final emulatorUrl = dotenv.env['EMULATOR_BASE_URL'] ?? 'http://10.0.2.2:3000';
+    final deviceUrl   = dotenv.env['DEVICE_BASE_URL']   ?? 'http://172.20.10.3:3000'; // ← ใส่ IP LAN เครื่อง dev
+    final iosUrl      = dotenv.env['IOS_BASE_URL']      ?? 'http://localhost:3000';
+
+    if (Platform.isAndroid) {
+      final info = await DeviceInfoPlugin().androidInfo;
+      final isEmulator = !(info.isPhysicalDevice ?? true);
+      _cachedBaseUrl = isEmulator ? emulatorUrl : deviceUrl;
+    } else if (Platform.isIOS) {
+      _cachedBaseUrl = iosUrl;
+    } else {
+      _cachedBaseUrl = deviceUrl;
+    }
+
+    return _cachedBaseUrl!;
   }
+
 
   // ล็อกอินด้วย token
   Future<Map<String, dynamic>> loginWithToken(String token) async {
     try {
+       final baseUrl = await LoginApi.getBaseUrl();
       final response = await http.get(
         Uri.parse('$baseUrl/auth/verify?token=$token'),
         headers: {'Content-Type': 'application/json'},
@@ -41,6 +62,7 @@ class LoginApi {
   Future<Map<String, dynamic>> checkIn(String qrCodeId) async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token');
+     final baseUrl = await LoginApi.getBaseUrl();
 
     if (token == null) {
       throw Exception('ไม่พบ token');
@@ -78,6 +100,7 @@ class LoginApi {
   // ตรวจสอบ token
   Future<bool> verifyToken(String token) async {
     try {
+      final baseUrl = await LoginApi.getBaseUrl();
       final response = await http.get(
         Uri.parse('$baseUrl/verify-token'),
         headers: {
@@ -95,7 +118,7 @@ class LoginApi {
     try {
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('token');
-
+      final baseUrl = await LoginApi.getBaseUrl();
       if (token == null) {
         print('⛔️ ไม่มี token ใน getUser');
         return null;

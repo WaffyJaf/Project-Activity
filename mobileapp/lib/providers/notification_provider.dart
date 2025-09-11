@@ -3,6 +3,8 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../services/login_api.dart';
 import 'dart:async';
+import 'package:device_info_plus/device_info_plus.dart';
+import 'dart:io';
 
 
 class Notification {
@@ -76,21 +78,47 @@ class Notification {
 }
 
 class NotificationProvider with ChangeNotifier {
-  
   List<Notification> _notifications = [];
   bool _isLoading = false;
-  bool _isFetching = false; // เพิ่มตัวแปรควบคุมการ fetch
-  Timer? _pollingTimer; // เพิ่ม Timer สำหรับ polling
+  bool _isFetching = false; 
+  Timer? _pollingTimer; 
+
+  late String _baseUrl; // ใช้ late เพราะต้อง init ทีหลัง
 
   List<Notification> get notifications => _notifications;
   bool get isLoading => _isLoading;
   int get unreadCount => _notifications.where((n) => !n.read).length;
 
+  NotificationProvider() {
+    _initBaseUrl();
+  }
+
+  Future<void> _initBaseUrl() async {
+    _baseUrl = await _getBaseUrl();
+    debugPrint("🌐 Base URL in use: $_baseUrl");
+  }
+
+  static Future<String> _getBaseUrl() async {
+    const emulatorUrl = 'http://10.0.2.2:3000';
+    const deviceUrl   = 'http://172.20.10.3:3000'; // IP LAN ของเครื่อง dev
+    const iosUrl      = 'http://localhost:3000';
+
+    if (Platform.isAndroid) {
+      final androidInfo = await DeviceInfoPlugin().androidInfo;
+      final isEmulator = !(androidInfo.isPhysicalDevice ?? true);
+      return isEmulator ? emulatorUrl : deviceUrl;
+    } else if (Platform.isIOS) {
+      return iosUrl;
+    } else {
+      return deviceUrl;
+    }
+  }
+
   // เริ่ม polling
   void startPolling(String msId) {
-    stopPolling(); // หยุด timer เดิมก่อน
-    _pollingTimer = Timer.periodic(Duration(seconds: 30), (timer) {
-      fetchNotifications(msId); // เรียกทุก 30 วินาที
+    stopPolling(); 
+    _pollingTimer = Timer.periodic(const Duration(seconds: 30), (timer) {
+      fetchNotifications(msId); 
     });
   }
 
@@ -116,7 +144,7 @@ class NotificationProvider with ChangeNotifier {
       }
 
       final response = await http.get(
-        Uri.parse('http://10.0.2.2:3000/notifications?ms_id=$msId'),
+        Uri.parse('$_baseUrl/notifications?ms_id=$msId'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $authToken',
@@ -173,7 +201,7 @@ class NotificationProvider with ChangeNotifier {
       }
 
       final response = await http.put(
-        Uri.parse('http://10.0.2.2:3000/notifications/$notificationId/read'),
+        Uri.parse('$_baseUrl/notifications/$notificationId/read'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $authToken',

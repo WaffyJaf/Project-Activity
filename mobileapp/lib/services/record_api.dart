@@ -1,13 +1,14 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:mobileapp/models/record.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+import '../services/login_api.dart'; 
 
 class ApiService {
-  final String baseUrl = dotenv.env['BASE_URL'] ?? ''; 
+  ApiService();
 
   Future<List<Registration>> getRegistrationByStudentId(String studentId) async {
     try {
+       final baseUrl = await LoginApi.getBaseUrl();
       final response = await http.get(Uri.parse('$baseUrl/record/regisrecord/$studentId'));
       print('API Response Status: ${response.statusCode}');
       print('API Response Body: ${response.body}');

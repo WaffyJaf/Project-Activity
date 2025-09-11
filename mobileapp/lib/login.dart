@@ -373,36 +373,43 @@ class _WebViewPageState extends State<WebViewPage> {
             }
             // ตรวจจับ callback จาก Microsoft
             if (Platform.isAndroid && request.url.startsWith('http://localhost:3000/auth/microsoft/callback')) {
-              final uri = Uri.parse(request.url);
-              final newUri = uri.replace(host: '10.0.2.2');
-              final client = http.Client();
-              try {
-                final httpRequest = http.Request('GET', newUri);
-                httpRequest.followRedirects = false;
-                final streamedResponse = await client.send(httpRequest);
-                final response = await http.Response.fromStream(streamedResponse);
-                if (response.statusCode >= 300 && response.statusCode < 400) {
-                  final location = response.headers['location'];
-                  if (location != null) {
-                    final redirectUri = Uri.parse(location);
-                    if (redirectUri.scheme == 'myapp' && redirectUri.host == 'auth') {
-                      widget.onAuthCallback(redirectUri);
-                      Navigator.pop(context);
-                      return NavigationDecision.prevent;
-                    }
-                  }
-                } else {
-                  throw Exception('Failed to process callback: ${response.statusCode}');
-                }
-              } catch (e) {
-                print('Error processing callback: $e');
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('เกิดข้อผิดพลาดในการประมวลผล callback: $e')),
-                );
-                return NavigationDecision.prevent;
-              } finally {
-                client.close();
-              }
+  final uri = Uri.parse(request.url);
+
+  // เช็คว่าเป็น emulator (10.0.2.2) หรือ ip จริง (172.20.10.3)
+  final hosts = ['10.0.2.2', '172.20.10.3'];
+
+  for (final host in hosts) {
+    final newUri = uri.replace(host: host, port: 3000);
+    final client = http.Client();
+    try {
+      final httpRequest = http.Request('GET', newUri);
+      httpRequest.followRedirects = false;
+
+      final streamedResponse = await client.send(httpRequest);
+      final response = await http.Response.fromStream(streamedResponse);
+
+      if (response.statusCode >= 300 && response.statusCode < 400) {
+        final location = response.headers['location'];
+        if (location != null) {
+          final redirectUri = Uri.parse(location);
+          if (redirectUri.scheme == 'myapp' && redirectUri.host == 'auth') {
+            widget.onAuthCallback(redirectUri);
+            Navigator.pop(context);
+            return NavigationDecision.prevent;
+          }
+        }
+      } else {
+        throw Exception('Failed to process callback: ${response.statusCode}');
+      }
+    } catch (e) {
+      // ถ้า host นี้พัง ให้ลอง host ถัดไปแทน
+      debugPrint('Error with $host: $e');
+      continue;
+    } finally {
+      client.close();
+    }
+  }
+
               return NavigationDecision.prevent;
             }
             return NavigationDecision.navigate;

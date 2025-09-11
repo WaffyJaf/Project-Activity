@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+import '../services/login_api.dart'; 
+
 
 class HoursSummary {
   final String msId;
@@ -26,9 +27,9 @@ class HoursSummary {
   }
 
 class ApiService {
-  final String baseUrl = dotenv.env['BASE_URL'] ?? ''; 
-
+  ApiService();
   Future<List<HoursSummary>> getTermSummary(String msId, {String? academicYear, int limit = 10, int offset = 0}) async {
+    final baseUrl = await LoginApi.getBaseUrl();
     final uri = Uri.parse('$baseUrl/api/hours/$msId').replace(
       queryParameters: {
         'scope': 'term',
@@ -48,6 +49,7 @@ class ApiService {
   }
 
   Future<List<HoursSummary>> getYearSummary(String msId, {int limit = 10, int offset = 0}) async {
+    final baseUrl = await LoginApi.getBaseUrl();
     final uri = Uri.parse('$baseUrl/api/hours/$msId').replace(
       queryParameters: {
         'scope': 'year',
@@ -66,6 +68,7 @@ class ApiService {
   }
 
   Future<List<HoursSummary>> getSixMonthSummary(String msId, {int limit = 10, int offset = 0}) async {
+    final baseUrl = await LoginApi.getBaseUrl();
     final uri = Uri.parse('$baseUrl/api/hours/$msId').replace(
       queryParameters: {
         'scope': 'six-month',
@@ -84,6 +87,7 @@ class ApiService {
   }
 
   Future<double> getTotalHours(String msId) async {
+  final baseUrl = await LoginApi.getBaseUrl();
   final uri = Uri.parse('$baseUrl/api/hours/$msId').replace(
     queryParameters: {'scope': 'all'},
   );

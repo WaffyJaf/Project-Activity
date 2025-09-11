@@ -1,13 +1,15 @@
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:mobileapp/models/project.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+import '../services/login_api.dart';
 
 class ApiProject{
-  final String baseUrl = dotenv.env['BASE_URL'] ?? '';
+  ApiProject();
+
 
     Future<List<Project>> fetchProjectActivities() async {
     try {
+      final baseUrl = await LoginApi.getBaseUrl();
       final response = await http.get(Uri.parse('$baseUrl/project/getproject'));
 
       if (response.statusCode == 200) {
@@ -26,7 +28,8 @@ class ApiProject{
     if (qrCodeId.isEmpty || !RegExp(r'^[A-Za-z0-9]+$').hasMatch(qrCodeId)) {
       throw Exception('QR Code ไม่ถูกต้อง');
     }
-
+    
+    final baseUrl = await LoginApi.getBaseUrl();
     final response = await http.post(
       Uri.parse('$baseUrl/record/activityrecord2'),
       headers: {'Content-Type': 'application/json'},
@@ -69,26 +72,28 @@ class ApiProject{
       throw Exception('QR Code กิจกรรมไม่ถูกต้อง: ข้อมูลว่างเปล่า');
     }
 
-    // ลองแยก projectId จาก URL หรือใช้ qrCodeData โดยตรง
+    // แยก projectId จาก query หรือใช้ qrCodeData ตรง ๆ
     String projectId = qrCodeData;
     final uri = Uri.tryParse(qrCodeData);
     if (uri != null && uri.queryParameters.containsKey('projectId')) {
       projectId = uri.queryParameters['projectId'] ?? qrCodeData;
     }
 
-    // ตรวจสอบว่า projectId เป็นตัวเลขหรือ string ที่ถูกต้อง
     if (projectId.isEmpty) {
       throw Exception('QR Code กิจกรรมไม่ถูกต้อง: ไม่สามารถแยก projectId ได้');
     }
 
-    print('Sending projectId: $projectId'); // Debug
-    print('Sending userQrCodeId: $userQrCodeId'); // Debug
+    print('Sending projectId: $projectId');
+    print('Sending userQrCodeId: $userQrCodeId');
+
+    // ✅ ดึง baseUrl แบบ async
+    final baseUrl = await LoginApi.getBaseUrl();
 
     final response = await http.post(
       Uri.parse('$baseUrl/record/joinactivity'),
       headers: {'Content-Type': 'application/json'},
       body: json.encode({
-        'qr_code_data': projectId, // ส่ง projectId หรือ qrCodeData
+        'qr_code_data': projectId,
         'user_id': userQrCodeId,
       }),
     );
@@ -104,8 +109,10 @@ class ApiProject{
       final Map<String, dynamic> data;
       try {
         data = json.decode(response.body);
-      } catch (e) {
-        throw Exception('เกิดข้อผิดพลาดในการเข้าร่วมกิจกรรม (${response.statusCode}): ${response.body}');
+      } catch (_) {
+        throw Exception(
+          'เกิดข้อผิดพลาดในการเข้าร่วมกิจกรรม (${response.statusCode}): ${response.body}',
+        );
       }
 
       if (response.statusCode == 400) {
@@ -127,7 +134,9 @@ class ApiProject{
           throw Exception('เกิดข้อผิดพลาด: ${data['error']}');
         }
       } else {
-        throw Exception('เกิดข้อผิดพลาดในการเข้าร่วมกิจกรรม (${response.statusCode}): ${data['error'] ?? response.body}');
+        throw Exception(
+          'เกิดข้อผิดพลาดในการเข้าร่วมกิจกรรม (${response.statusCode}): ${data['error'] ?? response.body}',
+        );
       }
     }
   }

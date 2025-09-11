@@ -1,20 +1,21 @@
-import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:http/http.dart' as http;
 import '../models/activity.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+import '../services/login_api.dart';  // ← ใช้ baseUrl กลาง
 
-
-class ApiService{
-    final String baseUrl = dotenv.env['BASE_URL'] ?? '';
-
-    Future<List<Activity>> fetchActivities() async {
+class ApiService {
+  Future<List<Activity>> fetchActivities() async {
     try {
-      final response = await http.get(Uri.parse('$baseUrl/event/getevent'));
+      final baseUrl = await LoginApi.getBaseUrl();
+      final response = await http
+          .get(Uri.parse('$baseUrl/event/getevent'))
+          .timeout(const Duration(seconds: 15));
+
       if (response.statusCode == 200) {
-        List<dynamic> data = jsonDecode(response.body);
+        final List<dynamic> data = jsonDecode(response.body);
         return data.map((json) => Activity.fromJson(json)).toList();
       } else {
-        throw Exception('Failed to load activities: ${response.statusCode}');
+        throw Exception('Failed to load activities: ${response.statusCode} - ${response.body}');
       }
     } catch (e) {
       throw Exception('Error fetching activities: $e');
@@ -28,53 +29,4 @@ class ApiService{
       orElse: () => throw Exception('ไม่พบกิจกรรม id=$postId'),
     );
   }
-
 }
-
-    class Apiregis{
-      final String baseUrl = dotenv.env['BASE_URL'] ?? '';
-      Future<Map<String, dynamic>> register({
-      required String postId,    
-      required String studentId, 
-      required String studentName, 
-      required String faculty,  
-    }) async {
-      try {
-        final response = await http.post(
-          Uri.parse('$baseUrl/event/regisactivity'),
-          headers: {'Content-Type': 'application/json'},
-          body: jsonEncode({
-            'post_id': int.parse(postId),
-            'ms_id': studentId,
-            'student_name': studentName,
-            'faculty': faculty,
-          }),
-        );
-
-         final result = jsonDecode(response.body);
-
-          if (response.statusCode == 201) {
-            return {
-              'status': 'success',
-              'message': result['message'] ?? 'ลงทะเบียนสำเร็จ',
-            };
-          } else if (response.statusCode == 409) {
-            // กรณีสมัครซ้ำ
-            return {
-              'status': 'duplicate',
-              'message': result['message'] ?? 'คุณได้ลงทะเบียนกิจกรรมนี้แล้ว',
-            };
-          } else {
-            return {
-              'status': 'error',
-              'message': result['message'] ?? 'ลงทะเบียนล้มเหลว',
-            };
-          }
-        } catch (e) {
-          return {
-            'status': 'error',
-            'message': 'เกิดข้อผิดพลาดในการเชื่อมต่อ: $e',
-          };
-      }
-    }
-  }

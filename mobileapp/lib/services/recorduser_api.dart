@@ -1,12 +1,16 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:mobileapp/models/user.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+import '../services/login_api.dart';
 
 class ApiService {
-  final String baseUrl = dotenv.env['BASE_URL'] ?? '';
+  ApiService();
+    
+
+  
   Future<User?> getUserByMsId(String msId) async {
     try {
+       final baseUrl = await LoginApi.getBaseUrl();
       final response = await http.get(Uri.parse('$baseUrl/record/$msId'));
 
       if (response.statusCode == 200) {
